@@ -1,190 +1,243 @@
-import { Clock3, MapPin, ShieldCheck } from 'lucide-react';
+'use client'
 
-const services = [
-  {
-    label: 'PLUMBING',
-    labelClass: 'bg-[#3F3F46] text-white',
-    title: 'Pipes & leaks sorted in minutes.',
-    description:
-      'No guesswork. Verified plumbers show up ready to solve leaks, blockages, and pressure issues.',
-    mock: 'plumbing',
-  },
-  {
-    label: 'ELECTRICAL',
-    labelClass: 'bg-[#3F3F46] text-white',
-    title: 'Safe wiring, done right.',
-    description:
-      'Certified electricians handle faults, installations, and inspections, done right the first time.',
-    mock: 'electrical',
-  },
-  {
-    label: 'HEATING & AC',
-    labelClass: 'bg-[#3F3F46] text-white',
-    title: 'Cool summers, warm winters. HVAC Solutions',
-    description:
-      "From AC maintenance to full HVAC system repairs, we've got you covered for every season.",
-    mock: 'hvac',
-  },
-  {
-    label: '24/7 EMERGENCY',
-    labelClass: 'bg-[#FF3B30] text-white',
-    title: 'Engineer at your door in minutes.',
-    description:
-      'Emergency requests are prioritised and dispatched instantly with live tracking for total peace of mind.',
-    mock: 'emergency',
-  },
-];
+import React from 'react';
+import { motion } from 'framer-motion';
+import { FigmaImage } from '@/components/ui/figma-image';
+import { cn } from '@/lib/utils';
+import { HiStar, HiClock, HiMapPin, HiCheck } from 'react-icons/hi2';
 
-function ServiceMock({ type }: { type: string }) {
-  if (type === 'plumbing') {
-    return (
-      <div className="mx-auto mt-auto w-full max-w-[350px]">
-        <div className="rounded-[20px] bg-white p-5 shadow-[0_18px_50px_rgba(26,43,78,0.08)]">
-          <div className="flex items-start justify-between gap-3">
-            <div className="flex items-center gap-3">
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#3C73EA] text-[18px] font-bold text-white">
-                JA
-              </div>
-              <div>
-                <div className="text-[18px] font-semibold text-[#374151]">James A.</div>
-                <div className="text-[14px] text-[#8D95A3]">Certified Plumber · Lagos</div>
-              </div>
-            </div>
-            <div className="flex items-center gap-1 text-[16px] font-semibold text-[#414B5A]">
-              <span className="text-[#F6A623]">★</span>4.9
-            </div>
-          </div>
+const ServiceCard = ({
+  title,
+  description,
+  tag,
+  tagColor = "bg-[#3B3B3B]",
+  children
+}: {
+  title: string;
+  description: string;
+  tag: string;
+  tagColor?: string;
+  children: React.ReactNode;
+}) => (
+  <motion.div
+    initial={{ opacity: 0, y: 20 }}
+    whileInView={{ opacity: 1, y: 0 }}
+    viewport={{ once: true }}
+    className="border-[#D9D9D9] border-[1.5px] border-solid flex flex-col gap-10 p-6 md:p-10 rounded-[24px] bg-white hover:shadow-xl transition-shadow duration-300"
+  >
+    <div className="flex flex-col gap-4">
+      <div className={cn("px-3 py-1.5 rounded-full w-fit", tagColor)}>
+        <span className="text-white text-xs font-semibold tracking-wider uppercase">{tag}</span>
+      </div>
+      <h3 className="font-heading text-2xl font-bold text-[#3B3B3B]">{title}</h3>
+      <p className="text-[#636363] text-base leading-relaxed">{description}</p>
+    </div>
+    <div className="flex items-center justify-center bg-[#F9F9F9] rounded-2xl p-6 min-h-[220px]">
+      {children}
+    </div>
+  </motion.div>
+);
 
-          <div className="mt-4 h-px bg-[#E8EBF1]" />
-
-          <div className="mt-4 flex items-center justify-between">
-            <span className="rounded-full bg-[#E8FFF4] px-3 py-1 text-[12px] font-semibold text-[#27BA88]">
-              Available now
-            </span>
-            <span className="flex items-center gap-1 text-[14px] text-[#8E97A5]">
-              <Clock3 className="h-4 w-4" />
-              45 min ETA
-            </span>
-          </div>
-        </div>
-
-        <div className="mx-auto mt-4 inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-[15px] font-semibold text-[#667085] shadow-sm">
-          <MapPin className="h-4 w-4 text-[#8E97A5]" />
-          3.2 km away · Lagos Island
+const PlumbingMockup = () => (
+  <div className="w-full max-w-[380px] bg-white rounded-2xl p-4 shadow-lg border border-slate-100 flex flex-col gap-4">
+    <div className="flex items-start justify-between border-b border-slate-100 pb-4">
+      <div className="flex items-center gap-3">
+        <FigmaImage
+          src="/assets/workers/james.png"
+          alt="James A."
+          className="w-14 h-14 rounded-full"
+          fallbackInitial="JA"
+        />
+        <div>
+          <div className="font-bold text-[#3B3B3B] text-lg">James A.</div>
+          <div className="text-[#636363] text-sm">Certified Plumber · Lagos</div>
         </div>
       </div>
-    );
-  }
-
-  if (type === 'electrical') {
-    return (
-      <div className="mx-auto mt-auto w-full max-w-[320px] rounded-[20px] bg-white p-5 shadow-[0_18px_50px_rgba(26,43,78,0.08)]">
-        <div className="flex items-center justify-between text-[14px] font-semibold text-[#414B5A]">
-          <span>Today&apos;s Job Checklist</span>
-          <span className="text-[#8A94A3]">2/4 done</span>
-        </div>
-        <div className="mt-4 space-y-3 text-[14px]">
-          <div className="flex items-center gap-3 text-[#B4BBC7] line-through">
-            <ShieldCheck className="h-4 w-4 text-[#27BA88]" />
-            DB board inspection
-          </div>
-          <div className="flex items-center gap-3 text-[#B4BBC7] line-through">
-            <ShieldCheck className="h-4 w-4 text-[#27BA88]" />
-            Socket & switch test
-          </div>
-          <div className="flex items-center justify-between gap-3 text-[#F59E0B]">
-            <span className="flex items-center gap-3">
-              <span className="h-4 w-4 rounded-full border border-current" />
-              Lighting installation
-            </span>
-            <span className="text-[12px] font-semibold">In progress</span>
-          </div>
-          <div className="flex items-center gap-3 text-[#9AA3B2]">
-            <span className="h-4 w-4 rounded-full border border-current" />
-            Safety certificate
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (type === 'hvac') {
-    return (
-      <div className="mx-auto mt-auto w-full max-w-[234px] rounded-[20px] bg-white p-6 text-center shadow-[0_18px_50px_rgba(26,43,78,0.08)]">
-        <div className="text-[12px] text-[#8D95A3]">Room Temperature</div>
-        <div className="mt-3 text-[48px] font-bold leading-none text-[#3F444D]">27°C</div>
-        <div className="mt-2 text-[12px] font-semibold text-[#FF5F5F]">Target: 21°C</div>
-        <div className="mt-5 h-2 rounded-full bg-[#FFD8D8]" />
-        <div className="mt-3 text-[13px] font-semibold text-[#FF5F5F]">Cooling — AC running</div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="mx-auto mt-auto w-full max-w-[330px] rounded-[20px] bg-white p-5 shadow-[0_18px_50px_rgba(26,43,78,0.08)]">
-      <div className="flex items-center gap-3 text-[14px] font-semibold text-[#27324A]">
-        <span className="rounded-full bg-[#FFF0F0] px-3 py-1 text-[12px] text-[#FF4D4F]">● LIVE</span>
-        Engineer Dispatched
-      </div>
-      <div className="mt-5 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#34435C] text-[18px] font-bold text-white">
-            KB
-          </div>
-          <div>
-            <div className="text-[18px] font-semibold text-[#374151]">Kunle B.</div>
-            <div className="text-[14px] text-[#8D95A3]">2.1 km away · Plumber</div>
-          </div>
-        </div>
-        <div className="text-right">
-          <div className="text-[30px] font-bold leading-none text-[#27324A]">18 min</div>
-          <div className="text-[12px] text-[#A5ADBA]">ETA</div>
-        </div>
-      </div>
-      <div className="mt-4 h-2 rounded-full bg-[#E6EAF1]">
-        <div className="h-2 w-[72%] rounded-full bg-[#364152]" />
+      <div className="flex items-center gap-1">
+        <HiStar className="text-amber-400 w-4 h-4" />
+        <span className="font-bold text-[#3B3B3B]">4.9</span>
       </div>
     </div>
-  );
-}
+    <div className="flex items-center justify-between">
+      <div className="bg-[#ECFDF5] px-3 py-1.5 rounded-full flex items-center gap-2">
+        <div className="w-2.5 h-2.5 bg-[#10B981] rounded-full animate-pulse" />
+        <span className="text-[#10B981] text-xs font-semibold">Available now</span>
+      </div>
+      <div className="flex items-center gap-1.5 text-[#64748B]">
+        <HiClock className="w-4 h-4" />
+        <span className="text-xs">45 min ETA</span>
+      </div>
+    </div>
+    <div className="bg-slate-50 px-4 py-2 rounded-full flex items-center gap-2 text-[#64748B]">
+      <HiMapPin className="w-4 h-4" />
+      <span className="text-sm font-medium">3.2 km away · Lagos Island</span>
+    </div>
+  </div>
+);
+
+const ElectricalMockup = () => (
+  <div className="w-full max-w-[340px] bg-white rounded-2xl p-4 shadow-lg border border-slate-100 flex flex-col gap-4">
+    <div className="flex items-center justify-between">
+      <span className="font-bold text-[#1E293B]">Today's Job Checklist</span>
+      <span className="text-sm text-[#64748B]">2/4 done</span>
+    </div>
+    <div className="flex flex-col gap-3">
+      {[
+        { label: "DB board inspection", checked: true },
+        { label: "Socket & switch test", checked: true },
+        { label: "Lighting installation", inProgress: true },
+        { label: "Safety certificate", checked: false },
+      ].map((item, i) => (
+        <div key={i} className="flex items-center gap-3">
+          <div className={cn(
+            "w-5 h-5 rounded-md border flex items-center justify-center",
+            item.checked ? "bg-blue-600 border-blue-600" : item.inProgress ? "bg-amber-50 border-amber-500" : "bg-white border-slate-200"
+          )}>
+            {item.checked && <HiCheck className="text-white w-3.5 h-3.5" />}
+            {item.inProgress && <div className="w-2 h-2 bg-amber-500 rounded-full animate-pulse" />}
+          </div>
+          <span className={cn(
+            "text-sm font-medium",
+            item.checked ? "text-slate-400 line-through" : item.inProgress ? "text-amber-600" : "text-slate-600"
+          )}>
+            {item.label}
+          </span>
+          {item.inProgress && <span className="ml-auto text-[10px] font-bold text-amber-500 uppercase">In progress</span>}
+        </div>
+      ))}
+    </div>
+  </div>
+);
+
+const HVACMockup = () => (
+  <div className="w-full max-w-[280px] bg-white rounded-2xl p-6 shadow-lg border border-slate-100 flex flex-col items-center gap-4">
+    <div className="flex flex-col items-center text-center">
+      <span className="text-xs font-medium text-slate-500 uppercase tracking-tight">Room Temperature</span>
+      <span className="text-5xl font-black text-[#3B3B3B] tracking-tighter">27°C</span>
+      <span className="text-xs font-bold text-rose-600 mt-1">Target: 21°C</span>
+    </div>
+    <div className="w-full h-1.5 bg-rose-100 rounded-full overflow-hidden relative">
+      <motion.div
+        initial={{ width: 0 }}
+        whileInView={{ width: '70%' }}
+        className="absolute inset-y-0 left-0 bg-gradient-to-r from-rose-400 to-rose-600"
+      />
+    </div>
+    <div className="flex items-center gap-2 text-rose-500 font-bold text-xs uppercase">
+      <div className="w-1.5 h-1.5 bg-rose-500 rounded-full animate-ping" />
+      Cooling — AC running
+    </div>
+  </div>
+);
+
+const EmergencyMockup = () => (
+  <div className="w-full max-w-[340px] bg-white rounded-2xl p-5 shadow-lg border border-slate-100 flex flex-col gap-4">
+    <div className="flex items-center gap-3">
+      <div className="bg-rose-50 px-3 py-1 rounded-full flex items-center gap-2">
+        <div className="w-2 h-2 bg-rose-600 rounded-full animate-pulse" />
+        <span className="text-rose-600 text-[11px] font-black uppercase tracking-widest">Live</span>
+      </div>
+      <span className="font-bold text-[#1E293B] text-sm">Engineer Dispatched</span>
+    </div>
+    <div className="h-px bg-slate-100" />
+    <div className="flex items-center justify-between">
+      <div className="flex items-center gap-3">
+        <FigmaImage
+          src="/assets/workers/kunle.png"
+          alt="Kunle B."
+          className="w-12 h-12 rounded-full"
+          fallbackInitial="KB"
+        />
+        <div>
+          <div className="font-bold text-[#1E293B] text-sm">Kunle B.</div>
+          <div className="text-[#64748B] text-xs">2.1 km away · Plumber</div>
+        </div>
+      </div>
+      <div className="text-right">
+        <div className="font-black text-[#1E293B] text-lg leading-none">18 min</div>
+        <div className="text-[#94A3B8] text-[10px] font-bold uppercase">ETA</div>
+      </div>
+    </div>
+    <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden relative">
+      <motion.div
+        initial={{ width: 0 }}
+        whileInView={{ width: '60%' }}
+        className="absolute inset-y-0 left-0 bg-[#1E293B]"
+      />
+    </div>
+  </div>
+);
 
 export const ServiceGrid = () => {
   return (
-    <section id="services" className="bg-[#F5F5F5] py-20">
-      <div className="mx-auto max-w-[1440px] px-6 lg:px-12">
-        <div className="max-w-[620px]">
-          <p className="text-xl font-bold text-blue-700">Our Services</p>
-          <h2 className="mt-1 text-4xl font-bold text-slate-800">
-            Every home need, one platform.
-          </h2>
-          <p className="mt-3 text-base leading-6 text-zinc-600">
-            From burst pipes to faulty wiring book a vetted, certified engineer in under
-            60 seconds and track their arrival in real time.
-          </p>
+    <section id="services" className="bg-white py-24 px-6 lg:px-16 overflow-hidden">
+      <div className="max-w-[1440px] mx-auto">
+        <div className="mb-16">
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            className="flex flex-col gap-2"
+          >
+            <span className="text-blue-700 text-xl font-bold font-heading">Our Services</span>
+            <h2 className="text-slate-800 text-4xl md:text-5xl font-bold font-heading">
+              Everything your home needs, in one place.
+            </h2>
+            <p className="mt-2 max-w-[600px] text-zinc-600 text-lg">
+              From burst pipes to faulty wiring book a vetted, certified engineer in under 60 seconds and track their arrival in real time.
+            </p>
+          </motion.div>
         </div>
 
-        <div className="mt-16 grid gap-8 lg:grid-cols-2">
-          {services.map((service) => (
-            <article
-              key={service.title}
-              className="flex min-h-[460px] flex-col rounded-[20px] border border-zinc-300 bg-[#FCFCFC] px-5 py-5"
-            >
-              <span className={`w-fit rounded-full px-3 py-2 text-xs font-semibold ${service.labelClass}`}>
-                {service.label}
-              </span>
-              <h3 className="mt-3 max-w-[520px] text-[36px] text-2xl leading-8 font-bold text-neutral-700">
-                {service.title}
-              </h3>
-              <p className="mt-2 max-w-[520px] text-base leading-6 text-zinc-600">
-                {service.description}
-              </p>
-              <div className="mt-10 flex flex-1 items-center justify-center">
-                <ServiceMock type={service.mock} />
-              </div>
-            </article>
-          ))}
-        </div>
+        <motion.div
+          initial="hidden"
+          whileInView="show"
+          viewport={{ once: true, margin: "-100px" }}
+          variants={{
+            hidden: { opacity: 0 },
+            show: {
+              opacity: 1,
+              transition: {
+                staggerChildren: 0.1
+              }
+            }
+          }}
+          className="grid grid-cols-1 lg:grid-cols-2 gap-8"
+        >
+          <ServiceCard
+            title="Pipes & leaks sorted in minutes."
+            description="No guesswork. Verified plumbers show up ready to solve leaks, blockages, and pressure issues."
+            tag="Plumbing"
+          >
+            <PlumbingMockup />
+          </ServiceCard>
+
+          <ServiceCard
+            title="Safe wiring, done right."
+            description="Certified electricians handle faults, installations, and inspections — done right the first time."
+            tag="Electrical"
+          >
+            <ElectricalMockup />
+          </ServiceCard>
+
+          <ServiceCard
+            title="Cool summers, warm winters."
+            description="From AC maintenance to full HVAC system repairs, we've got you covered for every season."
+            tag="Heating & AC"
+          >
+            <HVACMockup />
+          </ServiceCard>
+
+          <ServiceCard
+            title="Engineer at your door in minutes."
+            description="Emergency requests are prioritized and dispatched instantly with live tracking for total peace of mind."
+            tag="24/7 Emergency"
+            tagColor="bg-[#FB2424]"
+          >
+            <EmergencyMockup />
+          </ServiceCard>
+        </motion.div>
       </div>
     </section>
   );
 };
+

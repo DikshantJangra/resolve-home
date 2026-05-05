@@ -17,7 +17,12 @@ const plusJakartaSans = Plus_Jakarta_Sans({
 export const metadata: Metadata = {
   title: "Resolve Home - Professional Home Services",
   description: "Book professional engineers for your home services with Resolve Home.",
+  icons: {
+    icon: "/favicon.svg",
+  },
 };
+
+import { SmoothScroll } from "@/components/providers/smooth-scroll";
 
 export default function RootLayout({
   children,
@@ -32,8 +37,10 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col" suppressHydrationWarning>
         <QueryProvider>
-          {children}
-          <Toaster />
+          <SmoothScroll>
+            {children}
+            <Toaster />
+          </SmoothScroll>
         </QueryProvider>
       </body>
     </html>

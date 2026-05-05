@@ -1,5 +1,4 @@
 import { Hero } from "@/features/landing/components/hero";
-import { ProfessionalsList } from "@/features/landing/components/professionals-list";
 import { ServiceGrid } from "@/features/landing/components/service-grid";
 import { HowItWorks } from "@/features/landing/components/how-it-works";
 import { AboutNetwork } from "@/features/landing/components/about-network";
@@ -10,7 +9,6 @@ export default function LandingPage() {
   return (
     <div className="flex min-h-screen w-full flex-col bg-white">
       <Hero />
-      <ProfessionalsList />
       <ServiceGrid />
       <HowItWorks />
       <AboutNetwork />

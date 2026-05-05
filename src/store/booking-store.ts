@@ -1,24 +1,32 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 
+export type Priority = 'Emergency' | 'Standard' | null
+
+interface BookingLocation {
+  state: string
+  city: string
+  streetAddress: string
+  landmark: string
+}
+
 interface BookingState {
   currentStep: number
-  serviceType: string | null
-  appointmentDate: string | null
-  address: {
-    line1: string
-    city: string
-    postcode: string
-  } | null
-  contactDetails: {
-    email: string
-    phone: string
-  } | null
+  priority: Priority
+  serviceType: string
+  issueDetails: string
+  photos: string[]
+  location: BookingLocation | null
+  
+  // Actions
   setStep: (step: number) => void
+  setPriority: (priority: Priority) => void
   setServiceType: (type: string) => void
-  setAppointmentDate: (date: string) => void
-  setAddress: (address: BookingState['address']) => void
-  setContactDetails: (details: BookingState['contactDetails']) => void
+  setIssueDetails: (details: string) => void
+  setPhotos: (photos: string[]) => void
+  addPhoto: (photo: string) => void
+  removePhoto: (index: number) => void
+  setLocation: (location: BookingLocation | null) => void
   resetBooking: () => void
 }
 
@@ -26,22 +34,29 @@ export const useBookingStore = create<BookingState>()(
   persist(
     (set) => ({
       currentStep: 1,
-      serviceType: null,
-      appointmentDate: null,
-      address: null,
-      contactDetails: null,
+      priority: null,
+      serviceType: 'Electrician', // Default or from previous flow
+      issueDetails: '',
+      photos: [],
+      location: null,
+
       setStep: (step) => set({ currentStep: step }),
-      setServiceType: (type) => set({ serviceType: type }),
-      setAppointmentDate: (date) => set({ appointmentDate: date }),
-      setAddress: (address) => set({ address }),
-      setContactDetails: (contactDetails) => set({ contactDetails }),
+      setPriority: (priority) => set({ priority }),
+      setServiceType: (serviceType) => set({ serviceType }),
+      setIssueDetails: (issueDetails) => set({ issueDetails }),
+      setPhotos: (photos) => set({ photos }),
+      addPhoto: (photo) => set((state) => ({ photos: [...state.photos, photo] })),
+      removePhoto: (index) => set((state) => ({ 
+        photos: state.photos.filter((_, i) => i !== index) 
+      })),
+      setLocation: (location) => set({ location }),
       resetBooking: () =>
         set({
           currentStep: 1,
-          serviceType: null,
-          appointmentDate: null,
-          address: null,
-          contactDetails: null,
+          priority: null,
+          issueDetails: '',
+          photos: [],
+          location: null,
         }),
     }),
     {
@@ -49,3 +64,4 @@ export const useBookingStore = create<BookingState>()(
     }
   )
 )
+
