@@ -5,24 +5,41 @@ import { ProfileSummaryCard } from '@/components/shared/profile-summary-card'
 import { PersonalInfoTab } from '@/features/profile/components/personal-info-tab'
 import { BookingHistoryList } from '@/features/profile/components/booking-history-list'
 import { ReviewsGivenList } from '@/features/profile/components/reviews-given-list'
-
-const profileData = {
-  fullName: 'Opeyemi Samuel',
-  email: 'opeyemisma@gmail.com',
-  phone: '+234 812 345 6789',
-  city: 'Lagos',
-  address: '14B Admiralty Way, Lekki Phase 1',
-  bio: 'Homeowner in Lagos. Love keeping my space well-maintained. Resolv Home has made finding trusted professionals so easy.',
-  memberSince: 'Apr 2024',
-  avatarUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=200&auto=format&fit=crop'
-}
+import { useSession } from '@/lib/auth-client'
+import { format } from 'date-fns'
 
 type TabType = 'Personal Info' | 'Booking History' | 'Reviews Given'
 
 export default function ProfilePage() {
   const [activeTab, setActiveTab] = useState<TabType>('Personal Info')
+  const { data: session, isPending } = useSession()
 
   const tabs: TabType[] = ['Personal Info', 'Booking History', 'Reviews Given']
+
+  if (isPending) {
+    return (
+      <div className="max-w-6xl mx-auto flex flex-col gap-8 animate-pulse">
+        <div className="h-20 bg-zinc-100 rounded-xl" />
+        <div className="flex flex-col lg:flex-row gap-8">
+          <div className="flex-1 h-[400px] bg-zinc-50 rounded-2xl" />
+          <div className="w-full lg:w-80 h-96 bg-zinc-50 rounded-2xl" />
+        </div>
+      </div>
+    )
+  }
+
+  const user = session?.user
+
+  const profileData = {
+    fullName: user?.name || 'User',
+    email: user?.email || '',
+    phone: '', // Needs to be fetched or added to user model
+    city: 'Lagos', // Default or fetch
+    address: '',
+    bio: 'Resolv Home member.',
+    memberSince: user?.createdAt ? format(new Date(user.createdAt), 'MMM yyyy') : 'Recently',
+    avatarUrl: user?.image || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.name || 'User'}`
+  }
 
   const renderTabContent = () => {
     switch (activeTab) {
@@ -78,7 +95,7 @@ export default function ProfilePage() {
           fullName={profileData.fullName}
           email={profileData.email}
           phone={profileData.phone}
-          location="Lagos, Nigeria"
+          location={profileData.city}
           memberSince={profileData.memberSince}
           avatarUrl={profileData.avatarUrl}
         />

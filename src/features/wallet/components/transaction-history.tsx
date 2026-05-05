@@ -6,7 +6,7 @@ import { Transaction, TransactionType } from '../types'
 import { cn } from '@/lib/utils'
 
 interface TransactionHistoryProps {
-  transactions: Transaction[]
+  transactions: any[]
 }
 
 const filters: { label: string; value: TransactionType | 'All' }[] = [

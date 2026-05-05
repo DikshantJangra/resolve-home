@@ -17,11 +17,15 @@ interface BookingState {
   issueDetails: string
   photos: string[]
   location: BookingLocation | null
+  categoryId: string | null
+  serviceId: string | null
   
   // Actions
   setStep: (step: number) => void
   setPriority: (priority: Priority) => void
   setServiceType: (type: string) => void
+  setCategoryId: (id: string | null) => void
+  setServiceId: (id: string | null) => void
   setIssueDetails: (details: string) => void
   setPhotos: (photos: string[]) => void
   addPhoto: (photo: string) => void
@@ -39,10 +43,14 @@ export const useBookingStore = create<BookingState>()(
       issueDetails: '',
       photos: [],
       location: null,
+      categoryId: null,
+      serviceId: null,
 
       setStep: (step) => set({ currentStep: step }),
       setPriority: (priority) => set({ priority }),
       setServiceType: (serviceType) => set({ serviceType }),
+      setCategoryId: (categoryId) => set({ categoryId }),
+      setServiceId: (serviceId) => set({ serviceId }),
       setIssueDetails: (issueDetails) => set({ issueDetails }),
       setPhotos: (photos) => set({ photos }),
       addPhoto: (photo) => set((state) => ({ photos: [...state.photos, photo] })),
@@ -57,6 +65,8 @@ export const useBookingStore = create<BookingState>()(
           issueDetails: '',
           photos: [],
           location: null,
+          categoryId: null,
+          serviceId: null,
         }),
     }),
     {

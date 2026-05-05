@@ -13,7 +13,7 @@ import { cn } from '@/lib/utils'
 import { Transaction } from '../types'
 
 interface TransactionItemProps {
-  transaction: Transaction
+  transaction: any
 }
 
 const typeConfig = {
@@ -52,7 +52,7 @@ const typeConfig = {
 }
 
 export const TransactionItem = ({ transaction }: TransactionItemProps) => {
-  const config = typeConfig[transaction.type]
+  const config = (typeConfig as any)[transaction.type] || typeConfig['Booking']
   const Icon = config.icon
   const isPositive = ['Top-up', 'Refund'].includes(transaction.type)
 

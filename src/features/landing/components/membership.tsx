@@ -93,6 +93,7 @@ export const Membership = () => {
                   src={src}
                   alt="Happy User"
                   className="w-10 h-10 rounded-full border-2 border-white relative z-[5]"
+                  sizes="40px"
                   style={{ zIndex: 5 - idx }}
                 />
               ))}

@@ -2,6 +2,7 @@
 
 import React from 'react'
 import Link from 'next/link'
+import { useParams } from 'next/navigation'
 import { 
   HiOutlineChevronLeft, 
   HiOutlineClock, 
@@ -14,66 +15,46 @@ import {
 import { HiWrenchScrewdriver } from 'react-icons/hi2'
 import { BookingProgressTracker } from '@/features/booking/components/booking-progress-tracker'
 import { ReviewCard } from '@/features/booking/components/review-card'
-import { Booking } from '@/features/booking/types'
 import { Button } from '@/components/ui/button'
-
-const MOCK_BOOKING_DETAILS: Booking = {
-  id: 'RH-7820-055',
-  referenceId: '#RH-7820-055',
-  category: 'Plumbing',
-  description: 'Burst pipe, kitchen sink',
-  status: 'In Progress',
-  professional: {
-    name: 'James Adewale',
-    avatar: 'https://images.unsplash.com/photo-1540569014015-19a7be504e3a?q=80&w=200&auto=format&fit=crop',
-    rating: 4.9,
-    specialty: 'Electrician',
-    jobsCompleted: 10,
-    distance: '2.4km away',
-    isVerified: true,
-    reviews: [
-      {
-        id: 'r1',
-        rating: 5,
-        location: 'Lagos, Nigeria',
-        title: 'Fix our 3phase inverter pumping machine',
-        comment: 'From the first consultation to the final touches, Refit delivered on every promise. Our home extension is exactly what we wanted.',
-        images: ['https://placehold.co/81x65', 'https://placehold.co/81x65']
-      },
-      {
-        id: 'r2',
-        rating: 5,
-        location: 'Lagos, Nigeria',
-        title: 'Fix our 3phase inverter pumping machine',
-        comment: 'From the first consultation to the final touches, Refit delivered on every promise. Our home extension is exactly what we wanted.',
-        images: ['https://placehold.co/60x65', 'https://placehold.co/60x65', 'https://placehold.co/60x65']
-      },
-      {
-        id: 'r3',
-        rating: 5,
-        location: 'Lagos, Nigeria',
-        title: 'Fix our 3phase inverter pumping machine',
-        comment: 'From the first consultation to the final touches, Refit delivered on every promise. Our home extension is exactly what we wanted.',
-        images: ['https://placehold.co/81x65', 'https://placehold.co/81x65', 'https://placehold.co/81x65']
-      }
-    ]
-  },
-  price: 45000,
-  date: 'Today',
-  time: '2:00 PM – 4:00 PM',
-  address: '7 Bourdillon Road, Ikoyi, Lagos',
-  eta: '20 - 30 mins',
-  progress: [
-    { label: 'Pro Matched', status: 'completed' },
-    { label: 'On the way', status: 'completed' },
-    { label: 'Arrived', status: 'completed' },
-    { label: 'In progress', status: 'current' },
-    { label: 'Completed', status: 'pending' },
-  ]
-}
+import { useBookingDetail } from '@/hooks/api-hooks'
+import { format } from 'date-fns'
+import { ProgressStep } from '@/features/booking/types'
 
 export default function BookingDetailsPage() {
-  const booking = MOCK_BOOKING_DETAILS // In real app, fetch by id
+  const { id } = useParams()
+  const { data: booking, isLoading, error } = useBookingDetail(id as string)
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="w-8 h-8 border-4 border-blue-700 border-t-transparent rounded-full animate-spin" />
+      </div>
+    )
+  }
+
+  if (error || !booking) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[400px] gap-4">
+        <p className="text-zinc-500">Failed to load booking details.</p>
+        <Link href="/bookings">
+          <Button variant="outline">Back to Bookings</Button>
+        </Link>
+      </div>
+    )
+  }
+
+  // Map backend status to progress steps
+  const statusSteps: ProgressStep[] = [
+    { label: 'Pending', status: (booking.status === 'pending' ? 'current' : (['confirmed', 'in-progress', 'completed'].includes(booking.status) ? 'completed' : 'pending')) as any },
+    { label: 'Confirmed', status: (booking.status === 'confirmed' ? 'current' : (['in-progress', 'completed'].includes(booking.status) ? 'completed' : 'pending')) as any },
+    { label: 'In Progress', status: (booking.status === 'in-progress' ? 'current' : (['completed'].includes(booking.status) ? 'completed' : 'pending')) as any },
+    { label: 'Completed', status: (booking.status === 'completed' ? 'current' : 'pending') as any },
+  ]
+
+  // For real app, professional data might come from another fetch or populate
+  // If not available, show a placeholder
+  const hasEngineer = booking.engineers && booking.engineers.length > 0
+  const engineer = hasEngineer ? booking.engineers[0] : null
 
   return (
     <div className="flex flex-col gap-6 max-w-6xl mx-auto">
@@ -95,45 +76,57 @@ export default function BookingDetailsPage() {
             </div>
             <div className="flex flex-col">
               <div className="flex items-center gap-2 flex-wrap">
-                <h2 className="text-neutral-700 text-lg font-semibold">{booking.category}</h2>
-                <span className="text-zinc-500 text-[10px] font-medium px-2 py-0.5 bg-zinc-50 rounded">
-                  JOB ID: {booking.referenceId}
+                <h2 className="text-neutral-700 text-lg font-semibold">{booking.service?.name || 'Service'}</h2>
+                <span className="text-zinc-500 text-[10px] font-medium px-2 py-0.5 bg-zinc-50 rounded uppercase">
+                  JOB ID: {booking.id.slice(0, 8)}
                 </span>
               </div>
-              <p className="text-zinc-500 text-sm">{booking.description}</p>
+              <p className="text-zinc-500 text-sm">{booking.notes || booking.service?.description}</p>
             </div>
           </div>
-          <div className="px-5 py-1.5 bg-orange-50 text-orange-500 rounded-full text-xs font-medium">
+          <div className="px-5 py-1.5 bg-orange-50 text-orange-500 rounded-full text-xs font-medium capitalize">
             {booking.status}
           </div>
         </div>
 
         {/* Progress Tracker Section */}
         <div className="py-6 border-t border-b border-zinc-50 flex flex-col md:flex-row items-center gap-8">
-          <div className="flex items-center gap-3 shrink-0">
-            <img 
-              src={booking.professional.avatar} 
-              alt={booking.professional.name} 
-              className="w-10 h-10 rounded-2xl object-cover border-2 border-white shadow-sm"
-            />
-            <div className="flex flex-col">
-              <span className="text-gray-700 text-sm font-semibold">{booking.professional.name}</span>
-              <div className="flex items-center gap-1">
-                <HiOutlineStar className="w-3 h-3 text-amber-500 fill-amber-500" />
-                <span className="text-gray-700 text-xs font-semibold">{booking.professional.rating}</span>
+          {engineer ? (
+            <div className="flex items-center gap-3 shrink-0">
+              <img 
+                src={engineer.image || "https://images.unsplash.com/photo-1540569014015-19a7be504e3a?q=80&w=200&auto=format&fit=crop"} 
+                alt={engineer.name} 
+                className="w-10 h-10 rounded-2xl object-cover border-2 border-white shadow-sm"
+              />
+              <div className="flex flex-col">
+                <span className="text-gray-700 text-sm font-semibold">{engineer.name}</span>
+                <div className="flex items-center gap-1">
+                  <HiOutlineStar className="w-3 h-3 text-amber-500 fill-amber-500" />
+                  <span className="text-gray-700 text-xs font-semibold">4.8</span>
+                </div>
               </div>
             </div>
-          </div>
+          ) : (
+            <div className="flex items-center gap-3 shrink-0 italic text-zinc-400 text-sm">
+              Waiting for engineer assignment...
+            </div>
+          )}
 
           <div className="flex-1 w-full min-w-0 overflow-x-auto pb-4 md:pb-0 no-scrollbar">
-             {booking.progress && <BookingProgressTracker steps={booking.progress} />}
+             <BookingProgressTracker steps={statusSteps} />
           </div>
         </div>
 
-        {/* ETA Info */}
-        <div className="flex items-center gap-2 text-neutral-700">
-          <HiOutlineClock className="w-4 h-4 text-blue-700" />
-          <span className="text-sm font-medium">ETA - {booking.eta}</span>
+        {/* Schedule Info */}
+        <div className="flex items-center gap-4 text-neutral-700 flex-wrap">
+          <div className="flex items-center gap-2">
+            <HiOutlineClock className="w-4 h-4 text-blue-700" />
+            <span className="text-sm font-medium">{booking.scheduledDate} at {booking.scheduledTime}</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <HiOutlineLocationMarker className="w-4 h-4 text-blue-700" />
+            <span className="text-sm font-medium">{booking.customerDetails?.address || 'Address provided'}</span>
+          </div>
         </div>
       </div>
 
@@ -164,57 +157,74 @@ export default function BookingDetailsPage() {
 
         {/* Professional Profile & Reviews */}
         <div className="lg:col-span-7 bg-stone-50 rounded-2xl p-6 flex flex-col gap-8 border border-zinc-100">
-          <div className="flex items-center gap-4">
-            <img 
-              src={booking.professional.avatar} 
-              alt={booking.professional.name} 
-              className="w-20 h-20 rounded-full object-cover border-4 border-white shadow-sm"
-            />
-            <div className="flex flex-col gap-2">
-              <div className="flex items-center gap-2 flex-wrap">
-                <h3 className="text-neutral-700 text-lg font-bold">{booking.professional.name}</h3>
-                <span className="px-2 py-0.5 bg-orange-100 text-orange-600 text-[10px] font-bold rounded">Pro Verified</span>
-              </div>
-              <div className="flex items-center gap-3 text-zinc-500 text-xs">
-                <div className="flex items-center gap-1">
-                  <span>{booking.professional.specialty}</span>
-                  <div className="w-1 h-1 bg-blue-700 rounded-full mx-1" />
-                  <HiOutlineStar className="w-3 h-3 text-amber-500 fill-amber-500" />
-                  <span>{booking.professional.rating} Rating</span>
+          {engineer ? (
+            <>
+              <div className="flex items-center gap-4">
+                <img 
+                  src={engineer.image || "https://images.unsplash.com/photo-1540569014015-19a7be504e3a?q=80&w=200&auto=format&fit=crop"} 
+                  alt={engineer.name} 
+                  className="w-20 h-20 rounded-full object-cover border-4 border-white shadow-sm"
+                />
+                <div className="flex flex-col gap-2">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <h3 className="text-neutral-700 text-lg font-bold">{engineer.name}</h3>
+                    <span className="px-2 py-0.5 bg-orange-100 text-orange-600 text-[10px] font-bold rounded">Pro Verified</span>
+                  </div>
+                  <div className="flex items-center gap-3 text-zinc-500 text-xs">
+                    <div className="flex items-center gap-1">
+                      <span>Professional Engineer</span>
+                      <div className="w-1 h-1 bg-blue-700 rounded-full mx-1" />
+                      <HiOutlineStar className="w-3 h-3 text-amber-500 fill-amber-500" />
+                      <span>4.8 Rating</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-4 text-zinc-500 text-xs">
+                    <span className="flex items-center gap-1">
+                      <HiOutlineLocationMarker className="w-3.5 h-3.5" />
+                      2.4km away
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <HiOutlineBriefcase className="w-3.5 h-3.5" />
+                      10+ Jobs completed
+                    </span>
+                  </div>
                 </div>
               </div>
-              <div className="flex items-center gap-4 text-zinc-500 text-xs">
-                <span className="flex items-center gap-1">
-                  <HiOutlineLocationMarker className="w-3.5 h-3.5" />
-                  {booking.professional.distance}
-                </span>
-                <span className="flex items-center gap-1">
-                  <HiOutlineBriefcase className="w-3.5 h-3.5" />
-                  {booking.professional.jobsCompleted} Jobs completed
-                </span>
+
+              <div className="flex flex-col gap-4">
+                <h4 className="text-neutral-700 text-sm font-semibold">Professional&apos;s Review</h4>
+                <div className="flex items-center justify-center p-8 bg-white rounded-xl border border-dashed border-zinc-200 italic text-zinc-400 text-sm">
+                  Reviews will be available after completion.
+                </div>
               </div>
-            </div>
-          </div>
 
-          <div className="flex flex-col gap-4">
-            <h4 className="text-neutral-700 text-sm font-semibold">Professional&apos;s Review</h4>
-            <div className="flex overflow-x-auto gap-4 pb-4 no-scrollbar -mx-2 px-2">
-              {booking.professional.reviews?.map(review => (
-                <ReviewCard key={review.id} review={review} />
-              ))}
+              <div className="flex gap-4 mt-auto">
+                <Button variant="outline" className="flex-1 h-12 border-red-600 text-red-600 hover:bg-red-50 hover:text-red-700 rounded-xl">
+                  <HiOutlinePhone className="w-5 h-5 mr-2" />
+                  Call Engineer
+                </Button>
+                <Button className="flex-1 h-12 bg-blue-700 hover:bg-blue-800 rounded-xl">
+                  <HiOutlineChatAlt className="w-5 h-5 mr-2" />
+                  Send Message
+                </Button>
+              </div>
+            </>
+          ) : (
+            <div className="flex-1 flex flex-col items-center justify-center gap-6 py-12">
+              <div className="w-20 h-20 bg-zinc-100 rounded-full flex items-center justify-center">
+                <HiOutlineBriefcase className="w-10 h-10 text-zinc-300" />
+              </div>
+              <div className="text-center">
+                <h3 className="text-neutral-700 text-lg font-bold">Matching in progress...</h3>
+                <p className="text-zinc-500 text-sm max-w-[280px] mx-auto mt-2">
+                  We are currently matching the best professional for your request. You&apos;ll be notified once assigned.
+                </p>
+              </div>
+              <Button variant="outline" className="mt-4 border-zinc-200 text-zinc-600">
+                Contact Support
+              </Button>
             </div>
-          </div>
-
-          <div className="flex gap-4 mt-auto">
-            <Button variant="outline" className="flex-1 h-12 border-red-600 text-red-600 hover:bg-red-50 hover:text-red-700 rounded-xl">
-              <HiOutlinePhone className="w-5 h-5 mr-2" />
-              Call Engineer
-            </Button>
-            <Button className="flex-1 h-12 bg-blue-700 hover:bg-blue-800 rounded-xl">
-              <HiOutlineChatAlt className="w-5 h-5 mr-2" />
-              Send Message
-            </Button>
-          </div>
+          )}
         </div>
       </div>
     </div>

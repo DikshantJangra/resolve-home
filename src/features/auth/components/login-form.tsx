@@ -9,6 +9,7 @@ import { z } from "zod"
 import { FcGoogle } from "react-icons/fc"
 import { HiEye, HiEyeOff } from "react-icons/hi"
 import { IoArrowBack } from "react-icons/io5"
+import { signIn } from "@/lib/auth-client"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -39,15 +40,46 @@ export function LoginForm() {
   async function onSubmit(data: LoginValues) {
     setIsLoading(true)
     try {
-      // Simulate login
-      await new Promise((resolve) => setTimeout(resolve, 1500))
-      localStorage.setItem("auth_token", "mock_token")
+      const { data: authData, error } = await signIn.email({
+        email: data.email,
+        password: data.password,
+        callbackURL: "/dashboard"
+      })
+
+      if (error) {
+        toast.error(error.message || "Invalid credentials")
+        return
+      }
+
+      // Save token if returned (as per API.md requirements)
+      const token = (authData as any).token || (authData as any).session?.token
+
+      if (token) {
+        localStorage.setItem('auth_token', token)
+        // Set cookie for middleware
+        const Cookies = (await import('js-cookie')).default
+        Cookies.set('auth_token', token, { expires: 7, path: '/' })
+      }
+
       toast.success("Welcome back!")
       router.push("/dashboard")
     } catch (error) {
-      toast.error("Invalid credentials")
+      console.error("Login error:", error)
+      toast.error("An unexpected error occurred")
     } finally {
       setIsLoading(false)
+    }
+  }
+
+  const handleGoogleSignIn = async () => {
+    try {
+      await signIn.social({
+        provider: "google",
+        callbackURL: window.location.origin + "/dashboard"
+      })
+    } catch (error) {
+      console.error("Google sign-in error:", error)
+      toast.error("Google sign in failed")
     }
   }
 
@@ -133,6 +165,7 @@ export function LoginForm() {
           <Button
             variant="outline"
             type="button"
+            onClick={handleGoogleSignIn}
             className="h-12 w-full rounded-xl border-zinc-600 border px-6 py-3 text-neutral-700 text-sm font-medium hover:bg-zinc-50 transition-all flex items-center justify-center gap-2.5"
           >
             <FcGoogle className="size-5" />

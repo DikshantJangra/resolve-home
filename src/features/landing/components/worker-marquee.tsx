@@ -109,7 +109,8 @@ const WorkerCard = ({ worker }: { worker: Worker }) => {
               "object-cover transition-transform duration-500 group-hover:scale-110",
               isLoading ? "opacity-0" : "opacity-100"
             )}
-            onLoadingComplete={() => setIsLoading(false)}
+            onLoad={() => setIsLoading(false)}
+            sizes="(max-width: 768px) 100vw, 280px"
             onError={() => {
               setHasError(true);
               setIsLoading(false);

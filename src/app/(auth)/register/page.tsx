@@ -22,6 +22,7 @@ export default function RegisterPage() {
             fill
             className="object-cover"
             priority
+            sizes="(max-width: 1024px) 100vw, 50vw"
           />
           
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />

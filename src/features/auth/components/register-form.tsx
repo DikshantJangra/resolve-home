@@ -7,6 +7,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import { FcGoogle } from "react-icons/fc"
 import { HiEye, HiEyeOff } from "react-icons/hi"
+import { signIn } from "@/lib/auth-client"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -187,6 +188,16 @@ export function RegisterForm() {
             <Button
               variant="outline"
               type="button"
+              onClick={async () => {
+                try {
+                  await signIn.social({ 
+                    provider: "google", 
+                    callbackURL: window.location.origin + "/dashboard" 
+                  })
+                } catch (err) {
+                  console.error("Social sign-in error:", err);
+                }
+              }}
               className="h-12 w-full rounded-xl border-zinc-600 border px-6 py-3 text-neutral-700 text-sm font-medium hover:bg-zinc-50"
             >
               <FcGoogle className="mr-3 size-5" />

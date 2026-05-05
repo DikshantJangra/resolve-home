@@ -1,18 +1,46 @@
 'use client'
 
-import React, { useEffect } from 'react'
+import React, { useEffect, useRef } from 'react'
 import { useBookingStore } from '@/store/booking-store'
+import { useCreateBooking } from '@/hooks/api-hooks'
+import { toast } from 'sonner'
 
 export const MatchingStep = () => {
-  const { setStep } = useBookingStore()
+  const { 
+    setStep, 
+    priority, 
+    serviceId, 
+    issueDetails, 
+    location, 
+    photos 
+  } = useBookingStore()
+  
+  const { mutate: createBooking, isPending } = useCreateBooking()
+  const hasCalled = useRef(false)
 
   useEffect(() => {
-    // Simulate finding a pro
-    const timer = setTimeout(() => {
-      setStep(6)
-    }, 3000)
-    return () => clearTimeout(timer)
-  }, [setStep])
+    if (hasCalled.current) return
+    hasCalled.current = true
+
+    // Real API Call
+    createBooking({
+      serviceId,
+      urgency: priority,
+      description: issueDetails,
+      address: location?.streetAddress,
+      city: location?.city,
+      state: location?.state,
+      images: photos,
+    }, {
+      onSuccess: () => {
+        setStep(6)
+      },
+      onError: (error: any) => {
+        toast.error(error.message || "Failed to create booking")
+        setStep(4) // Go back to review on error
+      }
+    })
+  }, [createBooking, serviceId, priority, issueDetails, location, photos, setStep])
 
   return (
     <div className="flex flex-col items-center justify-center h-full px-5 py-20 space-y-10">

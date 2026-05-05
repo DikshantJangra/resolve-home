@@ -28,6 +28,7 @@ export const Footer = () => {
                   fill
                   className="object-contain brightness-0 invert"
                   priority
+                  sizes="102px"
                 />
               </div>
             </Link>

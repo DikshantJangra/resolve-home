@@ -5,127 +5,43 @@ import { HiOutlineSearch } from 'react-icons/hi'
 import { Input } from '@/components/ui/input'
 import { cn } from '@/lib/utils'
 import { BookingCard } from '@/features/booking/components/booking-card'
-import { Booking, BookingStatus } from '@/features/booking/types'
+import { useUserBookings } from '@/hooks/api-hooks'
+import { Skeleton } from '@/components/ui/skeleton'
 
-const tabs: { label: string; value: BookingStatus | 'All' }[] = [
+const tabs: { label: string; value: string }[] = [
   { label: 'All', value: 'All' },
-  { label: 'Active', value: 'Active' },
-  { label: 'Upcoming', value: 'Upcoming' },
-  { label: 'Completed', value: 'Completed' },
-  { label: 'Cancelled', value: 'Cancelled' },
-]
-
-const MOCK_BOOKINGS: Booking[] = [
-  {
-    id: '1',
-    referenceId: 'RH-7842-019',
-    category: 'Plumbing',
-    description: 'Burst pipe, kitchen sink',
-    status: 'Upcoming',
-    professional: {
-      name: 'James Adewale',
-      avatar: 'https://images.unsplash.com/photo-1540569014015-19a7be504e3a?q=80&w=200&auto=format&fit=crop',
-      rating: 4.9,
-    },
-    price: 45000,
-    date: 'Today',
-    time: '2:00 PM – 4:00 PM',
-    address: '14 Allen Avenue, Ikeja, Lagos',
-  },
-  {
-    id: '2',
-    referenceId: 'RH-7820-055',
-    category: 'Plumbing',
-    description: 'Burst pipe, kitchen sink',
-    status: 'Completed',
-    professional: {
-      name: 'James Adewale',
-      avatar: 'https://images.unsplash.com/photo-1540569014015-19a7be504e3a?q=80&w=200&auto=format&fit=crop',
-      rating: 4.9,
-    },
-    price: 45000,
-    date: 'Apr 28, 2026',
-    time: 'Completed 3:45 PM',
-    address: '7 Bourdillon Road, Ikoyi, Lagos',
-  },
-  {
-    id: '3',
-    referenceId: 'RH-7835-004',
-    category: 'Emergency',
-    description: 'Gas leak',
-    status: 'Upcoming',
-    isEmergency: true,
-    professional: {
-      name: 'Chidi Bello',
-      avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=200&auto=format&fit=crop',
-      rating: 4.9,
-    },
-    price: 45000,
-    date: 'Today',
-    time: 'In progress',
-    address: '7 Bourdillon Road, Ikoyi, Lagos',
-  },
-  {
-    id: '4',
-    referenceId: 'RH-7820-056',
-    category: 'Electrical',
-    description: 'Full house rewiring',
-    status: 'Active',
-    professional: {
-      name: 'Sarah Johnson',
-      avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=200&auto=format&fit=crop',
-      rating: 4.8,
-    },
-    price: 120000,
-    date: 'Tomorrow',
-    time: '9:00 AM – 5:00 PM',
-    address: '25 Victoria Island, Lagos',
-  },
-  {
-    id: '5',
-    referenceId: 'RH-7820-057',
-    category: 'Cleaning',
-    description: 'Deep cleaning service',
-    status: 'Completed',
-    professional: {
-      name: 'Mary Okoro',
-      avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?q=80&w=200&auto=format&fit=crop',
-      rating: 4.7,
-    },
-    price: 25000,
-    date: 'May 1, 2026',
-    time: 'Completed 12:00 PM',
-    address: '10 Lekki Phase 1, Lagos',
-  },
-  {
-    id: '6',
-    referenceId: 'RH-7820-058',
-    category: 'AC Repair',
-    description: 'AC gas refilling',
-    status: 'Cancelled',
-    professional: {
-      name: 'Babatunde Raji',
-      avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?q=80&w=200&auto=format&fit=crop',
-      rating: 4.5,
-    },
-    price: 15000,
-    date: 'May 2, 2026',
-    time: 'Cancelled',
-    address: '5 Surulere, Lagos',
-  }
+  { label: 'Pending', value: 'PENDING' },
+  { label: 'Confirmed', value: 'CONFIRMED' },
+  { label: 'Completed', value: 'COMPLETED' },
+  { label: 'Cancelled', value: 'CANCELLED' },
 ]
 
 export default function BookingsPage() {
-  const [activeTab, setActiveTab] = useState<BookingStatus | 'All'>('All')
+  const [activeTab, setActiveTab] = useState<string>('All')
   const [searchQuery, setSearchQuery] = useState('')
+  const { data: bookings, isLoading } = useUserBookings()
 
-  const filteredBookings = MOCK_BOOKINGS.filter(booking => {
+  const filteredBookings = bookings?.filter((booking: any) => {
     const matchesTab = activeTab === 'All' || booking.status === activeTab
-    const matchesSearch = booking.referenceId.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                          booking.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          booking.description.toLowerCase().includes(searchQuery.toLowerCase())
+    const matchesSearch = 
+      booking.id.toLowerCase().includes(searchQuery.toLowerCase()) || 
+      booking.service?.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      booking.address.toLowerCase().includes(searchQuery.toLowerCase())
     return matchesTab && matchesSearch
-  })
+  }) || []
+
+  if (isLoading) {
+    return (
+      <div className="flex flex-col gap-8">
+        <div className="h-20 bg-zinc-100 animate-pulse rounded-xl" />
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+          {[1, 2, 3, 4].map((i) => (
+            <Skeleton key={i} className="h-64 rounded-2xl" />
+          ))}
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="flex flex-col gap-8">
@@ -153,8 +69,8 @@ export default function BookingsPage() {
           <div className="flex overflow-x-auto no-scrollbar">
             {tabs.map((tab) => {
               const count = tab.value === 'All' 
-                ? MOCK_BOOKINGS.length 
-                : MOCK_BOOKINGS.filter(b => b.status === tab.value).length
+                ? bookings?.length || 0
+                : bookings?.filter((b: any) => b.status === tab.value).length || 0
 
               return (
                 <button
@@ -185,7 +101,7 @@ export default function BookingsPage() {
         {/* Grid of Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
           {filteredBookings.length > 0 ? (
-            filteredBookings.map((booking) => (
+            filteredBookings.map((booking: any) => (
               <BookingCard key={booking.id} booking={booking} />
             ))
           ) : (

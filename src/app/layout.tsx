@@ -4,6 +4,12 @@ import "./globals.css";
 import QueryProvider from "@/components/providers/query-provider";
 import { Toaster } from "@/components/ui/sonner";
 
+// Uppy Styles
+import "@uppy/core/css/style.min.css";
+import "@uppy/dashboard/css/style.min.css";
+import "@uppy/image-editor/css/style.min.css";
+import "@uppy/status-bar/css/style.min.css";
+
 const inter = Inter({
   variable: "--font-inter",
   subsets: ["latin"],

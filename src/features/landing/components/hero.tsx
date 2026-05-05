@@ -4,8 +4,26 @@ import Link from "next/link";
 import { ChevronDown } from "lucide-react";
 import { motion } from "framer-motion";
 import { WorkerMarquee } from "./worker-marquee";
+import { useCategories } from "@/hooks/api-hooks";
+import { useState } from "react";
+import { useBookingStore } from "@/store/booking-store";
+import { useRouter } from "next/navigation";
 
 export const Hero = () => {
+  const { data: categories, isLoading } = useCategories();
+  const [selectedCategory, setSelectedCategory] = useState("");
+  const { setCategoryId } = useBookingStore();
+  const router = useRouter();
+
+  const handleFindPro = () => {
+    if (selectedCategory) {
+      setCategoryId(selectedCategory);
+      router.push("/booking");
+    } else {
+      router.push("/booking");
+    }
+  };
+
   return (
     <section id="hero" className="relative overflow-hidden bg-gradient-to-b from-white via-[#ECFDF5] to-[#F8FAFC] pt-[148px] pb-20">
       <div className="mx-auto w-full max-w-[1440px] px-6 lg:px-16">
@@ -34,19 +52,25 @@ export const Hero = () => {
             transition={{ duration: 0.6, delay: 0.2 }}
             className="mx-auto mt-8 flex w-full max-w-[540px] gap-3"
           >
-            <label className="relative block flex-1">
-              <input
-                type="text"
-                placeholder="What do you need help with?"
-                className="h-11 w-full rounded-lg border border-[#525252] bg-white/90 px-4 pr-11 text-sm text-[#3F3F46] outline-none transition-all focus:ring-2 focus:ring-blue-500/20"
-              />
+            <div className="relative block flex-1">
+              <select
+                value={selectedCategory}
+                onChange={(e) => setSelectedCategory(e.target.value)}
+                className="h-11 w-full appearance-none rounded-lg border border-[#525252] bg-white/90 px-4 pr-11 text-sm text-[#3F3F46] outline-none transition-all focus:ring-2 focus:ring-blue-500/20"
+              >
+                <option value="">What do you need help with?</option>
+                {!isLoading && categories?.map((cat: any) => (
+                  <option key={cat.id} value={cat.id}>{cat.name}</option>
+                ))}
+              </select>
               <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#52525B]" />
-            </label>
-            <Link href="/register">
-              <button className="h-11 min-w-40 rounded-xl bg-[#1D4ED8] px-6 text-sm font-medium text-white transition-all hover:bg-blue-800 hover:scale-[1.02] active:scale-[0.98]">
-                Find a pro
-              </button>
-            </Link>
+            </div>
+            <button 
+              onClick={handleFindPro}
+              className="h-11 min-w-40 rounded-xl bg-[#1D4ED8] px-6 text-sm font-medium text-white transition-all hover:bg-blue-800 hover:scale-[1.02] active:scale-[0.98]"
+            >
+              Find a pro
+            </button>
           </motion.div>
         </div>
 

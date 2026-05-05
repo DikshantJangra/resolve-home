@@ -12,10 +12,20 @@ interface FigmaImageProps {
   fallbackInitial?: string;
   fallbackIcon?: React.ReactNode;
   fill?: boolean;
+  sizes?: string;
   style?: React.CSSProperties;
 }
 
-export const FigmaImage = ({ src, alt, className, fallbackInitial, fallbackIcon, fill = true, style }: FigmaImageProps) => {
+export const FigmaImage = ({ 
+  src, 
+  alt, 
+  className, 
+  fallbackInitial, 
+  fallbackIcon, 
+  fill = true, 
+  sizes,
+  style 
+}: FigmaImageProps) => {
   const [error, setError] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -34,6 +44,7 @@ export const FigmaImage = ({ src, alt, className, fallbackInitial, fallbackIcon,
           src={src}
           alt={alt}
           fill={fill}
+          sizes={sizes}
           className={cn(
             "object-cover transition-all duration-500",
             isLoading ? "opacity-0 scale-95" : "opacity-100 scale-100"

@@ -140,6 +140,7 @@ export const AboutNetwork = () => {
                   alt={node.city}
                   fallbackInitial={node.initials}
                   className="w-[117px] h-[117px]"
+                  sizes="117px"
                 />
                 <span className="absolute right-[12px] top-[6px] h-4 w-4 rounded-full border-2 border-white bg-[#2AC38B] z-20">
                    <span className="absolute inset-0 rounded-full bg-[#2AC38B] animate-ping opacity-100" />
@@ -164,6 +165,7 @@ export const AboutNetwork = () => {
                 alt={node.city}
                 fallbackInitial={node.initials} 
                 className="w-16 h-16 rounded-full border-2" 
+                sizes="64px"
                 style={{ borderColor: node.border }}
               />
               <div className="text-lg font-semibold text-white">{node.city}</div>

@@ -21,6 +21,11 @@ export const ENDPOINTS = {
     GET_SESSION:     '/api/auth/get-session',
   },
 
+  // ─── Categories (public/shared) ───────────────────────────────────────────
+  CATEGORIES: {
+    LIST: '/api/admin/categories',
+  },
+
   // ─── User ─────────────────────────────────────────────────────────────────
   USER: {
     PROFILE:  '/api/user/profile',
@@ -37,6 +42,7 @@ export const ENDPOINTS = {
   // ─── Bookings ─────────────────────────────────────────────────────────────
   BOOKINGS: {
     BASE:   '/api/bookings',
+    BY_ID:  (id: string) => `/api/bookings/${id}`,
     CANCEL: (id: string) => `/api/bookings/${id}/cancel`,
   },
 

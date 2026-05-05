@@ -50,6 +50,7 @@ const StepMock = ({ type }: { type: string }) => {
                 src="/assets/workers/james.png" 
                 alt="James A." 
                 className="w-10 h-10 rounded-full"
+                sizes="40px"
                 fallbackInitial="JA"
               />
               <div className="text-left">

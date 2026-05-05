@@ -84,6 +84,7 @@ export const Navbar = () => {
               fill
               className="object-contain"
               priority
+              sizes="102px"
             />
           </div>
         </Link>

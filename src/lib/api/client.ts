@@ -3,8 +3,12 @@ import { toast } from 'sonner'
 
 // Base URL is the bare origin — all ENDPOINTS already include the /api prefix.
 // Dev: http://localhost:3000  |  Prod: https://resolvhome.onrender.com
+const isBrowser = typeof window !== 'undefined'
+
 const apiClient = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000',
+  // Use relative path in browser to trigger Next.js rewrites/proxy
+  baseURL: isBrowser ? '' : (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'),
+  withCredentials: true,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -35,8 +39,16 @@ apiClient.interceptors.response.use(
     
     // Normalize error display
     if (error.response?.status === 401) {
-      toast.error('Session expired. Please log in again.')
-      // Optional: Redirect to login or clear token
+      const hasToken = !!error.config?.headers?.Authorization;
+      if (hasToken) {
+        toast.error('Session expired. Please log in again.')
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem('auth_token')
+        import('js-cookie').then((Cookies) => {
+          Cookies.default.remove('auth_token')
+        })
+      }
+      }
     } else if (error.response?.status === 403) {
       toast.error('You do not have permission to perform this action.')
     } else {

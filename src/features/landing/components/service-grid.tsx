@@ -46,6 +46,7 @@ const PlumbingMockup = () => (
           src="/assets/workers/james.png"
           alt="James A."
           className="w-14 h-14 rounded-full"
+          sizes="56px"
           fallbackInitial="JA"
         />
         <div>
@@ -146,6 +147,7 @@ const EmergencyMockup = () => (
           src="/assets/workers/kunle.png"
           alt="Kunle B."
           className="w-12 h-12 rounded-full"
+          sizes="48px"
           fallbackInitial="KB"
         />
         <div>
