@@ -23,8 +23,8 @@ Resolve Home is a modern, high-fidelity platform designed to streamline the book
 This project follows a **Spec-First** approach for backend integration to ensure 100% type safety and a single source of truth.
 
 ### 📜 Documentation
-- **[API Reference (Human Readable)](./docs/API.md)**: Categorized list of endpoints, request bodies, and responses.
-- **[OpenAPI Spec (Raw)](./docs/openapi.json)**: The master JSON specification fetched from the production backend.
+- **[API Reference (Human Readable)](./API.md)**: Categorized list of endpoints, request bodies, and responses.
+- **[OpenAPI Spec (Raw)](./openapi.json)**: The master JSON specification fetched from the production backend.
 
 ### 🏗️ Type Generation
 We use `openapi-typescript` to generate live types from our backend schema. This prevents runtime API errors and ensures our frontend always matches the backend contract.
