@@ -42,3 +42,4 @@ next-env.d.ts
 
 # gstack (global install)
 .amazonq/rules/gstack.md
+.agents/
