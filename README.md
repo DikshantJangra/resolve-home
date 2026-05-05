@@ -1,36 +1,87 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# ⚡ Resolve Home
 
-## Getting Started
+**Premium Electrical & Plumbing Services Platform**
 
-First, run the development server:
+Resolve Home is a modern, high-fidelity platform designed to streamline the booking and management of essential home services. Built with a focus on speed, reliability, and visual excellence, it connects users with expert engineers for seamless home maintenance.
+
+---
+
+## 🛠️ Technology Stack
+
+- **Core:** [Next.js 15](https://nextjs.org) (App Router) + [React 19](https://react.dev)
+- **Styling:** [Tailwind CSS v4](https://tailwindcss.com) + [Shadcn UI](https://ui.shadcn.com)
+- **Animations:** [Framer Motion](https://framer.com/motion) + [tw-animate-css](https://github.com/thefubuki/tw-animate-css)
+- **State Management:** [Zustand](https://zustand-demo.pmnd.rs) (UI/Form State) + [TanStack Query v5](https://tanstack.com/query) (Server State)
+- **API Client:** [Axios](https://axios-http.com) with custom interceptors
+- **Forms:** [React Hook Form](https://react-hook-form.com) + [Zod](https://zod.dev)
+- **Icons:** [React Icons](https://react-icons.github.io/react-icons/)
+
+---
+
+## 🔌 Backend & API Integration
+
+This project follows a **Spec-First** approach for backend integration to ensure 100% type safety and a single source of truth.
+
+### 📜 Documentation
+- **[API Reference (Human Readable)](./docs/API.md)**: Categorized list of endpoints, request bodies, and responses.
+- **[OpenAPI Spec (Raw)](./docs/openapi.json)**: The master JSON specification fetched from the production backend.
+
+### 🏗️ Type Generation
+We use `openapi-typescript` to generate live types from our backend schema. This prevents runtime API errors and ensures our frontend always matches the backend contract.
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+# Update local types from the latest openapi.json
+npm run generate-api
+```
+*Generated types live in `src/types/api.d.ts`.*
+
+---
+
+## 🚀 Getting Started
+
+### 1. Prerequisites
+- Node.js 20+
+- npm
+
+### 2. Installation
+```bash
+git clone <repo-url>
+cd resolve-home
+npm install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 3. Environment Setup
+Create a `.env.local` file (refer to `.env.example`):
+```env
+NEXT_PUBLIC_API_URL=https://resolvhome.onrender.com
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### 4. Run Development Server
+```bash
+npm run dev
+```
+Open [http://localhost:3000](http://localhost:3000) to view the application.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+---
 
-## Learn More
+## 📂 Project Structure
 
-To learn more about Next.js, take a look at the following resources:
+- `src/app/`: Next.js App Router (Routes & Layouts)
+- `src/features/`: Feature-sliced components, hooks, and logic (e.g., `landing`, `booking`)
+- `src/components/ui/`: Reusable Shadcn UI base components
+- `src/lib/api/`: Centralized API client and [endpoint registry](./src/lib/api/endpoints.ts)
+- `src/store/`: Global Zustand stores for persistent UI state
+- `docs/`: Project documentation and API specifications
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+---
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## 🎨 Design System
+The design follows a premium "Glassmorphism" and "Dark Mode" aesthetic with:
+- Custom color palettes (Harmonious HSL values)
+- Sticky stacking card animations in the Service Grid
+- Fluid responsive layouts for all screen sizes
 
-## Deploy on Vercel
+---
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## 📖 Guidelines for Developers
+For a deep dive into implementation rules, state boundaries, and coding standards, refer to [**AGENTS.md**](./AGENTS.md).

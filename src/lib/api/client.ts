@@ -1,8 +1,10 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios'
 import { toast } from 'sonner'
 
+// Base URL is the bare origin — all ENDPOINTS already include the /api prefix.
+// Dev: http://localhost:3000  |  Prod: https://resolvhome.onrender.com
 const apiClient = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL || '/api',
+  baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000',
   headers: {
     'Content-Type': 'application/json',
   },
@@ -27,7 +29,9 @@ apiClient.interceptors.request.use(
 apiClient.interceptors.response.use(
   (response) => response,
   (error: AxiosError) => {
-    const message = (error.response?.data as { message?: string })?.message || error.message || 'An unexpected error occurred'
+    // Backend returns { success: false, error: string } — see docs/API.md
+    const data = error.response?.data as { error?: string; message?: string } | undefined
+    const message = data?.error || data?.message || error.message || 'An unexpected error occurred'
     
     // Normalize error display
     if (error.response?.status === 401) {
