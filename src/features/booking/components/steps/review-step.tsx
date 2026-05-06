@@ -11,11 +11,13 @@ export const ReviewStep = () => {
     serviceType, 
     issueDetails, 
     location, 
+    scheduledDate,
+    scheduledTime,
     setStep 
   } = useBookingStore()
 
   const handleConfirm = () => {
-    setStep(5) // Move to matching state
+    setStep(6) // Move to matching state
   }
 
   const reviewItems = [
@@ -24,7 +26,15 @@ export const ReviewStep = () => {
       value: priority === 'Emergency' ? 'Emergency fix' : 'Standard fix',
     },
     {
-      label: 'State Required',
+      label: 'Date',
+      value: scheduledDate || 'As soon as possible',
+    },
+    {
+      label: 'Time',
+      value: scheduledTime || 'Within 60 minutes',
+    },
+    {
+      label: 'Service',
       value: serviceType,
     },
     {
@@ -57,7 +67,7 @@ export const ReviewStep = () => {
       <div className="p-5 mt-auto flex gap-4">
         <Button
           variant="outline"
-          onClick={() => setStep(3)}
+          onClick={() => setStep(priority === 'Standard' ? 4 : 3)}
           className="flex-1 h-11 border-zinc-300 rounded-xl"
         >
           Back

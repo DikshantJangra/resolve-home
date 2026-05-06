@@ -75,6 +75,54 @@ export function useCreateBooking() {
   })
 }
 
+export function useAvailableEngineers(bookingId: string) {
+  return useQuery({
+    queryKey: ['available-engineers', bookingId],
+    queryFn: async () => {
+      const response = await apiClient.get(ENDPOINTS.BOOKINGS.AVAILABLE_ENGINEERS, {
+        params: { bookingId }
+      })
+      return response.data.data
+    },
+    enabled: !!bookingId
+  })
+}
+
+export function useSelectEngineer() {
+  return useMutation({
+    mutationFn: async ({ bookingId, engineerId }: { bookingId: string, engineerId: string }) => {
+      const response = await apiClient.put(ENDPOINTS.BOOKINGS.SELECT_ENGINEER(bookingId), {
+        engineerId
+      })
+      return response.data
+    }
+  })
+}
+
+// --- Chats ---
+
+export function useUserChats() {
+  return useQuery({
+    queryKey: ['user-chats'],
+    queryFn: async () => {
+      const response = await apiClient.get(ENDPOINTS.CHATS.BASE)
+      return response.data.data
+    },
+    enabled: typeof window !== 'undefined' && !!localStorage.getItem('auth_token')
+  })
+}
+
+export function useChatMessages(chatId: string) {
+  return useQuery({
+    queryKey: ['chat-messages', chatId],
+    queryFn: async () => {
+      const response = await apiClient.get(ENDPOINTS.CHATS.MESSAGES(chatId))
+      return response.data.data
+    },
+    enabled: !!chatId
+  })
+}
+
 // --- Admin ---
 
 export function useAdminStats() {

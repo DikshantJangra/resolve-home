@@ -47,7 +47,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Sign up with email, password, and role selection */
+        /**
+         * Sign up with email, password, and role selection
+         * @description Custom sign-up endpoint with role selection. The default Better Auth sign-up endpoint is disabled.
+         */
         post: {
             parameters: {
                 query?: never;
@@ -693,7 +696,6 @@ export interface paths {
                                     /** @description Email (read-only, cannot be changed) */
                                     email?: string;
                                     phone?: string;
-                                    address?: string;
                                     /** @description Profile image URL */
                                     image?: string;
                                     /** @enum {string} */
@@ -726,7 +728,7 @@ export interface paths {
         };
         /**
          * Update user profile
-         * @description Update user profile information. Note: Email cannot be changed for security reasons. Use Uppy for image uploads.
+         * @description Update user profile information. Note: Email cannot be changed for security reasons. Address removed - bookings now use detailed location. Use Uppy for image uploads.
          */
         put: {
             parameters: {
@@ -742,8 +744,6 @@ export interface paths {
                         name: string;
                         /** @description Phone number (optional) */
                         phone?: string;
-                        /** @description Full address (optional) */
-                        address?: string;
                         /** @description Profile image URL (optional, upload via Uppy first) */
                         image?: string;
                     };
@@ -768,7 +768,6 @@ export interface paths {
                                     /** @description Email (unchanged) */
                                     email?: string;
                                     phone?: string;
-                                    address?: string;
                                     /** @description Profile image URL */
                                     image?: string;
                                     /** @enum {string} */
@@ -2017,6 +2016,74 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/categories": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get all categories
+         * @description Get list of all service categories. Public endpoint - no authentication required.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description List of categories */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example true */
+                            success?: boolean;
+                            data?: {
+                                categories?: {
+                                    id?: string;
+                                    name?: string;
+                                    description?: string;
+                                    icon?: string;
+                                    /** Format: date-time */
+                                    createdAt?: string;
+                                    /** Format: date-time */
+                                    updatedAt?: string;
+                                }[];
+                            };
+                        };
+                    };
+                };
+                /** @description Server error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example false */
+                            success?: boolean;
+                            /** @example Failed to fetch categories */
+                            error?: string;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/services": {
         parameters: {
             query?: never;
@@ -2063,65 +2130,6 @@ export interface paths {
                                     updatedAt?: string;
                                 }[];
                             };
-                        };
-                    };
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/services/{id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get service by ID */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    /** @description Service ID */
-                    id: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Service details */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            /** @example true */
-                            success?: boolean;
-                            data?: {
-                                service?: Record<string, never>;
-                            };
-                        };
-                    };
-                };
-                /** @description Service not found */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            /** @example false */
-                            success?: boolean;
-                            /** @example Service not found */
-                            error?: string;
                         };
                     };
                 };
@@ -2650,6 +2658,21 @@ export interface paths {
                                 assignedServices?: string[];
                                 image?: string;
                                 isActive?: boolean;
+                                /** @description Online status (auto-tracked) */
+                                isOnline?: boolean;
+                                /**
+                                 * Format: date-time
+                                 * @description Last activity timestamp
+                                 */
+                                lastActivityAt?: string;
+                                location?: {
+                                    latitude?: number | null;
+                                    longitude?: number | null;
+                                };
+                                /** @description Engineer rating (0-5) */
+                                rating?: number;
+                                /** @description Number of completed jobs */
+                                completedJobs?: number;
                                 /** Format: date-time */
                                 createdAt?: string;
                                 /** Format: date-time */
@@ -3102,6 +3125,124 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/bookings/available-engineers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get available engineers for booking
+         * @description Get list of online engineers who can handle the booking service, sorted by distance. Includes reviews.
+         */
+        get: {
+            parameters: {
+                query: {
+                    /** @description Booking ID to get available engineers for */
+                    bookingId: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description List of available engineers with reviews */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example true */
+                            success?: boolean;
+                            data?: {
+                                engineers?: {
+                                    id?: string;
+                                    name?: string;
+                                    image?: string;
+                                    /** @example 4.5 */
+                                    rating?: number;
+                                    /** @example 25 */
+                                    completedJobs?: number;
+                                    /**
+                                     * @description Distance in km
+                                     * @example 2.4
+                                     */
+                                    distance?: number;
+                                    location?: {
+                                        latitude?: number;
+                                        longitude?: number;
+                                    };
+                                    reviews?: {
+                                        id?: string;
+                                        customerId?: string;
+                                        customerName?: string;
+                                        /** @example 5 */
+                                        rating?: number;
+                                        comment?: string;
+                                        /** Format: date-time */
+                                        createdAt?: string;
+                                    }[];
+                                }[];
+                                /** @example 5 */
+                                count?: number;
+                            };
+                        };
+                    };
+                };
+                /** @description Invalid input */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example false */
+                            success?: boolean;
+                            error?: string & (unknown | unknown);
+                        };
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example false */
+                            success?: boolean;
+                            /** @example Unauthorized - Please sign in */
+                            error?: string;
+                        };
+                    };
+                };
+                /** @description Booking not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example false */
+                            success?: boolean;
+                            /** @example Booking not found */
+                            error?: string;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/bookings": {
         parameters: {
             query?: never;
@@ -3141,12 +3282,15 @@ export interface paths {
                                 serviceId?: string;
                                 /** @description Populated service details */
                                 service?: Record<string, never>;
-                                engineerIds?: string[];
+                                engineerId?: string | null;
                                 scheduledDate?: string;
                                 scheduledTime?: string;
+                                priority?: string;
+                                issueDetails?: string;
+                                photos?: string[];
+                                location?: Record<string, never>;
                                 customerDetails?: Record<string, never>;
                                 status?: string;
-                                notes?: string;
                                 totalPrice?: number;
                                 /** Format: date-time */
                                 createdAt?: string;
@@ -3179,7 +3323,10 @@ export interface paths {
             };
         };
         put?: never;
-        /** Create a new booking */
+        /**
+         * Create a new booking
+         * @description Create a booking with priority, issue details, photos, and location. **Emergency bookings**: Do NOT send scheduledDate/scheduledTime - they are auto-set to now + 60 minutes. **Standard bookings**: Must provide scheduledDate and scheduledTime.
+         */
         post: {
             parameters: {
                 query?: never;
@@ -3193,19 +3340,41 @@ export interface paths {
                         /** @description Service ID */
                         serviceId: string;
                         /**
-                         * Format: date
-                         * @description Booking date (YYYY-MM-DD)
+                         * @description Priority: "emergency" (60-min response, auto-scheduled) or "standard" (user provides date/time)
+                         * @default standard
+                         * @enum {string}
                          */
-                        scheduledDate: string;
-                        /** @description Booking time (HH:MM) */
-                        scheduledTime: string;
-                        /** @description Additional notes */
-                        notes?: string;
+                        priority?: "emergency" | "standard";
+                        /**
+                         * Format: date
+                         * @description **REQUIRED for standard priority only**. Booking date (YYYY-MM-DD). **Do NOT send for emergency** - auto-set to today.
+                         */
+                        scheduledDate?: string;
+                        /** @description **REQUIRED for standard priority only**. Booking time (HH:MM). **Do NOT send for emergency** - auto-set to now + 60 minutes. */
+                        scheduledTime?: string;
+                        /** @description Detailed description of the issue (required) */
+                        issueDetails: string;
+                        /** @description Array of photo URLs (max 3, upload via /api/upload first) */
+                        photos?: string[];
+                        location: {
+                            /** @description State */
+                            state: string;
+                            /** @description City */
+                            city: string;
+                            /** @description Street address */
+                            streetAddress: string;
+                            /** @description Nearest landmark */
+                            nearestLandmark: string;
+                            /** @description GPS latitude (optional but recommended) */
+                            latitude?: number;
+                            /** @description GPS longitude (optional but recommended) */
+                            longitude?: number;
+                        };
                     };
                 };
             };
             responses: {
-                /** @description Booking created successfully */
+                /** @description Booking created successfully with available engineers */
                 201: {
                     headers: {
                         [name: string]: unknown;
@@ -3221,19 +3390,36 @@ export interface paths {
                                     id?: string;
                                     customerId?: string;
                                     serviceId?: string;
-                                    engineerIds?: string[];
+                                    engineerId?: string | null;
                                     scheduledDate?: string;
                                     scheduledTime?: string;
+                                    /** @enum {string} */
+                                    priority?: "emergency" | "standard";
+                                    issueDetails?: string;
+                                    photos?: string[];
+                                    location?: Record<string, never>;
                                     customerDetails?: Record<string, never>;
                                     /** @enum {string} */
                                     status?: "pending" | "confirmed" | "in-progress" | "completed" | "cancelled";
-                                    notes?: string;
                                     totalPrice?: number;
                                     /** Format: date-time */
                                     createdAt?: string;
                                     /** Format: date-time */
                                     updatedAt?: string;
                                 };
+                                /** @description List of available engineers sorted by distance */
+                                availableEngineers?: {
+                                    id?: string;
+                                    name?: string;
+                                    image?: string;
+                                    rating?: number;
+                                    completedJobs?: number;
+                                    distance?: number;
+                                    location?: Record<string, never>;
+                                    reviews?: Record<string, never>[];
+                                }[];
+                                /** @example 5 */
+                                engineersCount?: number;
                             };
                         };
                     };
@@ -3247,7 +3433,7 @@ export interface paths {
                         "application/json": {
                             /** @example false */
                             success?: boolean;
-                            error?: string & (unknown | unknown | unknown);
+                            error?: string & (unknown | unknown | unknown | unknown | unknown | unknown);
                         };
                     };
                 };
@@ -3275,6 +3461,228 @@ export interface paths {
                             /** @example false */
                             success?: boolean;
                             /** @example Service not found or inactive */
+                            error?: string;
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/bookings/{id}/select-engineer": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Select engineer for booking
+         * @description Select an engineer from available engineers list. Changes booking status to confirmed.
+         */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Booking ID */
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /** @description Engineer ID from available engineers list */
+                        engineerId: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Engineer selected successfully */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example true */
+                            success?: boolean;
+                            /** @example Engineer selected successfully */
+                            message?: string;
+                            data?: {
+                                /** @description Updated booking with engineerId and status=confirmed */
+                                booking?: Record<string, never>;
+                            };
+                        };
+                    };
+                };
+                /** @description Invalid input or booking not pending */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example false */
+                            success?: boolean;
+                            error?: string & (unknown | unknown);
+                        };
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example false */
+                            success?: boolean;
+                            /** @example Unauthorized - Please sign in */
+                            error?: string;
+                        };
+                    };
+                };
+                /** @description Booking or engineer not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example false */
+                            success?: boolean;
+                            error?: string & (unknown | unknown);
+                        };
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/bookings/{id}/review": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Create review for completed booking
+         * @description Leave a review and rating for the engineer after booking completion. Updates engineer rating.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Booking ID */
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /** @description Rating from 1 to 5 */
+                        rating: number;
+                        /** @description Review comment */
+                        comment: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Review created successfully */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example true */
+                            success?: boolean;
+                            /** @example Review created successfully */
+                            message?: string;
+                            data?: {
+                                review?: {
+                                    id?: string;
+                                    bookingId?: string;
+                                    engineerId?: string;
+                                    customerId?: string;
+                                    customerName?: string;
+                                    rating?: number;
+                                    comment?: string;
+                                    /** Format: date-time */
+                                    createdAt?: string;
+                                };
+                            };
+                        };
+                    };
+                };
+                /** @description Invalid input or booking not completed */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example false */
+                            success?: boolean;
+                            error?: string & (unknown | unknown | unknown | unknown);
+                        };
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example false */
+                            success?: boolean;
+                            /** @example Unauthorized - Please sign in */
+                            error?: string;
+                        };
+                    };
+                };
+                /** @description Booking not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example false */
+                            success?: boolean;
+                            /** @example Booking not found */
+                            error?: string;
+                        };
+                    };
+                };
+                /** @description Review already exists */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example false */
+                            success?: boolean;
+                            /** @example Review already exists for this booking */
                             error?: string;
                         };
                     };
@@ -3416,14 +3824,17 @@ export interface paths {
                                 serviceId?: string;
                                 /** @description Populated service details */
                                 service?: Record<string, never>;
-                                engineerIds?: string[];
+                                engineerId?: string | null;
                                 /** @description Populated engineer details */
-                                engineers?: unknown[];
+                                engineer?: Record<string, never>;
                                 scheduledDate?: string;
                                 scheduledTime?: string;
+                                priority?: string;
+                                issueDetails?: string;
+                                photos?: string[];
+                                location?: Record<string, never>;
                                 customerDetails?: Record<string, never>;
                                 status?: string;
-                                notes?: string;
                                 totalPrice?: number;
                                 /** Format: date-time */
                                 createdAt?: string;
@@ -3513,14 +3924,17 @@ export interface paths {
                                     serviceId?: string;
                                     /** @description Populated service details */
                                     service?: Record<string, never>;
-                                    engineerIds?: string[];
+                                    engineerId?: string | null;
                                     /** @description Populated engineer details */
-                                    engineers?: unknown[];
+                                    engineer?: Record<string, never>;
                                     scheduledDate?: string;
                                     scheduledTime?: string;
+                                    priority?: string;
+                                    issueDetails?: string;
+                                    photos?: string[];
+                                    location?: Record<string, never>;
                                     customerDetails?: Record<string, never>;
                                     status?: string;
-                                    notes?: string;
                                     totalPrice?: number;
                                     /** Format: date-time */
                                     createdAt?: string;
@@ -3809,6 +4223,332 @@ export interface paths {
                             /** @example false */
                             success?: boolean;
                             /** @example One or more engineers are already booked at this time */
+                            error?: string;
+                        };
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/chats": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get all user chats
+         * @description Get list of all chats for authenticated user (customer or worker) with unread message counts and last message preview.
+         *
+         *     ## Socket.IO Real-Time Events
+         *
+         *     After fetching chats via REST API, connect to Socket.IO for real-time messaging:
+         *
+         *     **Connection:**
+         *     ```javascript
+         *     const socket = io('http://localhost:3000');
+         *     socket.emit('join', userId); // Join with your userId
+         *     ```
+         *
+         *     **Join a chat:**
+         *     ```javascript
+         *     socket.emit('join_chat', chatId);
+         *     ```
+         *
+         *     **Send message:**
+         *     ```javascript
+         *     socket.emit('send_message', { chatId, message: 'Hello!' });
+         *     ```
+         *
+         *     **Receive messages:**
+         *     ```javascript
+         *     socket.on('receive_message', (message) => {
+         *       // message: { id, chatId, senderId, message, isRead, createdAt }
+         *     });
+         *     ```
+         *
+         *     **Typing indicator:**
+         *     ```javascript
+         *     // Emit when typing
+         *     socket.emit('typing', { chatId });
+         *
+         *     // Listen for others typing
+         *     socket.on('user_typing', ({ chatId, userId }) => {
+         *       // Show "User is typing..."
+         *     });
+         *
+         *     // Emit when stopped
+         *     socket.emit('stop_typing', { chatId });
+         *
+         *     // Listen for others stopped
+         *     socket.on('user_stopped_typing', ({ chatId, userId }) => {
+         *       // Hide typing indicator
+         *     });
+         *     ```
+         *
+         *     **Mark as read:**
+         *     ```javascript
+         *     socket.emit('mark_read', { chatId });
+         *
+         *     // Listen for read confirmation
+         *     socket.on('messages_read', ({ chatId, readBy }) => {
+         *       // Update UI to show messages were read
+         *     });
+         *     ```
+         *
+         *     **Online status:**
+         *     ```javascript
+         *     socket.on('user_online', ({ userId }) => {
+         *       // User came online
+         *     });
+         *
+         *     socket.on('user_offline', ({ userId }) => {
+         *       // User went offline
+         *     });
+         *     ```
+         *
+         *     See `SOCKET_IO_DOCUMENTATION.md` for complete reference.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description List of user chats */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example true */
+                            success?: boolean;
+                            data?: {
+                                chats?: {
+                                    /** @description Chat ID */
+                                    id?: string;
+                                    /** @description Associated booking ID */
+                                    bookingId?: string;
+                                    otherParticipant?: {
+                                        id?: string;
+                                        name?: string;
+                                        image?: string;
+                                        /** @enum {string} */
+                                        role?: "customer" | "worker";
+                                    };
+                                    lastMessage?: {
+                                        message?: string;
+                                        senderId?: string;
+                                        /** Format: date-time */
+                                        createdAt?: string;
+                                    } | null;
+                                    /** @description Number of unread messages */
+                                    unreadCount?: number;
+                                    /** Format: date-time */
+                                    createdAt?: string;
+                                    /** Format: date-time */
+                                    lastMessageAt?: string;
+                                }[];
+                            };
+                        };
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example false */
+                            success?: boolean;
+                            /** @example Unauthorized - Please sign in */
+                            error?: string;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/chats/{chatId}/messages": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get chat messages
+         * @description Get paginated messages for a specific chat. Automatically marks messages as read when fetched.
+         */
+        get: {
+            parameters: {
+                query?: {
+                    /** @description Page number */
+                    page?: number;
+                    /** @description Messages per page */
+                    limit?: number;
+                };
+                header?: never;
+                path: {
+                    /** @description Chat ID */
+                    chatId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Chat messages with pagination */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example true */
+                            success?: boolean;
+                            data?: {
+                                id?: string;
+                                chatId?: string;
+                                senderId?: string;
+                                message?: string;
+                                isRead?: boolean;
+                                /** Format: date-time */
+                                readAt?: string | null;
+                                /** Format: date-time */
+                                createdAt?: string;
+                            }[];
+                            pagination?: {
+                                page?: number;
+                                limit?: number;
+                                total?: number;
+                                totalPages?: number;
+                            };
+                        };
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example false */
+                            success?: boolean;
+                            /** @example Unauthorized - Please sign in */
+                            error?: string;
+                        };
+                    };
+                };
+                /** @description Chat not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example false */
+                            success?: boolean;
+                            /** @example Chat not found */
+                            error?: string;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/chats/{chatId}/read": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Mark messages as read
+         * @description Mark all unread messages in a chat as read.
+         */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Chat ID */
+                    chatId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Messages marked as read */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example true */
+                            success?: boolean;
+                            /** @example Messages marked as read */
+                            message?: string;
+                            data?: {
+                                /** @description Number of messages marked as read */
+                                markedCount?: number;
+                            };
+                        };
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example false */
+                            success?: boolean;
+                            /** @example Unauthorized - Please sign in */
+                            error?: string;
+                        };
+                    };
+                };
+                /** @description Chat not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example false */
+                            success?: boolean;
+                            /** @example Chat not found */
                             error?: string;
                         };
                     };

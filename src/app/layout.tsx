@@ -29,6 +29,7 @@ export const metadata: Metadata = {
 };
 
 import { SmoothScroll } from "@/components/providers/smooth-scroll";
+import { SocketProvider } from "@/components/providers/socket-provider";
 
 export default function RootLayout({
   children,
@@ -44,7 +45,9 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col" suppressHydrationWarning>
         <QueryProvider>
           <SmoothScroll>
-            {children}
+            <SocketProvider>
+              {children}
+            </SocketProvider>
             <Toaster />
           </SmoothScroll>
         </QueryProvider>

@@ -6,9 +6,11 @@ import { BookingHeader } from './booking-header'
 import { PriorityStep } from './steps/priority-step'
 import { IssueDetailsStep } from './steps/issue-details-step'
 import { LocationStep } from './steps/location-step'
+import { ScheduleStep } from './steps/schedule-step'
 import { ReviewStep } from './steps/review-step'
 import { MatchingStep } from './steps/matching-step'
 import { SuccessStep } from './steps/success-step'
+import { FinalSuccessStep } from './steps/final-success-step'
 
 export const BookingWizard = () => {
   const { currentStep } = useBookingStore()
@@ -22,18 +24,21 @@ export const BookingWizard = () => {
       case 3:
         return <LocationStep />
       case 4:
-        return <ReviewStep />
+        return <ScheduleStep />
       case 5:
-        return <MatchingStep />
+        return <ReviewStep />
       case 6:
+        return <MatchingStep />
+      case 7:
         return <SuccessStep />
+      case 8:
+        return <FinalSuccessStep />
       default:
         return <PriorityStep />
     }
   }
 
   const getStepTitle = () => {
-    if (currentStep === 6) return 'Book a service'
     return 'Book a service'
   }
 
@@ -46,11 +51,15 @@ export const BookingWizard = () => {
       case 3:
         return 'Where are you?'
       case 4:
-        return 'Review and checkout'
+        return 'Schedule'
       case 5:
-        return 'Finding professional'
+        return 'Review and checkout'
       case 6:
-        return 'Professional matched'
+        return 'Finding professional'
+      case 7:
+        return 'Select Professional'
+      case 8:
+        return 'Booking Confirmed'
       default:
         return 'Select Priority'
     }
@@ -61,7 +70,7 @@ export const BookingWizard = () => {
       <BookingHeader 
         title={getStepTitle()}
         subtitle={getStepSubtitle()}
-        currentStep={currentStep > 4 ? 4 : currentStep} // Progress bar stays at 4 for review/success
+        currentStep={currentStep > 5 ? 4 : (currentStep > 3 ? 3 : currentStep)} 
         totalSteps={4}
       />
       <div className="flex-1 overflow-hidden">

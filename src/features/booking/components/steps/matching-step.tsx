@@ -12,7 +12,9 @@ export const MatchingStep = () => {
     serviceId, 
     issueDetails, 
     location, 
-    photos 
+    photos,
+    setAvailableEngineers,
+    setBookingId 
   } = useBookingStore()
   
   const { mutate: createBooking, isPending } = useCreateBooking()
@@ -25,22 +27,31 @@ export const MatchingStep = () => {
     // Real API Call
     createBooking({
       serviceId,
-      urgency: priority,
-      description: issueDetails,
-      address: location?.streetAddress,
-      city: location?.city,
-      state: location?.state,
-      images: photos,
+      priority: priority?.toLowerCase() as 'emergency' | 'standard',
+      issueDetails,
+      location: {
+        state: location?.state,
+        city: location?.city,
+        streetAddress: location?.streetAddress,
+        nearestLandmark: location?.landmark,
+        latitude: 0, // Placeholder or get from geolocation
+        longitude: 0,
+      },
+      photos,
     }, {
-      onSuccess: () => {
-        setStep(6)
+      onSuccess: (data: any) => {
+        if (data.success) {
+          setAvailableEngineers(data.data.availableEngineers || [])
+          setBookingId(data.data.booking.id)
+          setStep(7) // Move to selection
+        }
       },
       onError: (error: any) => {
         toast.error(error.message || "Failed to create booking")
         setStep(4) // Go back to review on error
       }
     })
-  }, [createBooking, serviceId, priority, issueDetails, location, photos, setStep])
+  }, [createBooking, serviceId, priority, issueDetails, location, photos, setStep, setAvailableEngineers])
 
   return (
     <div className="flex flex-col items-center justify-center h-full px-5 py-20 space-y-10">

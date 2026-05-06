@@ -19,6 +19,11 @@ interface BookingState {
   location: BookingLocation | null
   categoryId: string | null
   serviceId: string | null
+  scheduledDate: string | null
+  scheduledTime: string | null
+  selectedEngineerId: string | null
+  availableEngineers: any[]
+  bookingId: string | null
   
   // Actions
   setStep: (step: number) => void
@@ -31,6 +36,11 @@ interface BookingState {
   addPhoto: (photo: string) => void
   removePhoto: (index: number) => void
   setLocation: (location: BookingLocation | null) => void
+  setScheduledDate: (date: string | null) => void
+  setScheduledTime: (time: string | null) => void
+  setSelectedEngineerId: (id: string | null) => void
+  setAvailableEngineers: (engineers: any[]) => void
+  setBookingId: (id: string | null) => void
   resetBooking: () => void
 }
 
@@ -45,6 +55,11 @@ export const useBookingStore = create<BookingState>()(
       location: null,
       categoryId: null,
       serviceId: null,
+      scheduledDate: null,
+      scheduledTime: null,
+      selectedEngineerId: null,
+      availableEngineers: [],
+      bookingId: null,
 
       setStep: (step) => set({ currentStep: step }),
       setPriority: (priority) => set({ priority }),
@@ -55,9 +70,14 @@ export const useBookingStore = create<BookingState>()(
       setPhotos: (photos) => set({ photos }),
       addPhoto: (photo) => set((state) => ({ photos: [...state.photos, photo] })),
       removePhoto: (index) => set((state) => ({ 
-        photos: state.photos.filter((_, i) => i !== index) 
+      photos: state.photos.filter((_, i) => i !== index) 
       })),
       setLocation: (location) => set({ location }),
+      setScheduledDate: (scheduledDate) => set({ scheduledDate }),
+      setScheduledTime: (scheduledTime) => set({ scheduledTime }),
+      setSelectedEngineerId: (selectedEngineerId) => set({ selectedEngineerId }),
+      setAvailableEngineers: (availableEngineers) => set({ availableEngineers }),
+      setBookingId: (bookingId) => set({ bookingId }),
       resetBooking: () =>
         set({
           currentStep: 1,
@@ -67,6 +87,11 @@ export const useBookingStore = create<BookingState>()(
           location: null,
           categoryId: null,
           serviceId: null,
+          scheduledDate: null,
+          scheduledTime: null,
+          selectedEngineerId: null,
+          availableEngineers: [],
+          bookingId: null,
         }),
     }),
     {

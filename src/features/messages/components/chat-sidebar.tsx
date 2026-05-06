@@ -3,17 +3,17 @@
 import React from 'react'
 import { HiOutlineSearch, HiOutlinePlusCircle } from 'react-icons/hi'
 import { cn } from '@/lib/utils'
-
-const contacts = [
-  { id: 1, name: 'Melanie Collins', time: 'just now', message: 'Cupiditate eos et accusantium corrupti impedit distinctio amet omnis. Fugiat et itaque in nulla. Molestiae quibusdam perspiciatis ut maiores et qui voluptatem.', unread: 0, active: false },
-  { id: 2, name: 'Sarah Emard', time: '1 minutes ago', message: 'Cupiditate eos et accusantium corrupti impedit distinctio amet omnis. Fugiat et itaque in nulla. Molestiae quibusdam perspiciatis ut maiores et qui voluptatem.', unread: 1, active: true },
-  { id: 3, name: 'Margie Williamson', time: '5 minutes ago', message: 'Omnis iure laborum vel harum dolor. Quae quis est. Eius et omnis aut iure accusantium quidem doloremque labore. Aut delectus enim ullam ad quis. Aperiam eos distinctio asperiores mollitia non.', unread: 5, active: false },
-  { id: 4, name: 'Timothy Durgan', time: '12 hours ago', message: 'Veritatis qui in inventore maiores quidem voluptates voluptatem aut. Autem quia earum quia soluta minima fuga. Voluptate occaecati sint. Sit itaque rerum placeat in quibusdam nostrum.', unread: 0, active: false },
-  { id: 5, name: 'Timothy Durgan', time: '12 hours ago', message: 'Veritatis qui in inventore maiores quidem voluptates voluptatem aut. Autem quia earum quia soluta minima fuga. Voluptate occaecati sint. Sit itaque rerum placeat in quibusdam nostrum.', unread: 0, active: false },
-  { id: 6, name: 'Dr. Calvin Bernier', time: '2 days ago', message: 'Voluptatem perferendis quis neque ut tempore. Dignissimos optio voluptatem eveniet dolores amet velit sequi cupiditate. Ipsa harum pariatur natus. In veniam quaerat inventore similique quis ad dolor. Nostrum iste ratione qui officia omnis culpa. Fuga facilis quibusdam odit rerum.', unread: 0, active: false },
-]
+import { useUserChats } from '@/hooks/api-hooks'
+import { useChatStore } from '@/store/use-chat-store'
+import { formatDistanceToNow } from 'date-fns'
 
 export const ChatSidebar = () => {
+  const { data: chats, isLoading } = useUserChats()
+  const { activeChatId, setActiveChatId } = useChatStore()
+
+  if (isLoading) {
+    return <div className="w-[458px] h-full bg-neutral-50 p-5">Loading chats...</div>
+  }
   return (
     <div className="w-[458px] h-full flex flex-col bg-neutral-50 rounded-[20px] outline outline-1 outline-offset-[-1px] outline-zinc-300 overflow-hidden">
       {/* Header Tabs */}
@@ -48,56 +48,65 @@ export const ChatSidebar = () => {
 
       {/* Contact List */}
       <div className="flex-1 overflow-y-auto px-5 pb-5 space-y-4">
-        {contacts.map((contact, idx) => (
-          <div
-            key={`${contact.id}-${idx}`}
-            className={cn(
-              "px-2 py-3 flex gap-2 cursor-pointer transition-all duration-200",
-              contact.active ? "bg-indigo-50 rounded-xl shadow-sm" : "hover:bg-white/50 rounded-xl"
-            )}
-          >
-            <div className="shrink-0 relative">
-              <div className="w-12 h-12 rounded-full overflow-hidden border border-indigo-50">
-                <img 
-                  src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${contact.name}`} 
-                  alt={contact.name}
-                  className="w-full h-full object-cover"
-                />
-              </div>
-            </div>
+        {(!chats || chats.length === 0) && (
+          <div className="text-center py-10 text-zinc-500 text-sm">No conversations yet</div>
+        )}
+        {chats?.map((chat: any) => {
+          const isActive = activeChatId === chat.id
+          const otherUser = chat.engineer // Assuming client side for now, or check roles
+          const lastMessage = chat.lastMessage
 
-            <div className="flex-1 min-w-0 flex flex-col justify-center">
-              <div className="flex justify-between items-center mb-0.5">
-                <div className="flex items-center gap-2">
-                  <h4 className={cn(
-                    "text-base truncate",
-                    contact.active ? "text-neutral-700 font-medium" : "text-neutral-700 font-normal"
-                  )}>
-                    {contact.name}
-                  </h4>
-                  <div className="flex items-center gap-1">
-                    <div className="w-1.5 h-1.5 bg-zinc-300 rounded-full" />
-                    <span className="text-xs text-zinc-600 whitespace-nowrap">{contact.time}</span>
-                  </div>
-                </div>
-                
-                <div className="flex flex-col items-end gap-1 shrink-0 ml-2">
-                  <div className="w-4 h-4 flex items-center justify-center">
-                     <div className="w-1 h-1 bg-zinc-600 rounded-full" />
-                  </div>
-                  {contact.unread > 0 && (
-                    <div className="w-4 h-4 bg-rose-400 rounded-full flex items-center justify-center">
-                      <span className="text-[10px] text-neutral-700 font-medium">{contact.unread}</span>
-                    </div>
-                  )}
+          return (
+            <div
+              key={chat.id}
+              onClick={() => setActiveChatId(chat.id)}
+              className={cn(
+                "px-2 py-3 flex gap-2 cursor-pointer transition-all duration-200",
+                isActive ? "bg-indigo-50 rounded-xl shadow-sm" : "hover:bg-white/50 rounded-xl"
+              )}
+            >
+              <div className="shrink-0 relative">
+                <div className="w-12 h-12 rounded-full overflow-hidden border border-indigo-50">
+                  <img 
+                    src={otherUser?.image || `https://api.dicebear.com/7.x/avataaars/svg?seed=${otherUser?.name || 'User'}`} 
+                    alt={otherUser?.name}
+                    className="w-full h-full object-cover"
+                  />
                 </div>
               </div>
-              <p className="text-sm text-zinc-600 line-clamp-1 leading-5">
-                {contact.message}
-              </p>
+
+              <div className="flex-1 min-w-0 flex flex-col justify-center">
+                <div className="flex justify-between items-center mb-0.5">
+                  <div className="flex items-center gap-2">
+                    <h4 className={cn(
+                      "text-base truncate",
+                      isActive ? "text-neutral-700 font-medium" : "text-neutral-700 font-normal"
+                    )}>
+                      {otherUser?.name || 'Unknown User'}
+                    </h4>
+                    <div className="flex items-center gap-1">
+                      <div className="w-1.5 h-1.5 bg-zinc-300 rounded-full" />
+                      <span className="text-xs text-zinc-600 whitespace-nowrap">
+                        {chat.updatedAt ? formatDistanceToNow(new Date(chat.updatedAt), { addSuffix: true }) : ''}
+                      </span>
+                    </div>
+                  </div>
+                  
+                  <div className="flex flex-col items-end gap-1 shrink-0 ml-2">
+                    {chat.unreadCount > 0 && (
+                      <div className="w-4 h-4 bg-rose-400 rounded-full flex items-center justify-center">
+                        <span className="text-[10px] text-neutral-700 font-medium">{chat.unreadCount}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+                <p className="text-sm text-zinc-600 line-clamp-1 leading-5">
+                  {lastMessage?.content || 'No messages yet'}
+                </p>
+              </div>
             </div>
-          </div>
-        ))}
+          )
+        })}
       </div>
     </div>
   )

@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 
 export const LocationStep = () => {
-  const { location, setLocation, setStep } = useBookingStore()
+  const { location, setLocation, setStep, priority } = useBookingStore()
   const [formData, setFormData] = useState({
     state: location?.state || '',
     city: location?.city || '',
@@ -34,7 +34,11 @@ export const LocationStep = () => {
 
   const handleContinue = () => {
     setLocation(formData)
-    setStep(4)
+    if (priority === 'Standard') {
+      setStep(4)
+    } else {
+      setStep(5)
+    }
   }
 
   return (

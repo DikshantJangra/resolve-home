@@ -1,121 +1,114 @@
 'use client'
 
-import React from 'react'
+import React, { useState } from 'react'
 import { HiOutlineStar, HiOutlineLocationMarker, HiOutlineBriefcase, HiOutlineCheckCircle } from 'react-icons/hi'
 import { IoLocationOutline } from 'react-icons/io5'
 import { useBookingStore } from '@/store/booking-store'
 import { Button } from '@/components/ui/button'
+import { useSelectEngineer } from '@/hooks/api-hooks'
+import { toast } from 'sonner'
+import { usePaystackPayment } from 'react-paystack'
 
 export const SuccessStep = () => {
-  const { resetBooking } = useBookingStore()
+  const { availableEngineers, resetBooking, setStep, selectedEngineerId, setSelectedEngineerId, bookingId } = useBookingStore()
+  const { mutate: selectEngineer, isPending } = useSelectEngineer()
+  
+  // Paystack Config (Mocking amount for now)
+  const config = {
+    reference: (new Date()).getTime().toString(),
+    email: "user@example.com",
+    amount: 500000, // 5000 NGN in kobo
+    publicKey: process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY || 'pk_test_placeholder',
+  };
 
-  const reviews = [
-    {
-      id: 1,
-      rating: 5,
-      location: 'Lagos, Nigeria',
-      title: 'Fix our 3phase inverter pumping machine',
-      content: 'From the first consultation to the final touches, Refit delivered on every promise. Our home extension is exactly what we wanted.',
-    },
-    {
-      id: 2,
-      rating: 5,
-      location: 'Lagos, Nigeria',
-      title: 'Fix our 3phase inverter pumping machine',
-      content: 'From the first consultation to the final touches, Refit delivered on every promise. Our home extension is exactly what we wanted.',
-    }
-  ]
+  const initializePayment = usePaystackPayment(config);
+
+  const handleConfirmSelection = (engineerId: string) => {
+    // 1. Pay via Paystack
+    initializePayment({
+      onSuccess: () => {
+        // 2. Call select-engineer API
+        // In a real app, we'd pass the reference to the backend to verify
+        toast.success("Payment successful!")
+        selectEngineer({ bookingId: bookingId || "", engineerId }, {
+          onSuccess: () => {
+            toast.success("Professional matched successfully!")
+            setStep(8) // Actual Success
+          },
+          onError: (err: any) => {
+            toast.error(err.message || "Failed to confirm engineer")
+          }
+        })
+      },
+      onClose: () => {
+        toast.error("Payment cancelled")
+      }
+    })
+  }
+
+  if (!availableEngineers || availableEngineers.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full p-10 text-center space-y-4">
+        <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center">
+          <HiOutlineCheckCircle className="w-8 h-8 text-red-500 rotate-180" />
+        </div>
+        <h3 className="text-xl font-bold text-neutral-700">No professionals found</h3>
+        <p className="text-zinc-600">We couldn't find any professionals near you at the moment. Please try again later.</p>
+        <Button onClick={() => setStep(1)} className="bg-blue-700">Go Back</Button>
+      </div>
+    )
+  }
 
   return (
     <div className="flex flex-col h-full bg-stone-50 rounded-xl overflow-hidden m-5">
       <div className="flex-1 p-5 space-y-8 overflow-y-auto">
-        {/* Pro Profile Header */}
-        <div className="flex items-start gap-4">
-          <img 
-            className="w-20 h-20 rounded-full object-cover" 
-            src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=200&auto=format&fit=crop" 
-            alt="Pro"
-          />
-          <div className="space-y-3.5">
-            <div className="space-y-2">
-              <div className="flex items-center gap-2">
-                <h3 className="text-neutral-700 text-base font-semibold leading-6">Engr Adeoye Tololopo</h3>
-                <span className="text-orange-500 text-xs font-semibold px-2 py-0.5 bg-orange-50 rounded-sm">Pro Verified</span>
-              </div>
-              <div className="flex items-center gap-1 text-zinc-600 text-xs">
-                <span>Electrician</span>
-                <span className="w-1 h-1 bg-blue-700 rounded-full" />
-                <HiOutlineStar className="text-amber-500 w-3 h-3" />
-                <span>4.9 Rating</span>
+        <h4 className="text-neutral-700 text-sm font-semibold leading-5">Available Professionals Near You</h4>
+        
+        {availableEngineers.map((engineer) => (
+          <div key={engineer.id} className="bg-white p-5 rounded-xl border border-zinc-200 space-y-5">
+            {/* Pro Profile Header */}
+            <div className="flex items-start gap-4">
+              <img 
+                className="w-16 h-16 rounded-full object-cover" 
+                src={engineer.image || "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=200&auto=format&fit=crop"} 
+                alt={engineer.name}
+              />
+              <div className="space-y-2 flex-1">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-neutral-700 text-base font-semibold leading-6">{engineer.name}</h3>
+                  <span className="text-orange-500 text-[10px] font-semibold px-2 py-0.5 bg-orange-50 rounded-sm uppercase tracking-wider">Pro Verified</span>
+                </div>
+                <div className="flex items-center gap-1 text-zinc-600 text-xs">
+                  <HiOutlineStar className="text-amber-500 w-3 h-3" />
+                  <span>{engineer.rating} Rating</span>
+                  <span className="w-1 h-1 bg-zinc-300 rounded-full mx-1" />
+                  <span>{engineer.completedJobs} Jobs completed</span>
+                </div>
+                <div className="flex items-center gap-1 text-zinc-500 text-xs">
+                  <HiOutlineLocationMarker className="w-4 h-4" />
+                  <span>{engineer.distance}km away</span>
+                </div>
               </div>
             </div>
-            
-            <div className="flex items-center gap-5 text-zinc-600 text-xs">
-              <div className="flex items-center gap-1">
-                <HiOutlineLocationMarker className="w-4 h-4" />
-                <span>2.4km away</span>
-              </div>
-              <div className="flex items-center gap-1">
-                <HiOutlineBriefcase className="w-4 h-4" />
-                <span>10 Jobs completed</span>
-              </div>
-            </div>
-          </div>
-        </div>
 
-        {/* Reviews Section */}
-        <div className="space-y-3">
-          <h4 className="text-neutral-700 text-sm font-semibold leading-5">Professional's Review</h4>
-          <div className="flex gap-3 overflow-x-auto pb-4 -mx-5 px-5 scrollbar-hide">
-            {reviews.map((review) => (
-              <div 
-                key={review.id} 
-                className="min-w-[288px] p-3 bg-white rounded-[10px] border border-zinc-200 space-y-3"
-              >
-                <div className="flex justify-between items-start">
-                  <div className="flex gap-0.5">
-                    {[...Array(5)].map((_, i) => (
-                      <HiOutlineStar key={i} className="text-amber-400 w-3.5 h-3.5 fill-amber-400" />
-                    ))}
-                  </div>
-                  <div className="flex items-center gap-1 text-zinc-400 text-[10px]">
-                    <IoLocationOutline className="w-3 h-3" />
-                    <span>{review.location}</span>
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <h5 className="text-neutral-800 text-sm font-medium">{review.title}</h5>
-                  <p className="text-zinc-700 text-xs leading-4">{review.content}</p>
-                </div>
-                {/* Review Images */}
-                <div className="flex gap-1">
-                  {[...Array(4)].map((_, i) => (
-                    <div key={i} className="flex-1 h-16 bg-zinc-100 rounded-sm" />
-                  ))}
-                </div>
+            {/* Reviews Preview */}
+            {engineer.reviews && engineer.reviews.length > 0 && (
+              <div className="space-y-3">
+                <p className="text-zinc-600 text-xs italic">
+                  "{engineer.reviews[0].comment}"
+                </p>
               </div>
-            ))}
-          </div>
-        </div>
-      </div>
+            )}
 
-      {/* Footer Actions */}
-      <div className="p-5 bg-white flex gap-5">
-        <Button
-          variant="outline"
-          className="flex-1 h-11 border-red-600 text-red-600 hover:bg-red-50 hover:text-red-700 rounded-xl"
-        >
-          Reject and Re-match
-        </Button>
-        <Button
-          onClick={() => {
-            alert('Confirmed! Redirecting to chat...')
-            resetBooking()
-          }}
-          className="flex-1 h-11 bg-blue-700 hover:bg-blue-800 text-neutral-50 rounded-xl"
-        >
-          Confirm and Message
-        </Button>
+            <Button
+              onClick={() => handleConfirmSelection(engineer.id)}
+              disabled={isPending}
+              className="w-full h-10 bg-blue-700 hover:bg-blue-800 text-neutral-50 rounded-xl text-xs font-semibold"
+            >
+              Select and Pay ₦5,000
+            </Button>
+          </div>
+        ))}
       </div>
     </div>
   )

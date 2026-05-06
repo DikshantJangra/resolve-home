@@ -1,4 +1,11 @@
-import { BookingWizard } from '@/features/booking/components/booking-wizard'
+'use client'
+
+import dynamic from 'next/dynamic'
+
+const BookingWizard = dynamic(
+  () => import('@/features/booking/components/booking-wizard').then((mod) => mod.BookingWizard),
+  { ssr: false }
+)
 
 export default function BookServicePage() {
   return (

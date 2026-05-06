@@ -41,9 +41,19 @@ export const ENDPOINTS = {
 
   // ─── Bookings ─────────────────────────────────────────────────────────────
   BOOKINGS: {
-    BASE:   '/api/bookings',
-    BY_ID:  (id: string) => `/api/bookings/${id}`,
-    CANCEL: (id: string) => `/api/bookings/${id}/cancel`,
+    BASE:                '/api/bookings',
+    AVAILABLE_ENGINEERS: '/api/bookings/available-engineers',
+    BY_ID:               (id: string) => `/api/bookings/${id}`,
+    SELECT_ENGINEER:     (id: string) => `/api/bookings/${id}/select-engineer`,
+    REVIEW:              (id: string) => `/api/bookings/${id}/review`,
+    CANCEL:              (id: string) => `/api/bookings/${id}/cancel`,
+  },
+
+  // ─── Chats ────────────────────────────────────────────────────────────────
+  CHATS: {
+    BASE:     '/api/chats',
+    MESSAGES: (chatId: string) => `/api/chats/${chatId}/messages`,
+    READ:     (chatId: string) => `/api/chats/${chatId}/read`,
   },
 
   // ─── File Upload ──────────────────────────────────────────────────────────
