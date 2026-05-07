@@ -4,13 +4,29 @@ import * as React from "react"
 import { Button } from "@/components/ui/button"
 import { useForgotPasswordStore } from "@/store/use-forgot-password-store"
 import { cn } from "@/lib/utils"
+import { toast } from "sonner"
+import { authClient } from "@/lib/auth-client"
 
 export function ForgotPasswordOtp() {
-  const { email, nextStep, prevStep } = useForgotPasswordStore()
+  const { email, nextStep, prevStep, setToken } = useForgotPasswordStore()
   const [otp, setOtp] = React.useState(["", "", "", "", "", ""])
   const [timer, setTimer] = React.useState(59)
+  const [isLoading, setIsLoading] = React.useState(false)
   
   const inputRefs = React.useRef<(HTMLInputElement | null)[]>([])
+
+  const handleVerify = async () => {
+    const code = otp.join("")
+    if (code.length !== 6) {
+      toast.error("Please enter the complete 6-digit code")
+      return
+    }
+
+    // Since we don't have a separate verify-otp endpoint for password reset,
+    // we'll assume the OTP is the token used for reset-password.
+    setToken(code)
+    nextStep()
+  }
 
   React.useEffect(() => {
     if (timer > 0) {
@@ -68,14 +84,14 @@ export function ForgotPasswordOtp() {
 
       <div className="flex flex-col items-center gap-5">
         <Button
-          onClick={nextStep}
-          disabled={!isComplete}
+          onClick={handleVerify}
+          disabled={!isComplete || isLoading}
           className={cn(
             "h-12 w-full rounded-xl bg-blue-700 text-sm font-medium text-white transition-all hover:bg-blue-800",
-            !isComplete && "opacity-40"
+            (!isComplete || isLoading) && "opacity-40"
           )}
         >
-          Verify & continue
+          {isLoading ? "Verifying..." : "Verify & continue"}
         </Button>
         
         <div className="flex flex-col items-center gap-4">

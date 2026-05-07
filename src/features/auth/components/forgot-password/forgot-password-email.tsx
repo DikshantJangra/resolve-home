@@ -7,6 +7,10 @@ import { z } from "zod"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { useForgotPasswordStore } from "@/store/use-forgot-password-store"
+import { toast } from "sonner"
+import { cn } from "@/lib/utils"
+import apiClient from "@/lib/api/client"
+import { ENDPOINTS } from "@/lib/api/endpoints"
 
 const emailSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
@@ -25,10 +29,29 @@ export function ForgotPasswordEmail() {
     resolver: zodResolver(emailSchema),
   })
 
-  const onSubmit = (data: EmailValues) => {
-    setEmail(data.email)
-    // Here you would typically trigger the API call to send OTP
-    nextStep()
+  const [isLoading, setIsLoading] = React.useState(false)
+
+  const onSubmit = async (data: EmailValues) => {
+    setIsLoading(true)
+    try {
+      const response = await apiClient.post(ENDPOINTS.AUTH.FORGET_PASSWORD, {
+        email: data.email,
+        redirectTo: window.location.origin + "/reset-password",
+      })
+
+      if (response.data.success === false) {
+        toast.error(response.data.error || "Failed to send reset email")
+      } else {
+        setEmail(data.email)
+        toast.success("Reset email sent! Please check your inbox.")
+        nextStep()
+      }
+    } catch (err: any) {
+      console.error("Forgot password error:", err)
+      toast.error(err.response?.data?.error || "An unexpected error occurred")
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
@@ -60,9 +83,13 @@ export function ForgotPasswordEmail() {
 
         <Button
           type="submit"
-          className="h-12 w-full rounded-xl bg-blue-700 text-sm font-medium text-white hover:bg-blue-800"
+          disabled={isLoading}
+          className={cn(
+            "h-12 w-full rounded-xl bg-blue-700 text-sm font-medium text-white hover:bg-blue-800",
+            isLoading && "opacity-50 cursor-not-allowed"
+          )}
         >
-          Verify & continue
+          {isLoading ? "Sending..." : "Verify & continue"}
         </Button>
       </form>
 

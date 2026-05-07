@@ -9,6 +9,9 @@ import { Input } from "@/components/ui/input"
 import { HiOutlineEye, HiOutlineEyeSlash } from "react-icons/hi2"
 import { useForgotPasswordStore } from "@/store/use-forgot-password-store"
 import { cn } from "@/lib/utils"
+import { toast } from "sonner"
+import apiClient from "@/lib/api/client"
+import { ENDPOINTS } from "@/lib/api/endpoints"
 
 const resetSchema = z.object({
   password: z.string()
@@ -25,9 +28,10 @@ const resetSchema = z.object({
 type ResetValues = z.infer<typeof resetSchema>
 
 export function ForgotPasswordReset() {
-  const { nextStep } = useForgotPasswordStore()
+  const { nextStep, token } = useForgotPasswordStore()
   const [showPass, setShowPass] = React.useState(false)
   const [showConfirm, setShowConfirm] = React.useState(false)
+  const [isLoading, setIsLoading] = React.useState(false)
   
   const {
     register,
@@ -40,9 +44,26 @@ export function ForgotPasswordReset() {
 
   const password = watch("password", "")
 
-  const onSubmit = (data: ResetValues) => {
-    // API call to reset password
-    nextStep()
+  const onSubmit = async (data: ResetValues) => {
+    setIsLoading(true)
+    try {
+      const response = await apiClient.post(ENDPOINTS.AUTH.RESET_PASSWORD, {
+        password: data.password,
+        token: token || "", // Token from store (or OTP)
+      })
+
+      if (response.data.success === false) {
+        toast.error(response.data.error || "Failed to reset password")
+      } else {
+        toast.success("Password reset successfully!")
+        nextStep()
+      }
+    } catch (err: any) {
+      console.error("Reset password error:", err)
+      toast.error(err.response?.data?.error || "An unexpected error occurred")
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   const requirements = [
@@ -132,9 +153,13 @@ export function ForgotPasswordReset() {
 
         <Button
           type="submit"
-          className="h-12 w-full rounded-xl bg-blue-700 text-sm font-medium text-white hover:bg-blue-800"
+          disabled={isLoading}
+          className={cn(
+            "h-12 w-full rounded-xl bg-blue-700 text-sm font-medium text-white hover:bg-blue-800",
+            isLoading && "opacity-50 cursor-not-allowed"
+          )}
         >
-          Save & continue
+          {isLoading ? "Saving..." : "Save & continue"}
         </Button>
       </form>
 
