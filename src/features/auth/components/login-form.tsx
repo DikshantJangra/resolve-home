@@ -30,6 +30,8 @@ export function LoginForm() {
   const router = useRouter()
   const [showPassword, setShowPassword] = React.useState(false)
   const [isLoading, setIsLoading] = React.useState(false)
+  const [showResend, setShowResend] = React.useState(false)
+  const [isResending, setIsResending] = React.useState(false)
 
   const form = useForm<LoginValues>({
     resolver: zodResolver(loginSchema),
@@ -41,6 +43,7 @@ export function LoginForm() {
 
   async function onSubmit(data: LoginValues) {
     setIsLoading(true)
+    setShowResend(false)
     try {
       const { data: authData, error } = await authClient.signIn.email({
         email: data.email,
@@ -52,17 +55,18 @@ export function LoginForm() {
           router.push("/dashboard")
         },
         onError: (ctx) => {
+          // If the error indicates email not verified, show the resend option
+          if (ctx.error.status === 403 || ctx.error.message?.toLowerCase().includes('verify') || ctx.error.message?.toLowerCase().includes('verification')) {
+            setShowResend(true)
+          }
           toast.error(ctx.error.message || "Invalid credentials")
         }
       })
 
       if (error) {
-        // Error handled in onError callback
         return
       }
 
-      // Save token and role if returned
-      // Note: Better Auth usually handles session via cookies automatically when using its client
       const token = (authData as any)?.token
       const role = (authData as any)?.user?.role
 
@@ -74,6 +78,34 @@ export function LoginForm() {
       console.error("Login error:", error)
     } finally {
       setIsLoading(false)
+    }
+  }
+
+  const handleResendEmail = async () => {
+    const email = form.getValues("email")
+    if (!email) {
+      toast.error("Please enter your email first")
+      return
+    }
+
+    setIsResending(true)
+    try {
+      const { error } = await authClient.sendVerificationEmail({
+        email,
+        callbackURL: typeof window !== 'undefined' ? window.location.origin + "/dashboard" : "/dashboard",
+      })
+
+      if (error) {
+        toast.error(error.message || "Failed to resend verification email")
+      } else {
+        toast.success("Verification email sent! Please check your inbox.")
+        setShowResend(false)
+      }
+    } catch (err) {
+      console.error("Resend error:", err)
+      toast.error("An unexpected error occurred")
+    } finally {
+      setIsResending(false)
     }
   }
 
@@ -160,6 +192,23 @@ export function LoginForm() {
           >
             {isLoading ? "Signing in..." : "Sign in"}
           </Button>
+
+          {showResend && (
+            <div className="flex flex-col gap-2 p-4 bg-blue-50/50 rounded-xl border border-blue-100">
+              <p className="text-xs text-blue-700 font-medium text-center">
+                Email not verified? We can resend the link.
+              </p>
+              <Button
+                type="button"
+                variant="outline"
+                disabled={isResending}
+                onClick={handleResendEmail}
+                className="h-10 w-full rounded-lg border-blue-200 text-blue-700 text-xs font-semibold hover:bg-blue-50 transition-all"
+              >
+                {isResending ? "Sending..." : "Resend Verification Email"}
+              </Button>
+            </div>
+          )}
 
           <div className="flex items-center justify-center gap-3">
             <div className="h-[1px] flex-1 bg-zinc-100" />

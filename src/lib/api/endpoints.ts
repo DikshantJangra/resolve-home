@@ -16,9 +16,10 @@ export const ENDPOINTS = {
     SIGN_IN_SOCIAL:  '/api/auth/sign-in/social',
     VERIFY_EMAIL:    '/api/auth/verify-email',
     FORGET_PASSWORD: '/api/auth/forget-password',
-    RESET_PASSWORD:  '/api/auth/reset-password',
-    SIGN_OUT:        '/api/auth/sign-out',
-    GET_SESSION:     '/api/auth/get-session',
+    RESET_PASSWORD:           '/api/auth/reset-password',
+    SEND_VERIFICATION_EMAIL:  '/api/auth/send-verification-email',
+    SIGN_OUT:                 '/api/auth/sign-out',
+    GET_SESSION:              '/api/auth/get-session',
   },
 
   // ─── Categories (public/shared) ───────────────────────────────────────────
