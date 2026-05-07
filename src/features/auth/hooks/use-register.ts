@@ -16,8 +16,8 @@ export function useRegister() {
     mutationFn: async (data: RegisterValues) => {
       const { role: storeRole } = useRegisterStore.getState()
       
-      // Map store roles (client/pro) to backend roles (user/worker)
-      const backendRole = storeRole === 'pro' ? 'worker' : 'user'
+      // Map store roles to backend-expected display strings for the custom signup endpoint
+      const backendRole = storeRole === 'pro' ? 'Work as a Professional' : 'Hire a professional'
       
       const response = await apiClient.post(ENDPOINTS.AUTH.REGISTER, {
         email: data.email,
