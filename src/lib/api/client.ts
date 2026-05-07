@@ -5,9 +5,9 @@ import { toast } from 'sonner'
 // Dev: http://localhost:3000  |  Prod: https://resolvhome.onrender.com
 const isBrowser = typeof window !== 'undefined'
 
-const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL
-if (!apiBaseUrl && typeof window !== 'undefined') {
-  console.warn('NEXT_PUBLIC_API_URL is not defined. API calls may default to localhost.')
+const apiBaseUrl = isBrowser ? '' : process.env.NEXT_PUBLIC_API_URL
+if (!apiBaseUrl && !isBrowser) {
+  console.warn('NEXT_PUBLIC_API_URL is not defined on the server.')
 }
 
 const apiClient = axios.create({
