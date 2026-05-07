@@ -6,7 +6,7 @@ import { useForgotPasswordStore } from "@/store/use-forgot-password-store"
 import { cn } from "@/lib/utils"
 
 export function ForgotPasswordOtp() {
-  const { email, nextStep } = useForgotPasswordStore()
+  const { email, nextStep, prevStep } = useForgotPasswordStore()
   const [otp, setOtp] = React.useState(["", "", "", "", "", ""])
   const [timer, setTimer] = React.useState(59)
   
@@ -82,7 +82,11 @@ export function ForgotPasswordOtp() {
           <p className="text-zinc-600 text-sm font-medium font-inter leading-5">
             Didn’t receive code? <span className="text-blue-700 font-bold">0:{timer < 10 ? `0${timer}` : timer}</span>
           </p>
-          <button className="text-zinc-600 text-sm font-medium font-inter underline leading-5 hover:text-zinc-900 transition-colors">
+          <button 
+            type="button"
+            onClick={prevStep}
+            className="text-zinc-600 text-sm font-medium font-inter underline leading-5 hover:text-zinc-900 transition-colors"
+          >
             Change email
           </button>
         </div>
