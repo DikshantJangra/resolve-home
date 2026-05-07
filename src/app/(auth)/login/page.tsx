@@ -1,4 +1,5 @@
 import Image from "next/image"
+import { Suspense } from "react"
 import { LoginForm } from "@/features/auth/components/login-form"
 
 export const metadata = {
@@ -39,7 +40,9 @@ export default function LoginPage() {
         <div className="flex w-full h-full lg:w-1/2">
           <div className="flex w-full h-full items-center justify-center py-10 px-8">
             <div className="flex h-full w-full max-w-[500px] flex-col overflow-y-auto rounded-[20px] bg-white p-8 scrollbar-hide">
-              <LoginForm />
+              <Suspense fallback={<div className="flex h-full items-center justify-center">Loading...</div>}>
+                <LoginForm />
+              </Suspense>
             </div>
           </div>
         </div>

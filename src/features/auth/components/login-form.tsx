@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
@@ -12,12 +12,13 @@ import { IoArrowBack } from "react-icons/io5"
 import { ENDPOINTS } from "@/lib/api/endpoints"
 import apiClient from "@/lib/api/client"
 import { authClient } from "@/lib/auth-client"
-
+import Cookies from "js-cookie"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { cn } from "@/lib/utils"
 import { toast } from "sonner"
+import { useAuthSession } from "@/hooks/api-hooks"
 
 const loginSchema = z.object({
   email: z.string().email("Invalid email address"),
@@ -28,6 +29,9 @@ type LoginValues = z.infer<typeof loginSchema>
 
 export function LoginForm() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const callbackUrl = searchParams.get("callbackUrl") || "/dashboard"
+  const { data: session } = useAuthSession()
   const [showPassword, setShowPassword] = React.useState(false)
   const [isLoading, setIsLoading] = React.useState(false)
   const [showResend, setShowResend] = React.useState(false)
@@ -41,6 +45,13 @@ export function LoginForm() {
     },
   })
 
+  // Redirect if already logged in
+  React.useEffect(() => {
+    if (session?.user) {
+      router.push(callbackUrl)
+    }
+  }, [session, router, callbackUrl])
+
   async function onSubmit(data: LoginValues) {
     setIsLoading(true)
     setShowResend(false)
@@ -48,22 +59,14 @@ export function LoginForm() {
       const { data: authData, error } = await authClient.signIn.email({
         email: data.email,
         password: data.password,
-        callbackURL: "/dashboard",
-      }, {
-        onSuccess: () => {
-          toast.success("Welcome back!")
-          router.push("/dashboard")
-        },
-        onError: (ctx) => {
-          // If the error indicates email not verified, show the resend option
-          if (ctx.error.status === 403 || ctx.error.message?.toLowerCase().includes('verify') || ctx.error.message?.toLowerCase().includes('verification')) {
-            setShowResend(true)
-          }
-          toast.error(ctx.error.message || "Invalid credentials")
-        }
       })
 
       if (error) {
+        // If the error indicates email not verified, show the resend option
+        if (error.status === 403 || error.message?.toLowerCase().includes('verify') || error.message?.toLowerCase().includes('verification')) {
+          setShowResend(true)
+        }
+        toast.error(error.message || "Invalid credentials")
         return
       }
 
@@ -72,10 +75,20 @@ export function LoginForm() {
 
       if (token) {
         localStorage.setItem('auth_token', token)
-        if (role) localStorage.setItem('user_role', role)
+        Cookies.set('auth_token', token, { expires: 7, path: '/' })
+        
+        if (role) {
+          localStorage.setItem('user_role', role)
+          Cookies.set('user_role', role, { expires: 7, path: '/' })
+        }
       }
+
+      toast.success("Welcome back!")
+      router.push(callbackUrl)
+      router.refresh()
     } catch (error: any) {
       console.error("Login error:", error)
+      toast.error("An unexpected error occurred")
     } finally {
       setIsLoading(false)
     }

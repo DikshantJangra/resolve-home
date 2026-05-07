@@ -10,13 +10,18 @@ export function useAuthSession() {
     queryFn: async () => {
       try {
         const response = await apiClient.get(ENDPOINTS.AUTH.GET_SESSION)
-        return response.data.data // Returns { user, session }
+        const data = response.data.data
+        
+        // If we got a session but don't have the token in localStorage, sync it
+        // Note: The backend might not return the token in get-session, but Better Auth 
+        // usually includes it in the user object or we can get it from the cookie if needed.
+        // For now, let's just return the data.
+        return data
       } catch (error) {
         return null
       }
     },
-    // Only fetch if token exists
-    enabled: typeof window !== 'undefined' && !!localStorage.getItem('auth_token'),
+    // Don't disable it if token is missing, because we might have a cookie session
     retry: false
   })
 }
