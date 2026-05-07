@@ -155,4 +155,31 @@
   .scrollbar-hide::-webkit-scrollbar {
     display: none;
   }
+
+  /* Phone Input Styles */
+  .PhoneInput {
+    display: flex;
+    align-items: center;
+  }
+  .PhoneInputInput {
+    flex: 1;
+    min-width: 0;
+    background: transparent;
+    border: none !important;
+    padding: 0 !important;
+    outline: none !important;
+  }
+  .PhoneInputCountry {
+    display: flex;
+    align-items: center;
+    margin-right: 0.5rem;
+  }
+  .PhoneInputCountrySelect {
+    cursor: pointer;
+  }
+  .PhoneInputCountryIcon {
+    width: 1.5rem;
+    height: 1rem;
+    border-radius: 2px;
+  }
 }

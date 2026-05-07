@@ -2,10 +2,10 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 /**
- * Route protection middleware for Resolve Home.
+ * Route protection proxy for Resolve Home.
  * Ensures protected routes are only accessible with a valid session.
  */
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // Define protected and auth routes
@@ -16,11 +16,11 @@ export function middleware(request: NextRequest) {
   
   const isAuthRoute = pathname === "/login" || pathname === "/register";
 
-  // Check for session cookie
-  // Better Auth defaults to 'better-auth.session-token'
-  // We also check for a generic 'auth_token' cookie as a fallback
+  // Check for session and role cookies
   const sessionToken = request.cookies.get("better-auth.session-token")?.value || 
                        request.cookies.get("auth_token")?.value;
+  const userRole = request.cookies.get("user_role")?.value;
+  const isAdminRoute = pathname.startsWith("/admin");
 
   // 1. Redirect to login if accessing protected route without session
   if (isProtectedRoute && !sessionToken) {
@@ -29,12 +29,33 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  // 2. Redirect to dashboard if accessing auth routes while logged in
+  // 2. Role-based barriers
+  if (isAdminRoute && userRole !== "admin") {
+    return NextResponse.redirect(new URL("/dashboard", request.url));
+  }
+
+  // 3. Redirect to dashboard if accessing auth routes while logged in
   if (isAuthRoute && sessionToken) {
     return NextResponse.redirect(new URL("/dashboard", request.url));
   }
 
-  return NextResponse.next();
+  // 4. Country Detection (Preset for Nigeria)
+  const response = NextResponse.next();
+  
+  // Detect country from various possible headers or geo object
+  const geoCountry = (request as any).geo?.country;
+  const headerCountry = request.headers.get("x-vercel-ip-country") || 
+                        request.headers.get("cf-ipcountry") || 
+                        "NG"; // Default to Nigeria
+  
+  const country = geoCountry || headerCountry;
+
+  // Set country cookie if not present
+  if (!request.cookies.has("user_country")) {
+    response.cookies.set("user_country", country, { path: "/", maxAge: 60 * 60 * 24 * 30 });
+  }
+
+  return response;
 }
 
 export const config = {

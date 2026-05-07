@@ -24,7 +24,7 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     if (!user?.id) return
 
-    const socketInstance = io(process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000', {
+    const socketInstance = io(process.env.NEXT_PUBLIC_API_URL!, {
       transports: ['websocket'],
     })
 

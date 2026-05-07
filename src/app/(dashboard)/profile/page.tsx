@@ -5,18 +5,18 @@ import { ProfileSummaryCard } from '@/components/shared/profile-summary-card'
 import { PersonalInfoTab } from '@/features/profile/components/personal-info-tab'
 import { BookingHistoryList } from '@/features/profile/components/booking-history-list'
 import { ReviewsGivenList } from '@/features/profile/components/reviews-given-list'
-import { useSession } from '@/lib/auth-client'
+import { useAuthSession } from '@/hooks/api-hooks'
 import { format } from 'date-fns'
 
 type TabType = 'Personal Info' | 'Booking History' | 'Reviews Given'
 
 export default function ProfilePage() {
   const [activeTab, setActiveTab] = useState<TabType>('Personal Info')
-  const { data: session, isPending } = useSession()
+  const { data: session, isLoading } = useAuthSession()
 
   const tabs: TabType[] = ['Personal Info', 'Booking History', 'Reviews Given']
 
-  if (isPending) {
+  if (isLoading) {
     return (
       <div className="max-w-6xl mx-auto flex flex-col gap-8 animate-pulse">
         <div className="h-20 bg-zinc-100 rounded-xl" />

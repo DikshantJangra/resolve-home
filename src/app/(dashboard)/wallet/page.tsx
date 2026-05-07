@@ -5,13 +5,12 @@ import { WalletBalanceCard } from '@/features/wallet/components/wallet-balance-c
 import { WalletStatCard } from '@/features/wallet/components/wallet-stat-card'
 import { BankDetailsSection } from '@/features/wallet/components/bank-details-section'
 import { TransactionHistory } from '@/features/wallet/components/transaction-history'
-import { useSession } from '@/lib/auth-client'
-import { useUserBookings } from '@/hooks/api-hooks'
+import { useAuthSession, useUserBookings } from '@/hooks/api-hooks'
 import { Skeleton } from '@/components/ui/skeleton'
 import { format } from 'date-fns'
 
 export default function WalletPage() {
-  const { data: session, isPending: sessionLoading } = useSession()
+  const { data: session, isLoading: sessionLoading } = useAuthSession()
   const { data: bookings, isLoading: bookingsLoading } = useUserBookings()
 
   if (sessionLoading || bookingsLoading) {

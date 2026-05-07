@@ -5,9 +5,13 @@ import { toast } from 'sonner'
 // Dev: http://localhost:3000  |  Prod: https://resolvhome.onrender.com
 const isBrowser = typeof window !== 'undefined'
 
+const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL
+if (!apiBaseUrl && typeof window !== 'undefined') {
+  console.warn('NEXT_PUBLIC_API_URL is not defined. API calls may default to localhost.')
+}
+
 const apiClient = axios.create({
-  // Use relative path in browser to trigger Next.js rewrites/proxy
-  baseURL: isBrowser ? '' : (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'),
+  baseURL: apiBaseUrl,
   withCredentials: true,
   headers: {
     'Content-Type': 'application/json',

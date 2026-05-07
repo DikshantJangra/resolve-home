@@ -1,6 +1,43 @@
-import { useQuery, useMutation } from "@tanstack/react-query"
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import apiClient from "@/lib/api/client"
 import { ENDPOINTS } from "@/lib/api/endpoints"
+
+// --- Auth Session ---
+
+export function useAuthSession() {
+  return useQuery({
+    queryKey: ['auth-session'],
+    queryFn: async () => {
+      try {
+        const response = await apiClient.get(ENDPOINTS.AUTH.GET_SESSION)
+        return response.data.data // Returns { user, session }
+      } catch (error) {
+        return null
+      }
+    },
+    // Only fetch if token exists
+    enabled: typeof window !== 'undefined' && !!localStorage.getItem('auth_token'),
+    retry: false
+  })
+}
+
+export function useSignOut() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async () => {
+      const response = await apiClient.post(ENDPOINTS.AUTH.SIGN_OUT)
+      return response.data
+    },
+    onSuccess: () => {
+      localStorage.removeItem('auth_token')
+      import('js-cookie').then((Cookies) => {
+        Cookies.default.remove('auth_token')
+      })
+      queryClient.setQueryData(['auth-session'], null)
+      window.location.href = '/login'
+    }
+  })
+}
 
 // --- Categories ---
 

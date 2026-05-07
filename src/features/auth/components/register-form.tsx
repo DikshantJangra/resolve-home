@@ -4,11 +4,13 @@ import * as React from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { useForm } from "react-hook-form"
+import { useForm, Controller } from "react-hook-form"
+import PhoneInput from 'react-phone-number-input'
+import 'react-phone-number-input/style.css'
 import { FcGoogle } from "react-icons/fc"
 import { HiEye, HiEyeOff } from "react-icons/hi"
-import { signIn } from "@/lib/auth-client"
-
+import apiClient from "@/lib/api/client"
+import { ENDPOINTS } from "@/lib/api/endpoints"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -19,7 +21,7 @@ import { useRegisterStore } from "@/store/use-register-store"
 
 export function RegisterForm() {
   const router = useRouter()
-  const { prevStep } = useRegisterStore()
+  const { prevStep, role } = useRegisterStore()
   const [showPassword, setShowPassword] = React.useState(false)
   const { mutate: register, isPending } = useRegister()
 
@@ -32,30 +34,44 @@ export function RegisterForm() {
       phone: "",
       password: "",
     },
-    mode: "onChange",
+    mode: "all",
   })
 
   function onSubmit(data: RegisterValues) {
     register(data)
   }
 
+  const roleTitle = role === 'pro' ? "Work as a Professional" : "Hire a professional"
+  const roleDescription = role === 'pro' 
+    ? "Join our network of experts and start earning today." 
+    : "Book any home service in under 60 seconds. Fill in your correct details below to get started."
+
   const password = form.watch("password")
   const requirements = [
-    { label: "minimum 8 characters", met: password.length >= 8 },
-    { label: "one number", met: /[0-9]/.test(password) },
-    { label: "one uppercase character", met: /[A-Z]/.test(password) },
-    { label: "one lowercase character", met: /[a-z]/.test(password) },
+    { label: "minimum 8 characters", met: (password?.length || 0) >= 8 },
+    { label: "one number", met: /[0-9]/.test(password || "") },
+    { label: "one uppercase character", met: /[A-Z]/.test(password || "") },
+    { label: "one lowercase character", met: /[a-z]/.test(password || "") },
   ]
+
+  const [defaultCountry, setDefaultCountry] = React.useState<any>("NG")
+
+  React.useEffect(() => {
+    import('js-cookie').then((Cookies) => {
+      const country = Cookies.default.get("user_country")
+      if (country) setDefaultCountry(country)
+    })
+  }, [])
 
   return (
     <div className="flex w-full flex-col gap-12">
       {/* Header */}
       <div className="flex flex-col gap-2">
         <h1 className="text-[32px] font-bold font-heading leading-8 text-neutral-700">
-          Sign Up
+          {roleTitle}
         </h1>
         <p className="text-base font-normal font-inter leading-6 text-zinc-600">
-          Book any home service in under 60 seconds. Fill in your correct details below to get started.
+          {roleDescription}
         </p>
       </div>
 
@@ -75,6 +91,9 @@ export function RegisterForm() {
                   form.formState.errors.firstName && "border-red-500 ring-1 ring-red-500"
                 )}
               />
+              {form.formState.errors.firstName && (
+                <p className="text-xs text-red-500 mt-1">{form.formState.errors.firstName.message}</p>
+              )}
             </div>
             <div className="flex-1 flex flex-col gap-1.5">
               <Label className="flex gap-0.5 text-sm font-medium text-zinc-600 font-inter">
@@ -88,6 +107,9 @@ export function RegisterForm() {
                   form.formState.errors.lastName && "border-red-500 ring-1 ring-red-500"
                 )}
               />
+              {form.formState.errors.lastName && (
+                <p className="text-xs text-red-500 mt-1">{form.formState.errors.lastName.message}</p>
+              )}
             </div>
           </div>
 
@@ -106,19 +128,39 @@ export function RegisterForm() {
                   form.formState.errors.email && "border-red-500 ring-1 ring-red-500"
                 )}
               />
+              {form.formState.errors.email && (
+                <p className="text-xs text-red-500 mt-1">{form.formState.errors.email.message}</p>
+              )}
             </div>
             <div className="flex-1 flex flex-col gap-1.5">
               <Label className="flex gap-0.5 text-sm font-medium text-zinc-600 font-inter">
                 Phone Number <span className="text-red-600 font-bold">*</span>
               </Label>
-              <Input
-                {...form.register("phone")}
-                placeholder="+23491 3324 2323"
-                className={cn(
-                  "h-12 border-zinc-300 rounded-lg px-4 py-3 text-sm placeholder:text-zinc-300 focus-visible:ring-blue-700",
-                  form.formState.errors.phone && "border-red-500 ring-1 ring-red-500"
-                )}
-              />
+              <div className="phone-input-container">
+                <Controller
+                  name="phone"
+                  control={form.control}
+                  render={({ field: { onChange, value, ...field } }) => (
+                    <PhoneInput
+                      {...field}
+                      value={value || ""}
+                      onChange={(val) => onChange(val || "")}
+                      key={defaultCountry}
+                      international
+                      defaultCountry={defaultCountry}
+                      limitMaxLength
+                      placeholder="Enter phone number"
+                      className={cn(
+                        "flex h-12 w-full border-zinc-300 rounded-lg px-4 py-3 text-sm placeholder:text-zinc-300 focus-within:ring-1 focus-within:ring-blue-700 focus-within:border-blue-700 bg-white transition-all",
+                        form.formState.errors.phone && "border-red-500 ring-1 ring-red-500"
+                      )}
+                    />
+                  )}
+                />
+              </div>
+              {form.formState.errors.phone && (
+                <p className="text-xs text-red-500 mt-1">{form.formState.errors.phone.message}</p>
+              )}
             </div>
           </div>
 
@@ -190,10 +232,16 @@ export function RegisterForm() {
               type="button"
               onClick={async () => {
                 try {
-                  await signIn.social({ 
-                    provider: "google", 
-                    callbackURL: window.location.origin + "/dashboard" 
+                  const response = await apiClient.post(ENDPOINTS.AUTH.SIGN_IN_SOCIAL, {
+                    provider: "google",
+                    callbackURL: window.location.origin + "/dashboard",
+                    disableRedirect: true
                   })
+
+                  const { url } = response.data
+                  if (url) {
+                    window.location.href = url
+                  }
                 } catch (err) {
                   console.error("Social sign-in error:", err);
                 }

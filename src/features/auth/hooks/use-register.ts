@@ -5,7 +5,6 @@ import { toast } from "sonner"
 import apiClient from "@/lib/api/client"
 import { ENDPOINTS } from "@/lib/api/endpoints"
 import { RegisterValues } from "../types"
-import { signUp } from "@/lib/auth-client"
 import { useRegisterStore } from "@/store/use-register-store"
 
 export function useRegister() {
@@ -15,33 +14,43 @@ export function useRegister() {
 
   return useMutation({
     mutationFn: async (data: RegisterValues) => {
-      const { role } = useRegisterStore.getState()
+      const { role: storeRole } = useRegisterStore.getState()
+      
+      // Map store roles (client/pro) to backend roles (user/worker)
+      const backendRole = storeRole === 'pro' ? 'worker' : 'user'
       
       const response = await apiClient.post(ENDPOINTS.AUTH.REGISTER, {
         email: data.email,
         password: data.password,
         name: `${data.firstName} ${data.lastName}`.trim(),
         phone: data.phone,
-        role: (role || 'user').toLowerCase() // Backend expects lowercase (user, worker, admin)
+        role: backendRole
       })
 
       return response.data
     },
     onSuccess: (response) => {
-      // Save token if returned
-      const authData = response as any
-      const token = authData?.token || authData?.data?.token
+      // The backend returns { success: true, message: string } for signup
+      // Sign up might not return a token directly if email verification is required
+      // If it does return a token, we save it.
+      const token = response?.data?.token || response?.token
 
       if (token) {
+        const { role: storeRole } = useRegisterStore.getState()
+        const backendRole = storeRole === 'pro' ? 'worker' : 'user'
+        
         localStorage.setItem('auth_token', token)
-        // Set cookie for middleware to read
+        localStorage.setItem('user_role', backendRole)
+        
+        // Set cookies for proxy
         import('js-cookie').then((Cookies) => {
           Cookies.default.set('auth_token', token, { expires: 7, path: '/' })
+          Cookies.default.set('user_role', backendRole, { expires: 7, path: '/' })
         })
       }
 
-      toast.success("Welcome to Resolve Home!")
-      router.push("/dashboard")
+      toast.success(response.message || "Welcome to Resolve Home! Please verify your email.")
+      router.push("/login")
     },
     onError: (error: any) => {
       // Error handling is already integrated in the apiClient interceptor via Sonner toasts

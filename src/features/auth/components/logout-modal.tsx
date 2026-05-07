@@ -5,20 +5,18 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 
+import { useSignOut } from '@/hooks/api-hooks'
+
 interface LogoutModalProps {
   isOpen: boolean
   onClose: () => void
 }
 
 export function LogoutModal({ isOpen, onClose }: LogoutModalProps) {
-  const router = useRouter()
+  const { mutate: signOut } = useSignOut()
 
   const handleLogout = async () => {
-    // In a real app, you'd call your logout API here
-    // For now, we'll just clear local storage and redirect
-    localStorage.removeItem('auth_token')
-    toast.success('Logged out successfully')
-    router.push('/')
+    signOut()
     onClose()
   }
 

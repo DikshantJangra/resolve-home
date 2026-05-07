@@ -4,14 +4,13 @@ import React from 'react'
 import { HiOutlineCurrencyDollar, HiOutlineClipboardCheck, HiOutlineChatAlt, HiOutlineStar } from 'react-icons/hi'
 import { StatCard } from '@/features/dashboard/components/stat-card'
 import { RecentRequests } from '@/features/dashboard/components/recent-requests'
-import { useSession } from '@/lib/auth-client'
-import { useUserBookings } from '@/hooks/api-hooks'
+import { useAuthSession, useUserBookings } from '@/hooks/api-hooks'
 
 export default function DashboardPage() {
-  const { data: session } = useSession()
+  const { data: session, isLoading: sessionLoading } = useAuthSession()
   const { data: bookings } = useUserBookings()
 
-  const isEngineer = (session?.user as any)?.role?.toUpperCase() === 'WORKER' || (session?.user as any)?.role?.toUpperCase() === 'ENGINEER'
+  const isEngineer = (session?.user as any)?.role?.toUpperCase() === 'WORKER' || (session?.user as any)?.role?.toUpperCase() === 'ADMIN' // Simplified check
 
   // Derive some stats from bookings
   const completedJobs = bookings?.filter((b: any) => b.status?.toUpperCase() === 'COMPLETED')?.length || 0

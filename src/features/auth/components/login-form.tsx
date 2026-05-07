@@ -9,7 +9,8 @@ import { z } from "zod"
 import { FcGoogle } from "react-icons/fc"
 import { HiEye, HiEyeOff } from "react-icons/hi"
 import { IoArrowBack } from "react-icons/io5"
-import { signIn } from "@/lib/auth-client"
+import { ENDPOINTS } from "@/lib/api/endpoints"
+import apiClient from "@/lib/api/client"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -40,32 +41,37 @@ export function LoginForm() {
   async function onSubmit(data: LoginValues) {
     setIsLoading(true)
     try {
-      const { data: authData, error } = await signIn.email({
+      const response = await apiClient.post(ENDPOINTS.AUTH.SIGN_IN_EMAIL, {
         email: data.email,
         password: data.password,
-        callbackURL: "/dashboard"
       })
 
-      if (error) {
-        toast.error(error.message || "Invalid credentials")
+      const { success, data: authData } = response.data
+
+      if (!success) {
+        toast.error("Invalid credentials")
         return
       }
 
-      // Save token if returned (as per API.md requirements)
-      const token = (authData as any).token || (authData as any).session?.token
+      // Save token and role if returned
+      const token = authData?.token
+      const role = authData?.user?.role
 
       if (token) {
         localStorage.setItem('auth_token', token)
-        // Set cookie for middleware
+        if (role) localStorage.setItem('user_role', role)
+        
+        // Set cookies for proxy
         const Cookies = (await import('js-cookie')).default
         Cookies.set('auth_token', token, { expires: 7, path: '/' })
+        if (role) Cookies.set('user_role', role, { expires: 7, path: '/' })
       }
 
       toast.success("Welcome back!")
       router.push("/dashboard")
-    } catch (error) {
+    } catch (error: any) {
       console.error("Login error:", error)
-      toast.error("An unexpected error occurred")
+      // Error is handled by apiClient interceptor
     } finally {
       setIsLoading(false)
     }
@@ -73,13 +79,18 @@ export function LoginForm() {
 
   const handleGoogleSignIn = async () => {
     try {
-      await signIn.social({
+      const response = await apiClient.post(ENDPOINTS.AUTH.SIGN_IN_SOCIAL, {
         provider: "google",
-        callbackURL: window.location.origin + "/dashboard"
+        callbackURL: window.location.origin + "/dashboard",
+        disableRedirect: true // Get URL back instead of auto-redirect
       })
+
+      const { url } = response.data
+      if (url) {
+        window.location.href = url
+      }
     } catch (error) {
       console.error("Google sign-in error:", error)
-      toast.error("Google sign in failed")
     }
   }
 
