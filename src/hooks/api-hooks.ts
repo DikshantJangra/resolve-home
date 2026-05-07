@@ -46,7 +46,7 @@ export function useCategories() {
     queryKey: ['categories'],
     queryFn: async () => {
       const response = await apiClient.get(ENDPOINTS.CATEGORIES.LIST)
-      return response.data.data
+      return response.data.data?.categories || []
     }
   })
 }
@@ -60,7 +60,7 @@ export function useServices(categoryId?: string) {
       const response = await apiClient.get(ENDPOINTS.SERVICES.BASE, {
         params: { categoryId }
       })
-      return response.data.data
+      return response.data.data?.services || []
     }
   })
 }
@@ -86,7 +86,7 @@ export function useUserBookings() {
     queryKey: ['user-bookings'],
     queryFn: async () => {
       const response = await apiClient.get(ENDPOINTS.BOOKINGS.BASE)
-      return response.data.data
+      return response.data.data?.bookings || []
     },
     enabled: typeof window !== 'undefined' && !!localStorage.getItem('auth_token')
   })
@@ -143,7 +143,7 @@ export function useUserChats() {
     queryKey: ['user-chats'],
     queryFn: async () => {
       const response = await apiClient.get(ENDPOINTS.CHATS.BASE)
-      return response.data.data
+      return response.data.data?.chats || []
     },
     enabled: typeof window !== 'undefined' && !!localStorage.getItem('auth_token')
   })
@@ -154,7 +154,7 @@ export function useChatMessages(chatId: string) {
     queryKey: ['chat-messages', chatId],
     queryFn: async () => {
       const response = await apiClient.get(ENDPOINTS.CHATS.MESSAGES(chatId))
-      return response.data.data
+      return response.data.data?.messages || []
     },
     enabled: !!chatId
   })
@@ -177,7 +177,7 @@ export function useAdminBookings() {
     queryKey: ['admin-bookings'],
     queryFn: async () => {
       const response = await apiClient.get(ENDPOINTS.ADMIN_BOOKINGS.BASE)
-      return response.data.data
+      return response.data.data?.bookings || []
     }
   })
 }

@@ -59,7 +59,7 @@ export const Hero = () => {
                 className="h-11 w-full appearance-none rounded-lg border border-[#525252] bg-white/90 px-4 pr-11 text-sm text-[#3F3F46] outline-none transition-all focus:ring-2 focus:ring-blue-500/20"
               >
                 <option value="">What do you need help with?</option>
-                {!isLoading && categories?.map((cat: any) => (
+                {!isLoading && Array.isArray(categories) && categories.map((cat: any) => (
                   <option key={cat.id} value={cat.id}>{cat.name}</option>
                 ))}
               </select>
