@@ -15,15 +15,18 @@ const apiClient = axios.create({
   withCredentials: true,
   headers: {
     'Content-Type': 'application/json',
+    'X-Requested-With': 'XMLHttpRequest',
   },
 })
 
 // Request Interceptor
 apiClient.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
-    // In a real app, you might get the token from a cookie or localStorage
     const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null
-    if (token && config.headers) {
+    // Don't add token to auth endpoints to avoid issues with stale tokens
+    const isAuthRoute = config.url?.includes('/api/auth/') || config.url?.includes('/api/signup-with-role')
+    
+    if (token && config.headers && !isAuthRoute) {
       config.headers.Authorization = `Bearer ${token}`
     }
     return config
@@ -54,7 +57,7 @@ apiClient.interceptors.response.use(
       }
       }
     } else if (error.response?.status === 403) {
-      toast.error('You do not have permission to perform this action.')
+      toast.error(message || 'You do not have permission to perform this action.')
     } else {
       toast.error(message)
     }

@@ -10,6 +10,7 @@ import 'react-phone-number-input/style.css'
 import { FcGoogle } from "react-icons/fc"
 import { HiEye, HiEyeOff } from "react-icons/hi"
 import apiClient from "@/lib/api/client"
+import { authClient } from "@/lib/auth-client"
 import { ENDPOINTS } from "@/lib/api/endpoints"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -232,16 +233,10 @@ export function RegisterForm() {
               type="button"
               onClick={async () => {
                 try {
-                  const response = await apiClient.post(ENDPOINTS.AUTH.SIGN_IN_SOCIAL, {
+                  await authClient.signIn.social({
                     provider: "google",
-                    callbackURL: window.location.origin + "/dashboard",
-                    disableRedirect: true
+                    callbackURL: typeof window !== 'undefined' ? window.location.origin + "/dashboard" : "/dashboard",
                   })
-
-                  const { url } = response.data
-                  if (url) {
-                    window.location.href = url
-                  }
                 } catch (err) {
                   console.error("Social sign-in error:", err);
                 }

@@ -23,7 +23,7 @@ export const ENDPOINTS = {
 
   // ─── Categories (public/shared) ───────────────────────────────────────────
   CATEGORIES: {
-    LIST: '/api/admin/categories',
+    LIST: '/api/categories',
   },
 
   // ─── User ─────────────────────────────────────────────────────────────────
