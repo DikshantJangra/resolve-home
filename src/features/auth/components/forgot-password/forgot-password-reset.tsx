@@ -48,7 +48,7 @@ export function ForgotPasswordReset() {
     setIsLoading(true)
     try {
       const response = await apiClient.post(ENDPOINTS.AUTH.RESET_PASSWORD, {
-        password: data.password,
+        newPassword: data.password,
         token: token || "", // Token from store (or OTP)
       })
 
