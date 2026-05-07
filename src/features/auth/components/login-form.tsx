@@ -111,12 +111,23 @@ export function LoginForm() {
 
   const handleGoogleSignIn = async () => {
     try {
-      await authClient.signIn.social({
+      const { data, error } = await authClient.signIn.social({
         provider: "google",
-        callbackURL: typeof window !== 'undefined' ? window.location.origin + "/dashboard" : "/dashboard",
+        callbackURL: "/dashboard",
+        disableRedirect: true,
       })
+
+      if (error) {
+        toast.error(error.message || "Failed to initiate Google sign-in")
+        return
+      }
+
+      if (data?.url) {
+        window.location.href = data.url
+      }
     } catch (error) {
       console.error("Google sign-in error:", error)
+      toast.error("An unexpected error occurred")
     }
   }
 

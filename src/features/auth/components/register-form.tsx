@@ -16,6 +16,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { cn } from "@/lib/utils"
+import { toast } from "sonner"
 import { useRegister } from "../hooks/use-register"
 import { registerSchema, type RegisterValues } from "../types"
 import { useRegisterStore } from "@/store/use-register-store"
@@ -233,12 +234,23 @@ export function RegisterForm() {
               type="button"
               onClick={async () => {
                 try {
-                  await authClient.signIn.social({
+                  const { data, error } = await authClient.signIn.social({
                     provider: "google",
-                    callbackURL: typeof window !== 'undefined' ? window.location.origin + "/dashboard" : "/dashboard",
+                    callbackURL: "/dashboard",
+                    disableRedirect: true,
                   })
+
+                  if (error) {
+                    toast.error(error.message || "Failed to initiate Google sign-up")
+                    return
+                  }
+
+                  if (data?.url) {
+                    window.location.href = data.url
+                  }
                 } catch (err) {
                   console.error("Social sign-in error:", err);
+                  toast.error("An unexpected error occurred");
                 }
               }}
               className="h-12 w-full rounded-xl border-zinc-600 border px-6 py-3 text-neutral-700 text-sm font-medium hover:bg-zinc-50"
