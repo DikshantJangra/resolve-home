@@ -4247,14 +4247,15 @@ export interface paths {
          * Get all user chats
          * @description Get list of all chats for authenticated user (customer or worker) with unread message counts and last message preview.
          *
-         *     ## Socket.IO Real-Time Events
+         *     ## Socket.IO
          *
-         *     After fetching chats via REST API, connect to Socket.IO for real-time messaging:
+         *     Connect to Socket.IO for real-time messaging:
+         *
+         *     **Server URL:** `https://resolvhome.onrender.com`
          *
          *     **Connection:**
          *     ```javascript
-         *     const socket = io('http://localhost:3000');
-         *     socket.emit('join', userId); // Join with your userId
+         *     const socket = io('https://resolvhome.onrender.com');
          *     ```
          *
          *     **Join a chat:**
@@ -4293,16 +4294,6 @@ export interface paths {
          *     });
          *     ```
          *
-         *     **Mark as read:**
-         *     ```javascript
-         *     socket.emit('mark_read', { chatId });
-         *
-         *     // Listen for read confirmation
-         *     socket.on('messages_read', ({ chatId, readBy }) => {
-         *       // Update UI to show messages were read
-         *     });
-         *     ```
-         *
          *     **Online status:**
          *     ```javascript
          *     socket.on('user_online', ({ userId }) => {
@@ -4313,8 +4304,6 @@ export interface paths {
          *       // User went offline
          *     });
          *     ```
-         *
-         *     See `SOCKET_IO_DOCUMENTATION.md` for complete reference.
          */
         get: {
             parameters: {
@@ -4552,6 +4541,984 @@ export interface paths {
                             error?: string;
                         };
                     };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/wallet": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get user wallet
+         * @description Get wallet details for the authenticated user including balance and statistics.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Wallet details retrieved successfully */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example true */
+                            success?: boolean;
+                            data?: {
+                                wallet?: {
+                                    id?: string;
+                                    userId?: string;
+                                    /** @example 50000 */
+                                    balance?: number;
+                                    /** @example 100000 */
+                                    totalDeposits?: number;
+                                    /** @example 30000 */
+                                    totalWithdrawals?: number;
+                                    /** @example 20000 */
+                                    totalSpent?: number;
+                                    /** @example NGN */
+                                    currency?: string;
+                                    /** @enum {string} */
+                                    status?: "active" | "suspended" | "frozen";
+                                    /** Format: date-time */
+                                    createdAt?: string;
+                                    /** Format: date-time */
+                                    updatedAt?: string;
+                                };
+                            };
+                        };
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Wallet not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/wallet/balance": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get wallet balance
+         * @description Get current available balance in the wallet.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Balance retrieved successfully */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example true */
+                            success?: boolean;
+                            data?: {
+                                /** @example 50000 */
+                                balance?: number;
+                                /** @example NGN */
+                                currency?: string;
+                            };
+                        };
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/wallet/statistics": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get wallet statistics
+         * @description Get detailed statistics about wallet transactions and balances.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Statistics retrieved successfully */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example true */
+                            success?: boolean;
+                            data?: {
+                                statistics?: {
+                                    /** @example 50000 */
+                                    balance?: number;
+                                    /** @example 100000 */
+                                    totalDeposits?: number;
+                                    /** @example 30000 */
+                                    totalWithdrawals?: number;
+                                    /** @example 20000 */
+                                    totalSpent?: number;
+                                    /** @example NGN */
+                                    currency?: string;
+                                    transactionStats?: {
+                                        /** @example deposit */
+                                        type?: string;
+                                        /** @example 5 */
+                                        count?: number;
+                                        /** @example 100000 */
+                                        totalAmount?: number;
+                                    }[];
+                                };
+                            };
+                        };
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/wallet/transactions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get transaction history
+         * @description Get paginated list of wallet transactions with optional filtering by type.
+         */
+        get: {
+            parameters: {
+                query?: {
+                    /** @description Page number */
+                    page?: number;
+                    /** @description Items per page */
+                    limit?: number;
+                    /** @description Filter by transaction type */
+                    type?: "deposit" | "withdrawal" | "payment" | "refund" | "escrow_hold" | "escrow_release";
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Transactions retrieved successfully */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example true */
+                            success?: boolean;
+                            data?: {
+                                id?: string;
+                                walletId?: string;
+                                userId?: string;
+                                /** @enum {string} */
+                                type?: "deposit" | "withdrawal" | "payment" | "refund" | "escrow_hold" | "escrow_release";
+                                /** @example 10000 */
+                                amount?: number;
+                                /** @example 40000 */
+                                balanceBefore?: number;
+                                /** @example 50000 */
+                                balanceAfter?: number;
+                                /** @enum {string} */
+                                status?: "pending" | "completed" | "failed" | "cancelled";
+                                reference?: string;
+                                description?: string;
+                                metadata?: Record<string, never>;
+                                /** Format: date-time */
+                                createdAt?: string;
+                                /** Format: date-time */
+                                updatedAt?: string;
+                            }[];
+                            pagination?: {
+                                page?: number;
+                                limit?: number;
+                                total?: number;
+                                totalPages?: number;
+                            };
+                        };
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/wallet/deposit/initialize": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Initialize wallet deposit
+         * @description Initialize a Paystack payment to deposit funds into wallet. Returns authorization URL for payment.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /**
+                         * @description Amount to deposit in Naira (minimum ₦100)
+                         * @example 10000
+                         */
+                        amount: number;
+                    };
+                };
+            };
+            responses: {
+                /** @description Deposit initialized successfully */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example true */
+                            success?: boolean;
+                            data?: {
+                                /** @example Deposit initialized successfully */
+                                message?: string;
+                                /**
+                                 * @description Redirect user to this URL to complete payment
+                                 * @example https://checkout.paystack.com/xxxxxxxxxx
+                                 */
+                                authorizationUrl?: string;
+                                /** @example DEP-1234567890-123456 */
+                                reference?: string;
+                                /** @example 10000 */
+                                amount?: number;
+                            };
+                        };
+                    };
+                };
+                /** @description Invalid amount or minimum deposit not met */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Wallet not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/wallet/deposit/verify/{reference}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Verify wallet deposit
+         * @description Verify Paystack payment and credit wallet balance. Call this after user completes payment.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Payment reference from initialize endpoint */
+                    reference: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Deposit verified and wallet credited */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example true */
+                            success?: boolean;
+                            data?: {
+                                /** @example Deposit successful */
+                                message?: string;
+                                /** @example 10000 */
+                                amount?: number;
+                                /** @example 60000 */
+                                newBalance?: number;
+                                transaction?: {
+                                    id?: string;
+                                    /** @example deposit */
+                                    type?: string;
+                                    amount?: number;
+                                    /** @example completed */
+                                    status?: string;
+                                    reference?: string;
+                                    balanceBefore?: number;
+                                    balanceAfter?: number;
+                                };
+                            };
+                        };
+                    };
+                };
+                /** @description Payment verification failed */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Transaction not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/quotations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Create quotation
+         * @description Engineer creates a quotation for a confirmed booking after visiting the customer location. Fixed call-out fee of ₦10,000 + workmanship + materials.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /** @description Booking ID */
+                        bookingId: string;
+                        /**
+                         * @description Cost of labor/workmanship
+                         * @example 40000
+                         */
+                        workmanshipCost: number;
+                        /**
+                         * @description Cost of materials
+                         * @example 20000
+                         */
+                        materialCost: number;
+                        /** @description Optional detailed breakdown of costs */
+                        breakdown?: {
+                            /** @example PVC Pipes */
+                            item?: string;
+                            /** @example 5000 */
+                            cost?: number;
+                            /** @enum {string} */
+                            type?: "material" | "workmanship";
+                        }[];
+                    };
+                };
+            };
+            responses: {
+                /** @description Quotation created successfully */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example true */
+                            success?: boolean;
+                            /** @example Quotation created successfully */
+                            message?: string;
+                            data?: {
+                                quotation?: {
+                                    id?: string;
+                                    bookingId?: string;
+                                    engineerId?: string;
+                                    customerId?: string;
+                                    /**
+                                     * @description Fixed call-out fee
+                                     * @example 10000
+                                     */
+                                    callOutFee?: number;
+                                    /** @example 40000 */
+                                    workmanshipCost?: number;
+                                    /** @example 20000 */
+                                    materialCost?: number;
+                                    /**
+                                     * @description Call-out + workmanship + material
+                                     * @example 70000
+                                     */
+                                    totalCost?: number;
+                                    /**
+                                     * @description 20% of (workmanship + material)
+                                     * @example 12000
+                                     */
+                                    platformFee?: number;
+                                    /**
+                                     * @description Call-out + 80% workmanship
+                                     * @example 42000
+                                     */
+                                    engineerPayout?: number;
+                                    /**
+                                     * @description 80% of material
+                                     * @example 16000
+                                     */
+                                    materialVendorPayout?: number;
+                                    breakdown?: unknown[];
+                                    /** @enum {string} */
+                                    status?: "pending" | "approved" | "rejected";
+                                    /** Format: date-time */
+                                    createdAt?: string;
+                                    /** Format: date-time */
+                                    updatedAt?: string;
+                                };
+                            };
+                        };
+                    };
+                };
+                /** @description Bad request - validation error */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Forbidden - only workers can create quotations */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Booking not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Active quotation already exists */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/quotations/booking/{bookingId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get quotation by booking ID
+         * @description Get quotation details for a specific booking. Accessible by customer or assigned engineer.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Booking ID */
+                    bookingId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Quotation retrieved successfully */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example true */
+                            success?: boolean;
+                            data?: {
+                                quotation?: {
+                                    id?: string;
+                                    bookingId?: string;
+                                    engineerId?: string;
+                                    customerId?: string;
+                                    /** @example 10000 */
+                                    callOutFee?: number;
+                                    /** @example 40000 */
+                                    workmanshipCost?: number;
+                                    /** @example 20000 */
+                                    materialCost?: number;
+                                    /** @example 70000 */
+                                    totalCost?: number;
+                                    /** @example 12000 */
+                                    platformFee?: number;
+                                    /** @example 42000 */
+                                    engineerPayout?: number;
+                                    /** @example 16000 */
+                                    materialVendorPayout?: number;
+                                    breakdown?: unknown[];
+                                    status?: string;
+                                    /** Format: date-time */
+                                    createdAt?: string;
+                                    /** Format: date-time */
+                                    updatedAt?: string;
+                                };
+                            };
+                        };
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Forbidden - no access to this quotation */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Quotation or booking not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/quotations/{id}/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Approve quotation
+         * @description Customer approves the quotation. Booking status changes to "payment_pending".
+         */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Quotation ID */
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Quotation approved successfully */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example true */
+                            success?: boolean;
+                            /** @example Quotation approved successfully */
+                            message?: string;
+                            data?: {
+                                quotation?: {
+                                    id?: string;
+                                    /** @example approved */
+                                    status?: string;
+                                    /** Format: date-time */
+                                    customerApprovedAt?: string;
+                                };
+                            };
+                        };
+                    };
+                };
+                /** @description Bad request - only pending quotations can be approved */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Forbidden - only customer can approve */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Quotation not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/quotations/{id}/reject": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Reject quotation
+         * @description Customer rejects the quotation. Engineer can revise and resubmit.
+         */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Quotation ID */
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        /**
+                         * @description Optional rejection reason
+                         * @example Price too high
+                         */
+                        reason?: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Quotation rejected successfully */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example true */
+                            success?: boolean;
+                            /** @example Quotation rejected successfully */
+                            message?: string;
+                            data?: {
+                                quotation?: {
+                                    id?: string;
+                                    /** @example rejected */
+                                    status?: string;
+                                    rejectionReason?: string;
+                                };
+                            };
+                        };
+                    };
+                };
+                /** @description Bad request - only pending quotations can be rejected */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Forbidden - only customer can reject */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Quotation not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/quotations/{id}/revise": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Revise quotation
+         * @description Engineer revises a rejected quotation with new costs. Status changes back to "pending".
+         */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Quotation ID */
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /** @example 35000 */
+                        workmanshipCost: number;
+                        /** @example 18000 */
+                        materialCost: number;
+                        breakdown?: {
+                            item?: string;
+                            cost?: number;
+                            /** @enum {string} */
+                            type?: "material" | "workmanship";
+                        }[];
+                    };
+                };
+            };
+            responses: {
+                /** @description Quotation revised successfully */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example true */
+                            success?: boolean;
+                            /** @example Quotation revised successfully */
+                            message?: string;
+                            data?: {
+                                quotation?: {
+                                    id?: string;
+                                    /** @example pending */
+                                    status?: string;
+                                    /** @example 63000 */
+                                    totalCost?: number;
+                                };
+                            };
+                        };
+                    };
+                };
+                /** @description Bad request - only rejected quotations can be revised */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Forbidden - only engineer can revise */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Quotation not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
                 };
             };
         };

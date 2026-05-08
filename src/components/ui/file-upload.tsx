@@ -135,16 +135,16 @@ export const FileUpload: React.FC<FileUploadProps> = ({
   if (!uppy || !isOpen) return null
 
   return (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-transparent pointer-events-none">
-      {/* Click-outside backdrop */}
+    <div className="fixed inset-0 z-[99999] flex items-center justify-center pointer-events-none">
+      {/* Click-outside backdrop with super minimal blur */}
       <div 
-        className="absolute inset-0 pointer-events-auto bg-transparent" 
+        className="absolute inset-0 pointer-events-auto bg-black/10 backdrop-blur-[2px]" 
         onClick={onRequestClose}
       />
       
       {/* Modal Content */}
-      <div className="relative z-[10000] pointer-events-auto">
-        <div className="bg-white rounded-xl shadow-2xl overflow-hidden min-w-[300px] md:min-w-[600px]">
+      <div className="relative z-[100000] pointer-events-auto w-full max-w-[600px] px-4">
+        <div className="bg-white rounded-xl shadow-2xl overflow-hidden">
           <Dashboard 
             uppy={uppy}
             width="100%"

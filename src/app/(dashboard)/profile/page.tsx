@@ -37,7 +37,7 @@ export default function ProfilePage() {
   }
 
   const user = profile?.user || session?.user
-  const completedBookings = bookings?.filter((b: any) => b.status === 'COMPLETED')?.length || 0
+  const completedBookings = bookings?.filter((b: any) => b.status?.toLowerCase() === 'completed')?.length || 0
 
   const profileData = {
     fullName: user?.name || 'User',

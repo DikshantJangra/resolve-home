@@ -9,9 +9,16 @@ import { useChatStore } from '@/store/use-chat-store'
 import { cn } from '@/lib/utils'
 
 export default function MessagesPage() {
+  const [mounted, setMounted] = React.useState(false)
   const { data: chats, isLoading } = useUserChats()
   const { activeChatId, setActiveChatId } = useChatStore()
+  
+  React.useEffect(() => {
+    setMounted(true)
+  }, [])
+
   const hasConversations = chats && chats.length > 0
+  const showLoading = !mounted || isLoading
 
   return (
     <div className="h-[calc(100vh-140px)] flex flex-col gap-4 md:gap-6">
@@ -33,7 +40,7 @@ export default function MessagesPage() {
           "flex-1 h-full transition-all",
           !activeChatId ? "hidden lg:block" : "block"
         )}>
-          {isLoading ? (
+          {showLoading ? (
             <div className="h-full bg-white rounded-[20px] outline outline-1 outline-offset-[-1px] outline-zinc-300 overflow-hidden flex items-center justify-center">
               <div className="text-zinc-500 animate-pulse text-sm">Loading messages...</div>
             </div>

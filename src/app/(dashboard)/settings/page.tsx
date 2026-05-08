@@ -320,16 +320,19 @@ function NotificationsSection({ user }: { user: any }) {
               <p className="text-zinc-600 text-xs font-normal">{item.desc}</p>
             </div>
             <button 
+              type="button"
               onClick={() => toggleItem(item.id)}
               className={cn(
-                "w-11 h-6 rounded-full transition-all relative",
-                item.active ? "bg-blue-700" : "bg-gray-300"
+                "relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none",
+                item.active ? "bg-blue-700" : "bg-gray-200"
               )}
             >
-              <div className={cn(
-                "w-4 h-4 bg-white rounded-full absolute top-1 shadow-sm transition-all",
-                item.active ? "right-1" : "left-1"
-              )} />
+              <span
+                className={cn(
+                  "pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out",
+                  item.active ? "translate-x-5" : "translate-x-0"
+                )}
+              />
             </button>
           </div>
         ))}

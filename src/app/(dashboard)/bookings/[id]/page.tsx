@@ -15,6 +15,7 @@ import {
 import { HiWrenchScrewdriver } from 'react-icons/hi2'
 import { BookingProgressTracker } from '@/features/booking/components/booking-progress-tracker'
 import { ReviewCard } from '@/features/booking/components/review-card'
+import { ReviewForm } from '@/features/booking/components/review-form'
 import { Button } from '@/components/ui/button'
 import { useBookingDetail } from '@/hooks/api-hooks'
 import { format } from 'date-fns'
@@ -193,9 +194,32 @@ export default function BookingDetailsPage() {
 
               <div className="flex flex-col gap-4">
                 <h4 className="text-neutral-700 text-sm font-semibold">Professional&apos;s Review</h4>
-                <div className="flex items-center justify-center p-8 bg-white rounded-xl border border-dashed border-zinc-200 italic text-zinc-400 text-sm">
-                  Reviews will be available after completion.
-                </div>
+                
+                {booking.status === 'completed' ? (
+                  booking.review ? (
+                    <ReviewCard 
+                      review={{
+                        id: booking.review.id || 'rev-1',
+                        rating: booking.review.rating || 5,
+                        comment: booking.review.comment || '',
+                        location: booking.location?.city || 'Local',
+                        title: 'Job Completed',
+                        images: []
+                      }} 
+                    />
+                  ) : (
+                    <ReviewForm 
+                      bookingId={booking.id} 
+                      onSuccess={() => {
+                        // Query invalidation handled in hook
+                      }}
+                    />
+                  )
+                ) : (
+                  <div className="flex items-center justify-center p-8 bg-white rounded-xl border border-dashed border-zinc-200 italic text-zinc-400 text-sm">
+                    Reviews will be available after completion.
+                  </div>
+                )}
               </div>
 
               <div className="flex gap-4 mt-auto">

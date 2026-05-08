@@ -28,41 +28,6 @@
 { "success": true, "message": "User created successfully. Verification email sent." }
 ```
 
-### `POST /api/auth/sign-in/email`
-```json
-// Request
-{ "email": "string", "password": "string (min 8)" }
-// Response 200
-{ "success": true, "data": { "user": {}, "session": {}, "token": "string" } }
-```
-
-### `POST /api/auth/sign-in/social`
-```json
-// Request
-{ "provider": "google", "callbackURL?": "/dashboard", "disableRedirect?": true }
-// Response 200 (disableRedirect: true)
-{ "url": "https://accounts.google.com/...", "redirect": false }
-// Response 302 (disableRedirect: false) — redirects to Google OAuth
-```
-
-### `POST /api/auth/forget-password`
-```json
-{ "email": "string" }
-// 200: { "success": true, "message": "Password reset email sent" }
-```
-
-### `POST /api/auth/reset-password`
-```json
-{ "token": "string", "password": "string (min 8)" }
-```
-
-### `GET /api/auth/get-session`
-```json
-// Response 200
-{ "success": true, "data": { "user": {}, "session": {} } }
-// 401 if not authenticated
-```
-
 ---
 
 ## User — `User`
@@ -78,26 +43,14 @@
 {
   id: string
   name: string
-  email: string        // read-only, cannot be changed
+  email: string
   phone: string
-  address: string
-  image: string        // profile image URL (upload via /api/upload first)
+  image: string        // profile image URL
   role: "user" | "admin" | "worker"
   emailVerified: boolean
-  createdAt: string    // ISO date
+  createdAt: string
   updatedAt: string
 }
-```
-
-### `PUT /api/user/profile`
-```json
-// Request (name required, rest optional)
-{ "name": "string", "phone?": "string", "address?": "string", "image?": "string (URL)" }
-```
-
-### `PUT /api/user/password`
-```json
-{ "currentPassword": "string", "newPassword": "string (min 8)" }
 ```
 
 ---
@@ -106,25 +59,9 @@
 
 | Method | Endpoint | Summary | Auth |
 |--------|----------|---------|:---:|
+| `GET`  | `/api/categories` | List all categories | ❌ |
 | `GET`  | `/api/services` | List all services (filter by `?categoryId=`) | ❌ |
-| `GET`  | `/api/services/:id` | Get single service | ❌ |
 | `GET`  | `/api/categories/:categoryId/services` | Services by category | ❌ |
-
-### Service Shape
-```ts
-{
-  id: string
-  name: string
-  description: string
-  price: number
-  categoryId: string
-  duration: number     // minutes
-  image: string
-  isActive: boolean
-  createdAt: string
-  updatedAt: string
-}
-```
 
 ---
 
@@ -133,170 +70,74 @@
 | Method | Endpoint | Summary | Auth |
 |--------|----------|---------|:---:|
 | `POST` | `/api/bookings` | Create booking | ✅ |
-| `GET`  | `/api/bookings` | Get own bookings (paginated, filter by status) | ✅ |
+| `GET`  | `/api/bookings` | Get own bookings | ✅ |
+| `GET`  | `/api/bookings/available-engineers` | Get available engineers for a booking | ✅ |
+| `PUT`  | `/api/bookings/:id/select-engineer` | Select engineer for booking | ✅ |
+| `POST` | `/api/bookings/:id/review` | Review completed booking | ✅ |
 | `PUT`  | `/api/bookings/:id/cancel` | Cancel a booking | ✅ |
 
 ### `POST /api/bookings`
 ```json
-// Request
 {
   "serviceId": "string",
-  "scheduledDate": "YYYY-MM-DD",
-  "scheduledTime": "HH:MM",
-  "notes?": "string"
-}
-// ⚠️ Requires complete profile: name, email, phone, address
-// ⚠️ Date must be in the future
-```
-
-### Booking Status Enum
-```
-pending → confirmed → in-progress → completed
-                  ↘ cancelled (only from pending or confirmed)
-```
-
-### Booking Shape
-```ts
-{
-  id: string
-  customerId: string
-  serviceId: string
-  service: object      // populated
-  engineerIds: string[]
-  scheduledDate: string
-  scheduledTime: string
-  customerDetails: object
-  status: "pending" | "confirmed" | "in-progress" | "completed" | "cancelled"
-  notes: string
-  totalPrice: number
-  createdAt: string
-  updatedAt: string
+  "priority": "emergency" | "standard",
+  "scheduledDate?": "YYYY-MM-DD",
+  "scheduledTime?": "HH:MM",
+  "issueDetails": "string",
+  "photos?": ["string (URL)"],
+  "location": { "state": "string", "city": "string", "streetAddress": "string", "nearestLandmark": "string", "latitude?": number, "longitude?": number }
 }
 ```
 
 ---
 
-## File Upload — `File Upload`
+## Wallet — `Wallet`
 
 | Method | Endpoint | Summary | Auth |
 |--------|----------|---------|:---:|
-| `GET`  | `/api/upload/config` | Get Uppy config | ✅ |
-| `POST` | `/api/upload` | Upload file(s) | ✅ |
-| `DELETE` | `/api/upload` | Delete file(s) | ✅ |
-
-### Query params for upload
-- `type`: `image` (5MB) | `document` (10MB) | `any` (10MB)
-- `multiple`: `true|false`
-- `maxFiles`: integer (default 5)
-
-### Upload Response
-```json
-{ "success": true, "data": { "file": { "url": "/uploads/filename.jpg", "filename": "...", "originalName": "...", "size": 102400, "mimeType": "image/jpeg" } } }
-```
+| `GET`  | `/api/wallet` | Get wallet details + balance | ✅ |
+| `GET`  | `/api/wallet/statistics` | Get wallet stats | ✅ |
+| `GET`  | `/api/wallet/transactions` | Get transaction history | ✅ |
+| `POST` | `/api/wallet/deposit/initialize` | Initialize deposit (Paystack) | ✅ |
+| `GET`  | `/api/wallet/deposit/verify/:ref` | Verify deposit | ✅ |
 
 ---
 
-## Admin — User Management
+## Quotation — `Quotation`
 
-> All admin routes require `role: admin` + Bearer token.
-
-| Method | Endpoint | Summary |
-|--------|----------|---------|
-| `GET`  | `/api/admin/users` | List users (paginated) |
-| `POST` | `/api/admin/users` | Create user |
-| `GET`  | `/api/admin/users/:id` | Get user |
-| `PUT`  | `/api/admin/users/:id` | Update user |
-| `POST` | `/api/admin/users/:id/ban` | Ban/unban user |
+| Method | Endpoint | Summary | Auth |
+|--------|----------|---------|:---:|
+| `POST` | `/api/quotations` | Create quotation (Engineer) | ✅ |
+| `GET`  | `/api/quotations/booking/:bookingId` | Get quotation for booking | ✅ |
+| `PUT`  | `/api/quotations/:id/approve` | Approve quotation (Customer) | ✅ |
+| `PUT`  | `/api/quotations/:id/reject` | Reject quotation (Customer) | ✅ |
+| `PUT`  | `/api/quotations/:id/revise` | Revise quotation (Engineer) | ✅ |
 
 ---
 
-## Admin — Category Management
+## Chat — `Chat`
 
-| Method | Endpoint | Summary |
-|--------|----------|---------|
-| `GET`  | `/api/admin/categories` | List all categories |
-| `POST` | `/api/admin/categories` | Create category |
-| `GET`  | `/api/admin/categories/:id` | Get category |
-| `PUT`  | `/api/admin/categories/:id` | Update category |
-| `DELETE` | `/api/admin/categories/:id` | Delete category |
+| Method | Endpoint | Summary | Auth |
+|--------|----------|---------|:---:|
+| `GET`  | `/api/chats` | Get all chats | ✅ |
+| `GET`  | `/api/chats/:chatId/messages` | Get chat messages | ✅ |
+| `PUT`  | `/api/chats/:chatId/read` | Mark messages as read | ✅ |
 
-### Category Shape
-```ts
-{ id: string; name: string; description: string; icon: string; createdAt: string; updatedAt: string }
-```
-
----
-
-## Admin — Service Management
-
-| Method | Endpoint | Summary |
-|--------|----------|---------|
-| `GET`  | `/api/admin/services` | List services (filter by `?categoryId=`) |
-| `POST` | `/api/admin/services` | Create service |
-| `GET`  | `/api/admin/services/:id` | Get service |
-| `PUT`  | `/api/admin/services/:id` | Update service |
-| `DELETE` | `/api/admin/services/:id` | Delete service |
+### Socket.IO Events
+- `join_chat`: (chatId)
+- `send_message`: ({ chatId, message })
+- `receive_message`: (message)
+- `typing` / `stop_typing`: ({ chatId })
+- `user_typing` / `user_stopped_typing`: ({ chatId, userId })
 
 ---
 
-## Admin — Engineer Management
+## Admin — Management
 
-| Method | Endpoint | Summary |
-|--------|----------|---------|
-| `GET`  | `/api/admin/engineers` | List engineers (paginated, `?includeInactive=true`) |
-| `POST` | `/api/admin/engineers` | Create engineer |
-| `GET`  | `/api/admin/engineers/:id` | Get engineer |
-| `PUT`  | `/api/admin/engineers/:id` | Update engineer |
-| `DELETE` | `/api/admin/engineers/:id` | Soft delete engineer |
+> All admin routes require `role: admin`.
 
-### Engineer Shape
-```ts
-{
-  id: string
-  name: string
-  email: string
-  phone: string
-  assignedServices: string[]   // array of service IDs
-  image: string
-  isActive: boolean
-  createdAt: string
-  updatedAt: string
-}
-```
-
----
-
-## Admin — Booking Management
-
-| Method | Endpoint | Summary |
-|--------|----------|---------|
-| `GET`  | `/api/admin/bookings` | All bookings (paginated, filter by status/serviceId/engineerId) |
-| `GET`  | `/api/admin/bookings/:id` | Get booking (with populated service + engineers) |
-| `PUT`  | `/api/admin/bookings/:id/status` | Update booking status |
-| `PUT`  | `/api/admin/bookings/:id/engineers` | Assign engineers to booking |
-
-### Assign Engineers
-```json
-// Request
-{ "engineerIds": ["id1", "id2"] }
-// 409 if any engineer already booked at that time
-```
-
----
-
-## Error Format (All Endpoints)
-```json
-{ "success": false, "error": "Human-readable error message" }
-```
-
-## Common HTTP Status Codes
-| Code | Meaning |
-|------|---------|
-| 200 | OK |
-| 201 | Created |
-| 400 | Bad Request / Validation Error |
-| 401 | Unauthorized (missing/invalid token) |
-| 403 | Forbidden (insufficient role) |
-| 404 | Resource Not Found |
-| 409 | Conflict (duplicate / scheduling clash) |
-| 500 | Server Error |
+- **Users:** `/api/admin/users` (GET, POST, GET :id, PUT :id, POST :id/ban)
+- **Categories:** `/api/admin/categories` (GET, POST, GET :id, PUT :id, DELETE :id)
+- **Services:** `/api/admin/services` (GET, POST, GET :id, PUT :id, DELETE :id)
+- **Engineers:** `/api/admin/engineers` (GET, POST, GET :id, PUT :id, DELETE :id)
+- **Bookings:** `/api/admin/bookings` (GET, GET :id, PUT :id/status, PUT :id/engineers)

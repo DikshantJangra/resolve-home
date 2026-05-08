@@ -3,6 +3,8 @@
 import React from 'react'
 import { HiOutlineStar } from 'react-icons/hi'
 import { cn } from '@/lib/utils'
+import { useUserBookings } from '@/hooks/api-hooks'
+import { format } from 'date-fns'
 
 interface ReviewGivenItemProps {
   professionalName: string
@@ -55,44 +57,45 @@ export const ReviewGivenItem = ({
 }
 
 export const ReviewsGivenList = () => {
-  const reviews = [
-    {
-      professionalName: 'James Adewale',
-      professionalInitials: 'JA',
-      category: 'Plumbing',
-      date: 'May 1, 2025',
-      rating: 5,
-      comment: 'James was incredibly professional. Fixed our burst pipe in under 2 hours. Would absolutely book again.'
-    },
-    {
-      professionalName: 'Amaka Okonkwo',
-      professionalInitials: 'AO',
-      category: 'Electrical',
-      date: 'Apr 28, 2025',
-      rating: 4,
-      comment: 'Very skilled. Sorted out the wiring fault quickly. Only slight issue was arrival 20 mins late.'
-    },
-    {
-      professionalName: 'Chidi Bello',
-      professionalInitials: 'CB',
-      category: 'Heating & AC',
-      date: 'Apr 18, 2025',
-      rating: 5,
-      comment: 'Excellent service from start to finish. Very tidy, explained everything clearly. Highly recommend.'
-    },
-    {
-      professionalName: 'James Adewale',
-      professionalInitials: 'JA',
-      category: 'Plumbing',
-      date: 'May 1, 2025',
-      rating: 5,
-      comment: 'James was incredibly professional. Fixed our burst pipe in under 2 hours. Would absolutely book again.'
-    }
-  ]
+  const { data: bookings, isLoading } = useUserBookings()
+
+  const reviews = bookings
+    ?.filter((b: any) => b.status === 'completed' && b.review)
+    .map((b: any) => ({
+      professionalName: b.engineer?.user?.name || 'Professional',
+      professionalInitials: b.engineer?.user?.name 
+        ? b.engineer.user.name.split(' ').map((n: string) => n[0]).join('').toUpperCase() 
+        : 'P',
+      category: b.service?.name || 'Service',
+      date: b.review?.createdAt ? format(new Date(b.review.createdAt), 'MMM d, yyyy') : format(new Date(b.updatedAt), 'MMM d, yyyy'),
+      rating: b.review?.rating || 0,
+      comment: b.review?.comment || ''
+    })) || []
+
+  if (isLoading) {
+    return (
+      <div className="flex flex-col gap-4">
+        {[1, 2, 3].map(i => (
+          <div key={i} className="h-24 w-full bg-gray-50 animate-pulse rounded-2xl" />
+        ))}
+      </div>
+    )
+  }
+
+  if (reviews.length === 0) {
+    return (
+      <div className="py-10 text-center flex flex-col items-center gap-3">
+        <div className="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center">
+          <HiOutlineStar className="w-8 h-8 text-blue-200" />
+        </div>
+        <p className="text-zinc-500 text-sm italic">You haven&apos;t given any reviews yet.</p>
+      </div>
+    )
+  }
 
   return (
     <div className="flex flex-col gap-4">
-      {reviews.map((review, index) => (
+      {reviews.map((review: any, index: number) => (
         <ReviewGivenItem key={index} {...review} />
       ))}
     </div>

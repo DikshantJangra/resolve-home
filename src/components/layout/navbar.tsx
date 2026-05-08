@@ -57,10 +57,10 @@ export const Navbar = ({ onMenuClick }: NavbarProps) => {
         
         <div className="relative flex items-center gap-3">
           <div className="relative h-10 w-10 md:h-12 md:w-12 overflow-hidden rounded-full border border-blue-700 flex items-center justify-center bg-zinc-100 shrink-0">
-            {isMounted && user?.image ? (
+            {isMounted ? (
               <img
-                src={user.image}
-                alt={user.name || "User"}
+                src={user?.image || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.name || 'User'}`}
+                alt={user?.name || "User"}
                 className="h-full w-full object-cover"
               />
             ) : (

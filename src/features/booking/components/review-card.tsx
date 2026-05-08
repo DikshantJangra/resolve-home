@@ -32,12 +32,12 @@ export const ReviewCard = ({ review }: ReviewCardProps) => {
         </div>
 
         <div className="flex flex-col gap-2">
-          <h4 className="text-slate-900 text-sm font-medium leading-5 line-clamp-1">{review.title}</h4>
+          <h4 className="text-slate-900 text-sm font-medium leading-5 line-clamp-1">{review.title || 'Job Review'}</h4>
           <p className="text-zinc-700 text-xs font-normal leading-4 line-clamp-3">{review.comment}</p>
         </div>
       </div>
 
-      {review.images.length > 0 && (
+      {review.images && review.images.length > 0 && (
         <div className="flex gap-1 overflow-hidden">
           {review.images.map((img, index) => (
             <img 

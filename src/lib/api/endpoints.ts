@@ -50,6 +50,25 @@ export const ENDPOINTS = {
     CANCEL:              (id: string) => `/api/bookings/${id}/cancel`,
   },
 
+  // ─── Wallet ───────────────────────────────────────────────────────────────
+  WALLET: {
+    BASE:               '/api/wallet',
+    BALANCE:            '/api/wallet/balance',
+    STATISTICS:         '/api/wallet/statistics',
+    TRANSACTIONS:       '/api/wallet/transactions',
+    DEPOSIT_INITIALIZE: '/api/wallet/deposit/initialize',
+    DEPOSIT_VERIFY:     (ref: string) => `/api/wallet/deposit/verify/${ref}`,
+  },
+
+  // ─── Quotations ────────────────────────────────────────────────────────────
+  QUOTATIONS: {
+    BASE:       '/api/quotations',
+    BY_BOOKING: (bookingId: string) => `/api/quotations/booking/${bookingId}`,
+    APPROVE:    (id: string) => `/api/quotations/${id}/approve`,
+    REJECT:     (id: string) => `/api/quotations/${id}/reject`,
+    REVISE:     (id: string) => `/api/quotations/${id}/revise`,
+  },
+
   // ─── Chats ────────────────────────────────────────────────────────────────
   CHATS: {
     BASE:     '/api/chats',

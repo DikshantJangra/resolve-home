@@ -30,7 +30,9 @@ export function useSignOut() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: async () => {
-      const response = await apiClient.post(ENDPOINTS.AUTH.SIGN_OUT)
+      const response = await apiClient.post(ENDPOINTS.AUTH.SIGN_OUT, {}, {
+        headers: { 'Content-Type': 'application/json' }
+      })
       return response.data
     },
     onSuccess: () => {
@@ -142,6 +144,23 @@ export function useCreateBooking() {
   })
 }
 
+export function useReviewBooking() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ bookingId, rating, comment }: { bookingId: string, rating: number, comment: string }) => {
+      const response = await apiClient.post(ENDPOINTS.BOOKINGS.REVIEW(bookingId), {
+        rating,
+        comment
+      })
+      return response.data
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['booking-detail', variables.bookingId] })
+      queryClient.invalidateQueries({ queryKey: ['user-bookings'] })
+    }
+  })
+}
+
 export function useAvailableEngineers(bookingId: string) {
   return useQuery({
     queryKey: ['available-engineers', bookingId],
@@ -162,6 +181,50 @@ export function useSelectEngineer() {
         engineerId
       })
       return response.data
+    }
+  })
+}
+
+// --- Wallet ---
+
+export function useWallet() {
+  return useQuery({
+    queryKey: ['wallet'],
+    queryFn: async () => {
+      const response = await apiClient.get(ENDPOINTS.WALLET.BASE)
+      return response.data.data?.wallet ?? null
+    },
+    enabled: typeof window !== 'undefined' && !!localStorage.getItem('auth_token')
+  })
+}
+
+export function useWalletStatistics() {
+  return useQuery({
+    queryKey: ['wallet-statistics'],
+    queryFn: async () => {
+      const response = await apiClient.get(ENDPOINTS.WALLET.STATISTICS)
+      return response.data.data?.statistics ?? null
+    },
+    enabled: typeof window !== 'undefined' && !!localStorage.getItem('auth_token')
+  })
+}
+
+export function useWalletTransactions() {
+  return useQuery({
+    queryKey: ['wallet-transactions'],
+    queryFn: async () => {
+      const response = await apiClient.get(ENDPOINTS.WALLET.TRANSACTIONS)
+      return response.data.data?.transactions || []
+    },
+    enabled: typeof window !== 'undefined' && !!localStorage.getItem('auth_token')
+  })
+}
+
+export function useInitializeDeposit() {
+  return useMutation({
+    mutationFn: async (amount: number) => {
+      const response = await apiClient.post(ENDPOINTS.WALLET.DEPOSIT_INITIALIZE, { amount })
+      return response.data.data
     }
   })
 }

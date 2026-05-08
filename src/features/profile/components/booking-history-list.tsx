@@ -73,13 +73,13 @@ export const BookingHistoryItem = ({
 export const BookingHistoryList = () => {
   const { data: bookings, isLoading } = useUserBookings()
 
-  const history = bookings?.filter((b: any) => b.status === 'COMPLETED').map((b: any) => ({
+  const history = bookings?.filter((b: any) => b.status?.toLowerCase() === 'completed').map((b: any) => ({
     id: b.id,
-    category: b.service?.category?.name || 'Service',
-    professionalName: b.engineer?.user?.name || 'Engineer',
+    category: b.service?.name || 'Service',
+    professionalName: b.engineer?.user?.name || 'Assigned Pro',
     date: b.createdAt ? format(new Date(b.createdAt), 'MMM d, yyyy') : 'Recently',
     price: b.totalPrice || 0,
-    rating: 5,
+    rating: b.review?.rating || 5, // Default to 5 if not yet rated for history view
     iconBgColor: 'bg-blue-50',
     iconColor: 'text-blue-700'
   })) || []

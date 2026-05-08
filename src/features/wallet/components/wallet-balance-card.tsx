@@ -7,9 +7,11 @@ import { Button } from '@/components/ui/button'
 interface WalletBalanceCardProps {
   balance: number
   email: string
+  isWorker?: boolean
+  onAction?: () => void
 }
 
-export const WalletBalanceCard = ({ balance, email }: WalletBalanceCardProps) => {
+export const WalletBalanceCard = ({ balance, email, isWorker, onAction }: WalletBalanceCardProps) => {
   return (
     <div className="w-full h-64 p-6 bg-blue-700 rounded-2xl flex flex-col justify-between relative overflow-hidden">
       {/* Decorative Moon Icon */}
@@ -30,9 +32,10 @@ export const WalletBalanceCard = ({ balance, email }: WalletBalanceCardProps) =>
       </div>
 
       <Button 
+        onClick={onAction}
         className="w-full bg-slate-50 text-blue-700 hover:bg-slate-100 font-medium h-12 rounded-xl border-none shadow-none"
       >
-        Withdraw Funds
+        {isWorker ? 'Withdraw Funds' : 'Fund Wallet'}
       </Button>
     </div>
   )
