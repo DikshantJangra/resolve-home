@@ -44,12 +44,12 @@ export default function BookingsPage() {
   }
 
   return (
-    <div className="flex flex-col gap-8">
+    <div className="flex flex-col gap-6 md:gap-8 pb-10">
       {/* Header Section */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex flex-col">
-          <h1 className="text-neutral-700 text-2xl font-bold font-['Plus_Jakarta_Sans'] leading-8">Bookings</h1>
-          <p className="text-zinc-500 text-base font-normal leading-6">Track and manage all your assigned jobs here.</p>
+          <h1 className="text-neutral-700 text-xl md:text-2xl font-bold font-['Plus_Jakarta_Sans'] leading-8">Bookings</h1>
+          <p className="text-zinc-500 text-sm md:text-base font-normal leading-6">Track and manage all your assigned jobs here.</p>
         </div>
         
         <div className="relative w-full md:w-96 group">
@@ -57,7 +57,7 @@ export default function BookingsPage() {
             placeholder="Search booking"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="h-12 pl-4 pr-12 border-zinc-300 rounded-xl text-sm placeholder:text-zinc-300 focus:border-blue-700 transition-all"
+            className="h-11 md:h-12 pl-4 pr-12 border-zinc-300 rounded-xl text-sm placeholder:text-zinc-300 focus:border-blue-700 transition-all"
           />
           <HiOutlineSearch className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-600 w-5 h-5 group-focus-within:text-blue-700 pointer-events-none" />
         </div>
@@ -77,16 +77,16 @@ export default function BookingsPage() {
                   key={tab.value}
                   onClick={() => setActiveTab(tab.value)}
                   className={cn(
-                    "flex items-center gap-2 px-6 py-4 border-b-2 transition-all whitespace-nowrap",
+                    "flex items-center gap-2 px-4 md:px-6 py-4 border-b-2 transition-all whitespace-nowrap",
                     activeTab === tab.value
                       ? "border-blue-700 text-blue-700 font-semibold"
                       : "border-transparent text-zinc-500 hover:text-zinc-700 font-normal"
                   )}
                 >
-                  <span className="text-sm leading-5">{tab.label}</span>
+                  <span className="text-xs md:text-sm leading-5">{tab.label}</span>
                   {count > 0 && (
                     <span className={cn(
-                      "w-5 h-5 flex items-center justify-center rounded-full text-[10px] font-bold",
+                      "w-4 h-4 md:w-5 md:h-5 flex items-center justify-center rounded-full text-[9px] md:text-[10px] font-bold",
                       activeTab === tab.value ? "bg-blue-100 text-blue-700" : "bg-zinc-100 text-zinc-500"
                     )}>
                       {count}
@@ -99,18 +99,18 @@ export default function BookingsPage() {
         </div>
 
         {/* Grid of Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-5">
           {filteredBookings.length > 0 ? (
             filteredBookings.map((booking: any) => (
               <BookingCard key={booking.id} booking={booking} />
             ))
           ) : (
-            <div className="col-span-full py-20 flex flex-col items-center justify-center text-zinc-500 gap-4">
-              <div className="w-16 h-16 bg-zinc-100 rounded-full flex items-center justify-center">
-                <HiOutlineSearch className="w-8 h-8" />
+            <div className="col-span-full py-16 md:py-20 flex flex-col items-center justify-center text-zinc-500 gap-4">
+              <div className="w-12 h-12 md:w-16 md:h-16 bg-zinc-100 rounded-full flex items-center justify-center">
+                <HiOutlineSearch className="w-6 h-6 md:w-8 md:h-8" />
               </div>
-              <p className="text-lg font-medium">No bookings found</p>
-              <p className="text-sm">Try adjusting your search or filters</p>
+              <p className="text-base md:text-lg font-medium">No bookings found</p>
+              <p className="text-xs md:text-sm">Try adjusting your search or filters</p>
             </div>
           )}
         </div>

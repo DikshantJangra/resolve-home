@@ -9,11 +9,9 @@ import {
   HiOutlineChatAlt, 
   HiOutlineUser, 
   HiOutlineCreditCard, 
-  HiOutlineCog,
-  HiOutlineLogout
+  HiOutlineCog
 } from 'react-icons/hi'
 import { cn } from '@/lib/utils'
-import { LogoutModal } from '@/features/auth/components/logout-modal'
 import { useUserProfile } from '@/hooks/api-hooks'
 import { Skeleton } from '@/components/ui/skeleton'
 
@@ -26,13 +24,28 @@ const sidebarItems = [
   { label: 'Settings', icon: HiOutlineCog, href: '/settings' },
 ]
 
-export const Sidebar = () => {
+interface SidebarProps {
+  onClose?: () => void
+}
+
+export const Sidebar = ({ onClose }: SidebarProps) => {
   const pathname = usePathname()
-  const [isLogoutOpen, setIsLogoutOpen] = React.useState(false)
+  const [isMounted, setIsMounted] = React.useState(false)
   const { data: user, isLoading: isLoadingUser } = useUserProfile()
 
+  React.useEffect(() => {
+    setIsMounted(true)
+  }, [])
+
   return (
-    <aside className="w-48 h-screen bg-white border-r border-zinc-300 flex flex-col sticky top-0">
+    <aside className="w-48 h-full min-h-screen bg-white border-r border-zinc-300 flex flex-col relative">
+      {/* Mobile Close Button */}
+      <button 
+        onClick={onClose}
+        className="lg:hidden absolute top-4 right-[-40px] w-8 h-8 bg-white border border-zinc-300 rounded-full flex items-center justify-center text-zinc-600 shadow-sm"
+      >
+        <span className="text-xl">×</span>
+      </button>
       {/* Logo Section */}
       <div className="h-16 px-6 border-b border-zinc-300 flex items-center">
         <Link href="/">
@@ -50,6 +63,7 @@ export const Sidebar = () => {
             <Link
               key={item.href}
               href={item.href}
+              onClick={onClose}
               className={cn(
                 "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors group",
                 isActive 
@@ -71,49 +85,7 @@ export const Sidebar = () => {
           )
         })}
 
-        {/* Logout Button */}
-        <button
-          onClick={() => setIsLogoutOpen(true)}
-          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors hover:bg-rose-50 group"
-        >
-          <HiOutlineLogout className="w-6 h-6 text-zinc-600 group-hover:text-rose-600 transition-colors" />
-          <span className="text-base font-normal font-inter leading-6 text-zinc-600 group-hover:text-rose-600">
-            Log out
-          </span>
-        </button>
       </nav>
-
-      {/* User Section */}
-      <div className="p-4 border-t border-zinc-300">
-        {isLoadingUser ? (
-          <div className="flex items-center gap-3">
-            <Skeleton className="w-9 h-9 rounded-full" />
-            <div className="space-y-1.5 flex-1">
-              <Skeleton className="h-3 w-20" />
-              <Skeleton className="h-2 w-24" />
-            </div>
-          </div>
-        ) : (
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-full bg-slate-200 overflow-hidden border border-slate-100 shrink-0">
-              <img 
-                src={user?.image || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.name}`} 
-                alt={user?.name} 
-                className="w-full h-full object-cover" 
-              />
-            </div>
-            <div className="flex flex-col min-w-0">
-              <span className="text-zinc-700 text-xs font-bold truncate">{user?.name}</span>
-              <span className="text-zinc-500 text-[10px] truncate">{user?.email}</span>
-            </div>
-          </div>
-        )}
-      </div>
-
-      <LogoutModal 
-        isOpen={isLogoutOpen} 
-        onClose={() => setIsLogoutOpen(false)} 
-      />
     </aside>
   )
 }

@@ -8,10 +8,15 @@ import { useChatStore } from '@/store/use-chat-store'
 import { formatDistanceToNow } from 'date-fns'
 
 export const ChatSidebar = () => {
+  const [isMounted, setIsMounted] = React.useState(false)
   const { data: chats, isLoading } = useUserChats()
   const { activeChatId, setActiveChatId } = useChatStore()
 
-  if (isLoading) {
+  React.useEffect(() => {
+    setIsMounted(true)
+  }, [])
+
+  if (!isMounted || isLoading) {
     return <div className="w-[458px] h-full bg-neutral-50 p-5">Loading chats...</div>
   }
   return (

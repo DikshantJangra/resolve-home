@@ -1,9 +1,7 @@
 'use client'
 
 import React, { useState } from 'react'
-import { HiOutlineX, HiOutlineTrash, HiOutlinePlus } from 'react-icons/hi'
-import { Button } from '@/components/ui/button'
-import { cn } from '@/lib/utils'
+import { HiOutlineX, HiOutlineTrash } from 'react-icons/hi'
 
 interface MaterialItem {
   id: string
@@ -13,120 +11,145 @@ interface MaterialItem {
 }
 
 export const QuotationModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) => {
+  const [laborFee, setLaborFee] = useState('0')
   const [items, setItems] = useState<MaterialItem[]>([
-    { id: '1', name: '', price: '', quantity: '1' }
+    { id: '1', name: '', price: '0', quantity: '1' }
   ])
 
   if (!isOpen) return null
 
   const addItem = () => {
-    setItems([...items, { id: Date.now().toString(), name: '', price: '', quantity: '1' }])
+    setItems([...items, { id: Date.now().toString(), name: '', price: '0', quantity: '1' }])
   }
 
   const removeItem = (id: string) => {
     setItems(items.filter(item => item.id !== id))
   }
 
+  const updateItem = (index: number, field: keyof MaterialItem, value: string) => {
+    const newItems = [...items]
+    newItems[index] = { ...newItems[index], [field]: value }
+    setItems(newItems)
+  }
+
+  const totalAmount = (Number(laborFee) || 0) + items.reduce((acc, item) => {
+    return acc + (Number(item.price) || 0) * (Number(item.quantity) || 0)
+  }, 0)
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
-      <div className="w-full max-w-[639px] bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
-        {/* Header */}
-        <div className="px-8 pt-8 pb-5 border-b border-zinc-200 flex justify-between items-start shrink-0">
-          <div className="space-y-1">
-            <h2 className="text-neutral-700 text-xl font-semibold font-['Plus_Jakarta_Sans'] leading-8">
-              Create Job Quotation
-            </h2>
-            <p className="text-zinc-600 text-base font-normal font-['Inter'] leading-6">
-              Break down costs for labor and materials.
-            </p>
-          </div>
-          <button 
-            onClick={onClose}
-            className="flex items-center gap-2 text-blue-700 hover:text-blue-800 transition-colors"
-          >
-            <HiOutlineX className="w-6 h-6" />
-            <span className="text-base font-medium">Close</span>
-          </button>
-        </div>
-
-        {/* Content */}
-        <div className="flex-1 overflow-y-auto p-8 space-y-8">
-          {/* Labor Fee */}
-          <div className="space-y-2">
-            <label className="flex items-center gap-0.5 text-zinc-600 text-sm font-medium">
-              Labor fee (₦) <span className="text-red-600">*</span>
-            </label>
-            <input 
-              type="text"
-              placeholder="Enter the amount you will charge for the job"
-              className="w-full h-12 px-4 rounded-xl border border-zinc-300 focus:outline-none focus:ring-2 focus:ring-blue-500/20 text-sm placeholder:text-zinc-300"
-            />
-          </div>
-
-          {/* Materials Section */}
-          <div className="space-y-4">
-            <div className="flex justify-between items-center">
-              <label className="flex items-center gap-0.5 text-zinc-600 text-sm font-medium">
-                Materials <span className="text-red-600">*</span>
-              </label>
-              <button 
-                onClick={addItem}
-                className="text-blue-700 text-sm font-medium hover:underline flex items-center gap-1"
-              >
-                <HiOutlinePlus className="w-4 h-4" />
-                Add Item
-              </button>
+      <div className="w-[639px] bg-white rounded-xl shadow-2xl flex flex-col max-h-[90vh]">
+        <div className="self-stretch flex flex-col justify-start items-start gap-6">
+          {/* Header */}
+          <div className="self-stretch px-5 pt-5 pb-3 border-b border-zinc-300 inline-flex justify-start items-start">
+            <div className="flex-1 inline-flex flex-col justify-start items-start gap-1">
+              <div className="self-stretch justify-start text-neutral-700 text-xl font-semibold font-['Plus_Jakarta_Sans'] leading-8">
+                Create Job Quotation
+              </div>
+              <div className="self-stretch justify-start text-zinc-600 text-base font-normal font-['Inter'] leading-6">
+                Break down costs for labor and materials.
+              </div>
             </div>
+            <button 
+              onClick={onClose}
+              className="flex justify-start items-center gap-2 text-blue-700 hover:text-blue-800 transition-colors"
+            >
+              <div className="w-6 h-6 flex items-center justify-center">
+                <HiOutlineX className="w-6 h-6" />
+              </div>
+              <div className="justify-start text-blue-700 text-base font-normal font-['Inter'] leading-6">Close</div>
+            </button>
+          </div>
 
-            <div className="space-y-3">
-              {items.map((item) => (
-                <div key={item.id} className="flex items-center gap-2.5">
-                  <input 
-                    type="text"
-                    placeholder="item name (e.g Copper Pipe)"
-                    className="flex-[3] h-12 px-4 rounded-xl border border-zinc-300 text-sm placeholder:text-zinc-300 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
-                  />
-                  <input 
-                    type="text"
-                    placeholder="₦0.00"
-                    className="flex-1 h-12 px-4 rounded-xl border border-zinc-300 text-sm placeholder:text-zinc-300 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
-                  />
-                  <input 
-                    type="text"
-                    placeholder="1"
-                    className="w-20 h-12 px-4 rounded-xl border border-zinc-300 text-sm placeholder:text-zinc-300 focus:outline-none focus:ring-2 focus:ring-blue-500/20 text-center"
-                  />
+          {/* Content */}
+          <div className="self-stretch flex flex-col justify-start items-start gap-2.5 overflow-y-auto">
+            <div className="self-stretch px-5 flex flex-col justify-start items-start gap-4 pb-4">
+              {/* Labor Fee */}
+              <div className="self-stretch flex flex-col justify-start items-start gap-1.5">
+                <div className="self-stretch inline-flex justify-start items-start gap-0.5">
+                  <div className="justify-start text-zinc-600 text-sm font-medium font-['Inter'] leading-5">Labor fee (₦)</div>
+                  <div className="justify-start text-red-600 text-sm font-medium font-['Inter'] leading-5">*</div>
+                </div>
+                <input 
+                  type="number"
+                  placeholder="Enter the amount you will charge for the job"
+                  className="self-stretch h-12 px-4 py-3 rounded-lg outline outline-1 outline-offset-[-1px] outline-zinc-300 focus:outline-blue-700 text-zinc-800 text-sm font-normal font-['Inter'] leading-5 placeholder:text-zinc-300"
+                  value={laborFee}
+                  onChange={(e) => setLaborFee(e.target.value)}
+                />
+              </div>
+
+              {/* Materials */}
+              <div className="self-stretch flex flex-col justify-start items-start gap-3">
+                <div className="self-stretch inline-flex justify-between items-start">
+                  <div className="flex justify-start items-center gap-0.5">
+                    <div className="justify-start text-zinc-600 text-sm font-medium font-['Inter'] leading-5">Materials</div>
+                    <div className="justify-start text-red-600 text-sm font-medium font-['Inter'] leading-5">*</div>
+                  </div>
                   <button 
-                    onClick={() => removeItem(item.id)}
-                    className="p-2.5 text-rose-400 hover:bg-rose-50 rounded-xl transition-colors"
+                    onClick={addItem}
+                    className="justify-start text-blue-700 text-sm font-medium font-['Inter'] leading-5 hover:underline"
                   >
-                    <HiOutlineTrash className="w-5 h-5" />
+                    Add Item
                   </button>
                 </div>
-              ))}
+
+                <div className="self-stretch flex flex-col gap-3">
+                  {items.map((item, index) => (
+                    <div key={item.id} className="self-stretch inline-flex justify-start items-center gap-1.5">
+                      <input 
+                        type="text"
+                        placeholder="item name (e.g Copper Pipe)"
+                        className="w-80 h-12 px-4 py-3 rounded-lg outline outline-1 outline-offset-[-1px] outline-zinc-300 focus:outline-blue-700 text-zinc-800 text-sm font-normal font-['Inter'] leading-5 placeholder:text-zinc-300"
+                        value={item.name}
+                        onChange={(e) => updateItem(index, 'name', e.target.value)}
+                      />
+                      <div className="relative w-24">
+                        <input 
+                          type="number"
+                          placeholder="₦0.00"
+                          className="w-full h-12 px-4 py-3 rounded-lg outline outline-1 outline-offset-[-1px] outline-zinc-300 focus:outline-blue-700 text-zinc-800 text-sm font-normal font-['Inter'] leading-5 placeholder:text-zinc-300"
+                          value={item.price}
+                          onChange={(e) => updateItem(index, 'price', e.target.value)}
+                        />
+                      </div>
+                      <input 
+                        type="number"
+                        placeholder="1"
+                        className="w-24 h-12 px-4 py-3 rounded-lg outline outline-1 outline-offset-[-1px] outline-zinc-300 focus:outline-blue-700 text-zinc-800 text-sm font-normal font-['Inter'] leading-5 placeholder:text-zinc-300"
+                        value={item.quantity}
+                        onChange={(e) => updateItem(index, 'quantity', e.target.value)}
+                      />
+                      <button 
+                        onClick={() => removeItem(item.id)}
+                        className="w-5 h-5 flex items-center justify-center text-rose-400 hover:text-rose-500 transition-colors"
+                      >
+                        <HiOutlineTrash className="w-5 h-5" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
         </div>
 
         {/* Footer */}
-        <div className="px-8 py-6 bg-white border-t border-zinc-100 flex justify-between items-center shrink-0">
-          <div className="space-y-0.5">
-            <div className="text-neutral-700 text-2xl font-bold font-['Plus_Jakarta_Sans']">
-              ₦329,999
+        <div className="self-stretch px-8 py-5 border-t border-zinc-100 inline-flex justify-between items-center bg-white">
+          <div className="inline-flex flex-col justify-start items-start">
+            <div className="justify-start text-neutral-700 text-2xl font-semibold font-['Plus_Jakarta_Sans'] leading-8">
+              ₦{totalAmount.toLocaleString()}
             </div>
-            <div className="text-zinc-600 text-sm font-normal">
+            <div className="justify-start text-zinc-600 text-sm font-normal font-['Inter'] leading-5">
               Total Estimated Amount
             </div>
           </div>
-          <Button 
-            className="h-12 px-8 bg-blue-700 hover:bg-blue-800 text-white rounded-xl font-medium"
-            onClick={() => {
-              // Handle send
-              onClose()
-            }}
+          <button 
+            className="w-48 h-11 px-6 py-3 bg-blue-700 hover:bg-blue-800 transition-colors rounded-xl flex justify-center items-center gap-2.5 text-neutral-50 text-sm font-medium font-['Inter'] leading-5 shadow-sm"
+            onClick={onClose}
           >
             Send Quotation
-          </Button>
+          </button>
         </div>
       </div>
     </div>

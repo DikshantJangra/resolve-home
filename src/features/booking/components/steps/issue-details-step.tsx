@@ -28,40 +28,18 @@ export const IssueDetailsStep = () => {
   const [isUploaderOpen, setIsUploaderOpen] = useState(false)
   const { data: services, isLoading: isLoadingServices } = useServices(categoryId || undefined)
 
-  const handleUploadSuccess = (files: any[]) => {
-    const url = files[0].response.body.data.file.url
-    addPhoto(url)
+  const handleUploadSuccess = (successfulFiles: any[]) => {
+    successfulFiles.forEach(file => {
+      const url = file.response.body.data.file.url
+      addPhoto(url)
+    })
   }
 
   const isFormValid = issueDetails.length > 10 && photos.length > 0 && serviceId
 
   return (
     <div className="flex flex-col h-full">
-      <div className="flex-1 px-5 pt-10 space-y-8">
-        {/* Service Type Selection */}
-        <div className="space-y-1.5">
-          <Label className="flex gap-0.5 text-zinc-600 text-sm font-medium">
-            Specific Service <span className="text-red-600">*</span>
-          </Label>
-          <div className="grid grid-cols-2 gap-3">
-            {!isLoadingServices && services?.map((service: any) => (
-              <button
-                key={service.id}
-                onClick={() => setServiceId(service.id)}
-                className={cn(
-                  "flex items-center justify-between p-3 rounded-xl border text-left transition-all",
-                  serviceId === service.id 
-                    ? "border-blue-700 bg-blue-50/50 text-blue-700" 
-                    : "border-zinc-200 text-zinc-600 hover:border-zinc-300"
-                )}
-              >
-                <span className="text-xs font-medium">{service.name}</span>
-                {serviceId === service.id && <HiOutlineCheck className="w-4 h-4" />}
-              </button>
-            ))}
-          </div>
-        </div>
-
+      <div className="flex-1 px-5 pt-10 space-y-8 no-scrollbar">
         {/* Issue Details */}
         <div className="space-y-1.5">
           <Label className="flex gap-0.5 text-zinc-600 text-sm font-medium">
@@ -119,14 +97,14 @@ export const IssueDetailsStep = () => {
       <div className="p-5 mt-auto flex gap-4">
         <Button
           variant="outline"
-          onClick={() => setStep(1)}
+          onClick={() => setStep(2)}
           className="flex-1 h-11 border-zinc-300 rounded-xl"
         >
           Back
         </Button>
         <Button
           disabled={!isFormValid}
-          onClick={() => setStep(3)}
+          onClick={() => setStep(4)}
           className="flex-1 h-11 bg-blue-700 hover:bg-blue-800 text-neutral-50 rounded-xl disabled:opacity-40"
         >
           Continue

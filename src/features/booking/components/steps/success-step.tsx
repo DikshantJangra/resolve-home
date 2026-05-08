@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button'
 import { useSelectEngineer } from '@/hooks/api-hooks'
 import { toast } from 'sonner'
 import { usePaystackPayment } from 'react-paystack'
+import { ReviewCard } from '../review-card'
 
 export const SuccessStep = () => {
   const { availableEngineers, resetBooking, setStep, selectedEngineerId, setSelectedEngineerId, bookingId } = useBookingStore()
@@ -27,13 +28,11 @@ export const SuccessStep = () => {
     // 1. Pay via Paystack
     initializePayment({
       onSuccess: () => {
-        // 2. Call select-engineer API
-        // In a real app, we'd pass the reference to the backend to verify
         toast.success("Payment successful!")
         selectEngineer({ bookingId: bookingId || "", engineerId }, {
           onSuccess: () => {
             toast.success("Professional matched successfully!")
-            setStep(8) // Actual Success
+            setStep(8) // Final Success
           },
           onError: (err: any) => {
             toast.error(err.message || "Failed to confirm engineer")
@@ -59,56 +58,80 @@ export const SuccessStep = () => {
     )
   }
 
+  const currentPro = availableEngineers[0] // For now we show the top match as per design
+
   return (
-    <div className="flex flex-col h-full bg-stone-50 rounded-xl overflow-hidden m-5">
-      <div className="flex-1 p-5 space-y-8 overflow-y-auto">
-        <h4 className="text-neutral-700 text-sm font-semibold leading-5">Available Professionals Near You</h4>
-        
-        {availableEngineers.map((engineer) => (
-          <div key={engineer.id} className="bg-white p-5 rounded-xl border border-zinc-200 space-y-5">
-            {/* Pro Profile Header */}
-            <div className="flex items-start gap-4">
+    <div className="flex flex-col h-full bg-white">
+      <div className="flex-1 p-5 space-y-8 overflow-y-auto no-scrollbar">
+        {/* Pro Profile Card */}
+        <div className="w-full p-5 bg-stone-50 rounded-xl flex flex-col gap-8 overflow-hidden">
+          <div className="flex items-start gap-4">
+            <div className="flex items-center gap-3">
               <img 
-                className="w-16 h-16 rounded-full object-cover" 
-                src={engineer.image || "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=200&auto=format&fit=crop"} 
-                alt={engineer.name}
+                className="w-20 h-20 rounded-full object-cover" 
+                src={currentPro.image || "https://placehold.co/88x88"} 
+                alt={currentPro.name}
               />
-              <div className="space-y-2 flex-1">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-neutral-700 text-base font-semibold leading-6">{engineer.name}</h3>
-                  <span className="text-orange-500 text-[10px] font-semibold px-2 py-0.5 bg-orange-50 rounded-sm uppercase tracking-wider">Pro Verified</span>
+              <div className="space-y-3.5">
+                <div className="space-y-2">
+                  <div className="flex items-end gap-2">
+                    <h3 className="text-neutral-700 text-base font-semibold leading-6">{currentPro.name}</h3>
+                    <span className="text-orange-500 text-xs font-semibold leading-4">Pro Verified</span>
+                  </div>
+                  <div className="flex items-center gap-1 text-zinc-600 text-xs font-normal">
+                    <span>{currentPro.specialization || 'Electrician'}</span>
+                    <div className="w-1 h-1 bg-blue-700 rounded-full mx-1" />
+                    <div className="w-3 h-3 bg-amber-500 rounded-sm flex items-center justify-center">
+                      <HiOutlineStar className="text-white w-2 h-2" />
+                    </div>
+                    <span>{currentPro.rating} Rating</span>
+                  </div>
                 </div>
-                <div className="flex items-center gap-1 text-zinc-600 text-xs">
-                  <HiOutlineStar className="text-amber-500 w-3 h-3" />
-                  <span>{engineer.rating} Rating</span>
-                  <span className="w-1 h-1 bg-zinc-300 rounded-full mx-1" />
-                  <span>{engineer.completedJobs} Jobs completed</span>
-                </div>
-                <div className="flex items-center gap-1 text-zinc-500 text-xs">
-                  <HiOutlineLocationMarker className="w-4 h-4" />
-                  <span>{engineer.distance}km away</span>
+                
+                <div className="flex items-center gap-5">
+                  <div className="flex items-center gap-[3px] text-zinc-600 text-xs font-normal">
+                    <IoLocationOutline className="w-4 h-4" />
+                    <span>{currentPro.distance}km away</span>
+                  </div>
+                  <div className="flex items-center gap-[3px] text-zinc-600 text-xs font-normal">
+                    <HiOutlineBriefcase className="w-4 h-4" />
+                    <span>{currentPro.completedJobs} Jobs completed</span>
+                  </div>
                 </div>
               </div>
             </div>
+          </div>
 
-            {/* Reviews Preview */}
-            {engineer.reviews && engineer.reviews.length > 0 && (
-              <div className="space-y-3">
-                <p className="text-zinc-600 text-xs italic">
-                  "{engineer.reviews[0].comment}"
-                </p>
-              </div>
-            )}
+          {/* Review Section */}
+          <div className="space-y-3">
+            <h4 className="text-neutral-700 text-sm font-semibold leading-5">Professional's Review</h4>
+            <div className="flex gap-3 overflow-x-auto pb-4 no-scrollbar">
+              {currentPro.reviews?.map((review: any, idx: number) => (
+                <ReviewCard key={idx} review={review} />
+              )) || (
+                <div className="w-full text-center py-4 text-zinc-400 text-sm">No reviews available</div>
+              )}
+            </div>
+          </div>
 
+          {/* Action Buttons */}
+          <div className="flex gap-5">
             <Button
-              onClick={() => handleConfirmSelection(engineer.id)}
-              disabled={isPending}
-              className="w-full h-10 bg-blue-700 hover:bg-blue-800 text-neutral-50 rounded-xl text-xs font-semibold"
+              variant="outline"
+              onClick={() => setStep(6)} // Re-match logic
+              className="flex-1 h-11 border-red-600 text-red-600 hover:bg-red-50 rounded-xl font-medium"
             >
-              Select and Pay ₦5,000
+              Reject and Re-match
+            </Button>
+            <Button
+              onClick={() => handleConfirmSelection(currentPro.id)}
+              disabled={isPending}
+              className="flex-1 h-11 bg-blue-700 hover:bg-blue-800 text-neutral-50 rounded-xl font-medium"
+            >
+              Confirm and Message
             </Button>
           </div>
-        ))}
+        </div>
       </div>
     </div>
   )

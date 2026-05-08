@@ -34,16 +34,12 @@ export const LocationStep = () => {
 
   const handleContinue = () => {
     setLocation(formData)
-    if (priority === 'Standard') {
-      setStep(4)
-    } else {
-      setStep(5)
-    }
+    setStep(5)
   }
 
   return (
     <div className="flex flex-col h-full">
-      <div className="flex-1 px-5 pt-10 space-y-8 overflow-y-auto">
+      <div className="flex-1 px-5 pt-10 space-y-8 overflow-y-auto no-scrollbar">
         <button
           onClick={handleUseGPS}
           className="w-full flex justify-center items-center gap-2 py-2 text-blue-700 text-sm font-medium underline hover:text-blue-800 transition-colors"
@@ -112,7 +108,7 @@ export const LocationStep = () => {
       <div className="p-5 mt-auto flex gap-4">
         <Button
           variant="outline"
-          onClick={() => setStep(2)}
+          onClick={() => setStep(3)}
           className="flex-1 h-11 border-zinc-300 rounded-xl"
         >
           Back

@@ -16,7 +16,7 @@ export function useAuthSession() {
         // Note: The backend might not return the token in get-session, but Better Auth 
         // usually includes it in the user object or we can get it from the cookie if needed.
         // For now, let's just return the data.
-        return data
+        return data ?? null
       } catch (error) {
         return null
       }
@@ -70,17 +70,42 @@ export function useServices(categoryId?: string) {
   })
 }
 
-// --- User Profile ---
-
 export function useUserProfile() {
   return useQuery({
     queryKey: ['user-profile'],
     queryFn: async () => {
-      const response = await apiClient.get(ENDPOINTS.USER.PROFILE)
-      return response.data.data
+      try {
+        const response = await apiClient.get(ENDPOINTS.USER.PROFILE)
+        return response.data.data ?? null
+      } catch (error) {
+        return null
+      }
     },
     // Only fetch if token exists
     enabled: typeof window !== 'undefined' && !!localStorage.getItem('auth_token')
+  })
+}
+
+export function useUpdateProfile() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (data: any) => {
+      const response = await apiClient.put(ENDPOINTS.USER.PROFILE, data)
+      return response.data
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['user-profile'] })
+      queryClient.invalidateQueries({ queryKey: ['auth-session'] })
+    }
+  })
+}
+
+export function useUpdatePassword() {
+  return useMutation({
+    mutationFn: async (data: any) => {
+      const response = await apiClient.put(ENDPOINTS.USER.PASSWORD, data)
+      return response.data
+    }
   })
 }
 

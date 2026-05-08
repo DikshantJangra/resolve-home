@@ -1,14 +1,14 @@
-import type { Metadata } from "next";
-import { Inter, Plus_Jakarta_Sans } from "next/font/google";
-import "./globals.css";
-import QueryProvider from "@/components/providers/query-provider";
-import { Toaster } from "@/components/ui/sonner";
-
 // Uppy Styles
 import "@uppy/core/css/style.min.css";
 import "@uppy/dashboard/css/style.min.css";
 import "@uppy/image-editor/css/style.min.css";
 import "@uppy/status-bar/css/style.min.css";
+
+import type { Metadata } from "next";
+import { Inter, Plus_Jakarta_Sans } from "next/font/google";
+import "./globals.css";
+import QueryProvider from "@/components/providers/query-provider";
+import { Toaster } from "@/components/ui/sonner";
 
 const inter = Inter({
   variable: "--font-inter",

@@ -63,7 +63,7 @@ export const PriorityStep = () => {
       <div className="p-5 mt-auto">
         <Button
           disabled={!priority}
-          onClick={() => setStep(2)}
+          onClick={() => setStep(3)}
           className="w-full h-11 px-6 py-3 bg-blue-700 hover:bg-blue-800 text-neutral-50 text-sm font-medium rounded-xl disabled:opacity-40 transition-all"
         >
           Continue

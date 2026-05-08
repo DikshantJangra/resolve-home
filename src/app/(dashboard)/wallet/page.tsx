@@ -43,18 +43,18 @@ export default function WalletPage() {
   })) || []
 
   return (
-    <div className="flex flex-col gap-8 max-w-6xl mx-auto">
+    <div className="flex flex-col gap-6 md:gap-8 max-w-6xl mx-auto pb-10">
       {/* Page Header */}
       <div className="flex flex-col gap-1">
-        <h1 className="text-neutral-700 text-2xl font-bold font-['Plus_Jakarta_Sans'] leading-8">My Wallet</h1>
-        <p className="text-zinc-500 text-base font-normal leading-6">
+        <h1 className="text-neutral-700 text-xl md:text-2xl font-bold font-['Plus_Jakarta_Sans'] leading-8">My Wallet</h1>
+        <p className="text-zinc-500 text-sm md:text-base font-normal leading-6">
           Manage your funds, view transaction history, and fund your escrow safely.
         </p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 md:gap-8">
         {/* Left Column: Balance and Stats */}
-        <div className="lg:col-span-5 flex flex-col gap-6">
+        <div className="lg:col-span-5 flex flex-col gap-5 md:gap-6">
           <WalletBalanceCard 
             balance={isWorker ? totalFinancials : 50000} // Mock balance for users for now
             email={user?.email || ''} 

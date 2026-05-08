@@ -26,15 +26,7 @@ export const ReviewStep = () => {
       value: priority === 'Emergency' ? 'Emergency fix' : 'Standard fix',
     },
     {
-      label: 'Date',
-      value: scheduledDate || 'As soon as possible',
-    },
-    {
-      label: 'Time',
-      value: scheduledTime || 'Within 60 minutes',
-    },
-    {
-      label: 'Service',
+      label: 'Service Required',
       value: serviceType,
     },
     {
@@ -51,7 +43,7 @@ export const ReviewStep = () => {
 
   return (
     <div className="flex flex-col h-full">
-      <div className="flex-1 px-5 pt-10 space-y-8 overflow-y-auto">
+      <div className="flex-1 px-5 pt-10 space-y-8 overflow-y-auto no-scrollbar">
         {reviewItems.map((item, index) => (
           <div key={index} className="space-y-1.5">
             <Label className="text-neutral-700 text-base font-semibold font-['Inter'] leading-6">
@@ -67,7 +59,7 @@ export const ReviewStep = () => {
       <div className="p-5 mt-auto flex gap-4">
         <Button
           variant="outline"
-          onClick={() => setStep(priority === 'Standard' ? 4 : 3)}
+          onClick={() => setStep(4)}
           className="flex-1 h-11 border-zinc-300 rounded-xl"
         >
           Back

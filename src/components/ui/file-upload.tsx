@@ -2,10 +2,10 @@
 
 import React, { useEffect, useState } from 'react'
 import Uppy from '@uppy/core'
-import Dashboard from '@uppy/dashboard'
+import DashboardPlugin from '@uppy/dashboard'
 import XHRUpload from '@uppy/xhr-upload'
 import ImageEditor from '@uppy/image-editor'
-import DashboardModal from '@uppy/react/dashboard-modal'
+import Dashboard from '@uppy/react/dashboard'
 import apiClient from '@/lib/api/client'
 import { ENDPOINTS } from '@/lib/api/endpoints'
 import { toast } from 'sonner'
@@ -44,15 +44,6 @@ export const FileUpload: React.FC<FileUploadProps> = ({
         // These will be overridden by the config from backend
       }
     })
-      .use(Dashboard, {
-        inline: false,
-        trigger: null,
-        proudlyDisplayPoweredByUppy: false,
-        hideProgressDetails: false,
-        closeModalOnClickOutside: true,
-        theme: 'light',
-        note: `Upload your ${uploadType} (Max ${multiple ? maxFiles : 1} file${multiple ? 's' : ''})`,
-      })
       .use(ImageEditor, {
         quality: 0.8,
         cropperOptions: {
@@ -88,14 +79,28 @@ export const FileUpload: React.FC<FileUploadProps> = ({
           })
 
           // Setup XHR Upload with backend endpoint
-          uppyInstance.use(XHRUpload, {
-            endpoint: `${apiClient.defaults.baseURL}${config.endpoint}`,
-            formData: config.formData,
-            fieldName: config.fieldName,
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem('auth_token')}`
-            },
-          })
+          if (!uppyInstance.getPlugin('XHRUpload')) {
+            uppyInstance.use(XHRUpload, {
+              endpoint: `${apiClient.defaults.baseURL || (typeof window !== 'undefined' ? window.location.origin : '')}${config.endpoint}`,
+              formData: config.formData,
+              fieldName: config.fieldName,
+              headers: {
+                Authorization: `Bearer ${localStorage.getItem('auth_token')}`
+              },
+            })
+          } else {
+            // If plugin already exists, update its options
+            const xhrPlugin = uppyInstance.getPlugin('XHRUpload') as any
+            if (xhrPlugin) {
+              xhrPlugin.setOptions({
+                endpoint: `${apiClient.defaults.baseURL || (typeof window !== 'undefined' ? window.location.origin : '')}${config.endpoint}`,
+                fieldName: config.fieldName,
+                headers: {
+                  Authorization: `Bearer ${localStorage.getItem('auth_token')}`
+                }
+              })
+            }
+          }
         }
       } catch (error) {
         console.error('Failed to fetch Uppy config:', error)
@@ -103,12 +108,16 @@ export const FileUpload: React.FC<FileUploadProps> = ({
       }
     }
 
-    fetchConfig()
+    if (isOpen) {
+      fetchConfig()
+    }
 
     uppyInstance.on('complete', (result) => {
       if (result.successful && result.successful.length > 0) {
         toast.success('Upload successful!')
-        onSuccess?.(result.successful)
+        if (onSuccess) {
+          onSuccess(result.successful)
+        }
         setTimeout(() => onRequestClose(), 1000)
       }
       if (result.failed && result.failed.length > 0) {
@@ -123,15 +132,32 @@ export const FileUpload: React.FC<FileUploadProps> = ({
     }
   }, [uploadType, multiple, maxFiles, onSuccess, onRequestClose])
 
-  if (!uppy) return null
+  if (!uppy || !isOpen) return null
 
   return (
-    <DashboardModal
-      uppy={uppy}
-      open={isOpen}
-      onRequestClose={onRequestClose}
-      plugins={['ImageEditor']}
-      className="resolve-home-uppy"
-    />
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-transparent pointer-events-none">
+      {/* Click-outside backdrop */}
+      <div 
+        className="absolute inset-0 pointer-events-auto bg-transparent" 
+        onClick={onRequestClose}
+      />
+      
+      {/* Modal Content */}
+      <div className="relative z-[10000] pointer-events-auto">
+        <div className="bg-white rounded-xl shadow-2xl overflow-hidden min-w-[300px] md:min-w-[600px]">
+          <Dashboard 
+            uppy={uppy}
+            width="100%"
+            height={450}
+            plugins={['ImageEditor']}
+            theme="light"
+            note={`Upload your ${uploadType} (Max ${multiple ? maxFiles : 1} file${multiple ? 's' : ''})`}
+            proudlyDisplayPoweredByUppy={false}
+            hideProgressDetails={false}
+            className="resolve-home-uppy-dashboard"
+          />
+        </div>
+      </div>
+    </div>
   )
 }

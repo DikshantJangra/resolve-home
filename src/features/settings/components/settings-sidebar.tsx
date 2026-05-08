@@ -10,6 +10,7 @@ import {
   HiChevronRight
 } from 'react-icons/hi'
 import { cn } from '@/lib/utils'
+import { LogoutModal } from '@/features/auth/components/logout-modal'
 
 const settingsItems = [
   { label: 'Account', icon: HiOutlineUser, id: 'account' },
@@ -24,8 +25,10 @@ interface SettingsSidebarProps {
 }
 
 export const SettingsSidebar = ({ activeSection, onSectionChange }: SettingsSidebarProps) => {
+  const [isLogoutOpen, setIsLogoutOpen] = React.useState(false)
+
   return (
-    <div className="w-[280px] py-5 bg-stone-50 rounded-xl border border-stone-100 flex flex-col gap-2 h-fit">
+    <div className="w-full lg:w-[280px] py-5 bg-stone-50 rounded-xl border border-stone-100 flex flex-col gap-2 h-fit">
       {settingsItems.map((item) => {
         const Icon = item.icon
         const isActive = activeSection === item.id
@@ -50,10 +53,18 @@ export const SettingsSidebar = ({ activeSection, onSectionChange }: SettingsSide
         )
       })}
       
-      <button className="self-stretch h-11 px-4 py-3 flex justify-start items-center gap-2.5 text-red-600 hover:bg-red-50 transition-colors mt-2">
+      <button 
+        onClick={() => setIsLogoutOpen(true)}
+        className="self-stretch h-11 px-4 py-3 flex justify-start items-center gap-2.5 text-red-600 hover:bg-red-50 transition-colors mt-2"
+      >
         <HiOutlineLogout className="w-5 h-5" />
         <span className="text-xs font-medium uppercase tracking-wide">Log out</span>
       </button>
+
+      <LogoutModal 
+        isOpen={isLogoutOpen} 
+        onClose={() => setIsLogoutOpen(false)} 
+      />
     </div>
   )
 }

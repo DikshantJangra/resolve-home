@@ -13,7 +13,7 @@ interface StatCardProps {
 
 export const StatCard = ({ label, value, change, icon: Icon }: StatCardProps) => {
   return (
-    <div className="flex-1 min-w-56 p-4 rounded-xl outline outline-1 outline-offset-[-1px] outline-zinc-300 bg-white shadow-sm flex flex-col justify-between">
+    <div className="w-full p-4 rounded-xl outline outline-1 outline-offset-[-1px] outline-zinc-300 bg-white shadow-sm flex flex-col justify-between">
       <div className="flex justify-between items-start">
         <div className="space-y-3">
           <div className="flex flex-col gap-1">

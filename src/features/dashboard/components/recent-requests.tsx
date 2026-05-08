@@ -26,7 +26,7 @@ export const RecentRequests = () => {
   }
 
   return (
-    <div className="w-full max-w-[681px] p-5 bg-stone-50 rounded-xl flex flex-col gap-4 overflow-hidden border border-zinc-200">
+    <div className="w-full p-5 bg-stone-50 rounded-xl flex flex-col gap-4 overflow-hidden border border-zinc-200">
       <h3 className="text-slate-900 text-sm font-semibold font-['Inter'] leading-5">Recent Request</h3>
       
       <div className="flex flex-col gap-4">

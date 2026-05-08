@@ -55,10 +55,14 @@ export const MatchingStep = () => {
 
   return (
     <div className="flex flex-col items-center justify-center h-full px-5 py-20 space-y-10">
-      <div className="relative w-20 h-20">
-        <div className="absolute inset-0 border-4 border-indigo-100 rounded-full" />
-        <div className="absolute inset-0 border-4 border-blue-700 rounded-full border-t-transparent animate-spin" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-3.5 h-3.5 bg-blue-700 rounded-full" />
+      <div className="w-80 h-72 flex items-center justify-center relative overflow-hidden">
+        <div className="w-20 h-20 relative">
+          {/* Pulsing Dots Animation */}
+          <div className="absolute left-[33px] top-[16px] w-3.5 h-3.5 bg-indigo-200 rounded-full animate-pulse" />
+          <div className="absolute left-[33px] top-[50px] w-3.5 h-3.5 bg-indigo-200 rounded-full animate-pulse delay-75" />
+          <div className="absolute left-[16px] top-[33px] w-3.5 h-3.5 bg-blue-700 rounded-full animate-ping" />
+          <div className="absolute left-[50px] top-[33px] w-3.5 h-3.5 bg-blue-700 rounded-full animate-ping delay-150" />
+        </div>
       </div>
       
       <div className="text-center space-y-2">

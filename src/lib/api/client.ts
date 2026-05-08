@@ -25,8 +25,9 @@ apiClient.interceptors.request.use(
     const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null
     // Don't add token to auth endpoints to avoid issues with stale tokens
     const isAuthRoute = config.url?.includes('/api/auth/') || config.url?.includes('/api/signup-with-role')
+    const isGetSession = config.url?.includes('/api/auth/get-session')
     
-    if (token && config.headers && !isAuthRoute) {
+    if (token && config.headers && (!isAuthRoute || isGetSession)) {
       config.headers.Authorization = `Bearer ${token}`
     }
     return config

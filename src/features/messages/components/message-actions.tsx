@@ -12,25 +12,25 @@ export const MessageActions = ({
   onFlagMessage: () => void 
 }) => {
   return (
-    <div className="w-48 p-3 bg-white rounded-xl shadow-xl border border-zinc-100 flex flex-col gap-1">
+    <div className="w-48 p-3 bg-white rounded-lg border border-zinc-100 shadow-sm flex flex-col justify-start items-start gap-3">
       <button
         onClick={onMakeQuotation}
-        className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-blue-50 transition-colors group text-left"
+        className="self-stretch py-2 inline-flex justify-start items-center gap-2.5 hover:bg-zinc-50 transition-colors rounded-md px-1 group"
       >
         <div className="w-5 h-5 flex items-center justify-center text-blue-700">
           <HiOutlineDocumentText className="w-5 h-5" />
         </div>
-        <span className="text-blue-700 text-sm font-medium">Make Quotation</span>
+        <div className="justify-start text-blue-700 text-sm font-medium font-['Inter'] leading-5">Make Quotation</div>
       </button>
       
       <button
         onClick={onFlagMessage}
-        className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-rose-50 transition-colors group text-left"
+        className="self-stretch py-2 inline-flex justify-start items-center gap-2.5 hover:bg-zinc-50 transition-colors rounded-md px-1 group"
       >
         <div className="w-5 h-5 flex items-center justify-center text-rose-400">
           <HiOutlineFlag className="w-5 h-5" />
         </div>
-        <span className="text-rose-400 text-sm font-medium">Flag Message</span>
+        <div className="justify-start text-rose-400 text-sm font-medium font-['Inter'] leading-5">Flag Message</div>
       </button>
     </div>
   )

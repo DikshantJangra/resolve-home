@@ -10,8 +10,13 @@ import { useSocket } from '@/components/providers/socket-provider'
 import { useChatStore } from '@/store/use-chat-store'
 import { format } from 'date-fns'
 import { Button } from '@/components/ui/button'
+import { IoArrowBack } from 'react-icons/io5'
 
-export const ChatWindow = () => {
+interface ChatWindowProps {
+  onBack?: () => void
+}
+
+export const ChatWindow = ({ onBack }: ChatWindowProps) => {
   const [showActions, setShowActions] = useState(false)
   const [showQuotationModal, setShowQuotationModal] = useState(false)
   const [inputMessage, setInputMessage] = useState('')
@@ -84,9 +89,17 @@ export const ChatWindow = () => {
   return (
     <div className="flex-1 h-full flex flex-col bg-neutral-50 rounded-[20px] outline outline-1 outline-offset-[-1px] outline-zinc-300 overflow-hidden relative">
       {/* Header */}
-      <div className="h-20 p-5 bg-stone-50 border-b border-zinc-300 flex items-start gap-2 relative z-10">
-        <div className="flex-1 flex items-start gap-2">
-          <div className="w-12 h-12 rounded-full border border-indigo-50 overflow-hidden relative shrink-0">
+      <div className="h-20 p-4 md:p-5 bg-stone-50 border-b border-zinc-300 flex items-center gap-2 relative z-10">
+        <div className="flex-1 flex items-center gap-2 md:gap-3">
+          {/* Mobile Back Button */}
+          <button 
+            onClick={onBack}
+            className="lg:hidden p-1 -ml-1 text-zinc-600 hover:bg-zinc-100 rounded-lg transition-colors"
+          >
+            <IoArrowBack className="w-6 h-6" />
+          </button>
+
+          <div className="w-10 h-10 md:w-12 md:h-12 rounded-full border border-indigo-50 overflow-hidden relative shrink-0">
             <img 
               src={`https://api.dicebear.com/7.x/avataaars/svg?seed=Samuel`} 
               alt="Samuel"
