@@ -1,0 +1,374 @@
+'use client'
+
+import React, { useState } from 'react'
+import { useProfessionalSetupStore } from '@/store/professional-setup-store'
+import { Button, Input, Label, FileUpload } from "@resolve/ui"
+import { HiOutlineChevronLeft, HiOutlineCheckCircle, HiOutlinePlus } from 'react-icons/hi'
+import { useCategories, useUpdateEngineerProfile } from '@/hooks/api-hooks'
+import { toast } from 'sonner'
+import { cn } from "@resolve/ui"
+
+export const ProfessionalSetupWizard = ({ onComplete, initialStep }: { onComplete: () => void, initialStep?: number }) => {
+  const store = useProfessionalSetupStore()
+  const { data: categories } = useCategories()
+  const { mutate: updateProfile, isPending } = useUpdateEngineerProfile()
+  const [isUploaderOpen, setIsUploaderOpen] = useState(false)
+
+  React.useEffect(() => {
+    if (initialStep) {
+      store.setStep(initialStep)
+    }
+  }, [initialStep])
+
+  const steps = [
+    "Professional and work profile",
+    "Business location",
+    "Guarantor and Bank Setup"
+  ]
+
+  const handleFinish = () => {
+    const payload = {
+      specialty: store.specialty,
+      categoryId: store.categoryId,
+      experience: parseInt(store.experience),
+      idType: store.idType,
+      idNumber: store.idNumber,
+      idPhoto: store.idPhoto,
+      location: {
+        state: store.state,
+        city: store.city,
+        address: store.address,
+        landmark: store.landmark,
+      },
+      guarantor: {
+        name: store.guarantorName,
+        email: store.guarantorEmail,
+      },
+      bank: {
+        accountName: store.accountName,
+        bankName: store.bankName,
+        accountNumber: store.accountNumber,
+      }
+    }
+
+    updateProfile(payload, {
+      onSuccess: () => {
+        toast.success("Verification submitted successfully!")
+        store.setStep(4) // Move to pending screen
+      },
+      onError: (err: any) => {
+        toast.error(err.message || "Failed to submit verification")
+      }
+    })
+  }
+
+  const renderStep = () => {
+    switch (store.currentStep) {
+      case 1:
+        return (
+          <div className="space-y-6">
+            <div className="space-y-4">
+              <div className="space-y-1.5">
+                <Label>Primary Specialty <span className="text-red-500">*</span></Label>
+                <Input 
+                  placeholder="Select your speciality" 
+                  value={store.specialty}
+                  onChange={(e) => store.updateField('specialty', e.target.value)}
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <Label>Category <span className="text-red-500">*</span></Label>
+                <select 
+                  className="w-full h-12 px-4 rounded-lg border border-zinc-300 text-sm focus:border-blue-700 outline-none"
+                  value={store.categoryId}
+                  onChange={(e) => store.updateField('categoryId', e.target.value)}
+                >
+                  <option value="">Select your category</option>
+                  {categories?.map((cat: any) => (
+                    <option key={cat.id} value={cat.id}>{cat.name}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="space-y-1.5">
+                <Label>Years of experience <span className="text-red-500">*</span></Label>
+                <div className="flex gap-3">
+                  {['1 - 3', '4 - 7', '8 - 12', '13+'].map((range) => (
+                    <button
+                      key={range}
+                      onClick={() => store.updateField('experience', range === '13+' ? '13' : range.split(' - ')[0])}
+                      className={cn(
+                        "flex-1 py-3 px-4 rounded-lg border text-sm transition-all",
+                        store.experience === (range === '13+' ? '13' : range.split(' - ')[0])
+                          ? "border-blue-700 bg-blue-50 text-blue-700 font-medium"
+                          : "border-zinc-300 text-zinc-600 hover:border-zinc-400"
+                      )}
+                    >
+                      {range}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <Label>Select ID type <span className="text-red-500">*</span></Label>
+                <select 
+                  className="w-full h-12 px-4 rounded-lg border border-zinc-300 text-sm focus:border-blue-700 outline-none"
+                  value={store.idType}
+                  onChange={(e) => store.updateField('idType', e.target.value)}
+                >
+                  <option value="">Select ID type (NIN, BVN, Passport)</option>
+                  <option value="NIN">NIN</option>
+                  <option value="BVN">BVN</option>
+                  <option value="Passport">Passport</option>
+                </select>
+              </div>
+
+              <div className="space-y-1.5">
+                <Label>ID Number <span className="text-red-500">*</span></Label>
+                <Input 
+                  placeholder="000 000 000 000" 
+                  value={store.idNumber}
+                  onChange={(e) => store.updateField('idNumber', e.target.value)}
+                />
+              </div>
+
+              <div className="space-y-3">
+                <Label>Attach/Upload ID Document <span className="text-red-500">*</span></Label>
+                <div className="flex items-center gap-4">
+                   <button 
+                    onClick={() => setIsUploaderOpen(true)}
+                    className="w-11 h-11 bg-slate-50 border border-indigo-400 rounded-xl flex items-center justify-center hover:bg-slate-100"
+                   >
+                     <HiOutlinePlus className="w-5 h-5 text-blue-700" />
+                   </button>
+                   <span className="text-sm text-zinc-500">
+                     {store.idPhoto ? "Document uploaded successfully" : "Upload PNG, JPG or PDF up to 5MB"}
+                   </span>
+                </div>
+              </div>
+            </div>
+            
+            <FileUpload 
+              isOpen={isUploaderOpen}
+              onRequestClose={() => setIsUploaderOpen(false)}
+              onSuccess={(files) => {
+                const url = files[0].response.body.data.file.url
+                store.updateField('idPhoto', url)
+                setIsUploaderOpen(false)
+              }}
+              uploadType="image"
+            />
+          </div>
+        )
+      case 2:
+        return (
+          <div className="space-y-6">
+            <button className="flex items-center gap-2 text-blue-700 text-sm font-medium underline">
+              <HiOutlinePlus className="rotate-45" /> Use my current GPS location
+            </button>
+            
+            <div className="space-y-4">
+              <div className="space-y-1.5">
+                <Label>State <span className="text-red-500">*</span></Label>
+                <Input 
+                  placeholder="Lagos" 
+                  value={store.state}
+                  onChange={(e) => store.updateField('state', e.target.value)}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label>City <span className="text-red-500">*</span></Label>
+                <Input 
+                  placeholder="Ikeja" 
+                  value={store.city}
+                  onChange={(e) => store.updateField('city', e.target.value)}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label>Street Address <span className="text-red-500">*</span></Label>
+                <Input 
+                  placeholder="15 Mobolaji bank, Anthony way" 
+                  value={store.address}
+                  onChange={(e) => store.updateField('address', e.target.value)}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label>Nearest Landmark/Area <span className="text-red-500">*</span></Label>
+                <Input 
+                  placeholder="Near ikeja mall" 
+                  value={store.landmark}
+                  onChange={(e) => store.updateField('landmark', e.target.value)}
+                />
+              </div>
+            </div>
+          </div>
+        )
+      case 3:
+        return (
+          <div className="space-y-8">
+            <div className="space-y-4">
+              <h4 className="text-zinc-600 text-sm">Guarantor details</h4>
+              <div className="space-y-4">
+                <div className="space-y-1.5">
+                  <Label>Guarantor Full name <span className="text-red-500">*</span></Label>
+                  <Input 
+                    placeholder="Enter guarantor's full name" 
+                    value={store.guarantorName}
+                    onChange={(e) => store.updateField('guarantorName', e.target.value)}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label>Email Address <span className="text-red-500">*</span></Label>
+                  <Input 
+                    placeholder="Enter guarantor's email" 
+                    value={store.guarantorEmail}
+                    onChange={(e) => store.updateField('guarantorEmail', e.target.value)}
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <h4 className="text-zinc-600 text-sm">Bank Details</h4>
+              <div className="space-y-4">
+                <div className="space-y-1.5">
+                  <Label>Account Name <span className="text-red-500">*</span></Label>
+                  <Input 
+                    placeholder="Tob Wasiu" 
+                    className="bg-zinc-100"
+                    value={store.accountName}
+                    onChange={(e) => store.updateField('accountName', e.target.value)}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label>Select Bank <span className="text-red-500">*</span></Label>
+                  <Input 
+                    placeholder="GtBank PLC" 
+                    value={store.bankName}
+                    onChange={(e) => store.updateField('bankName', e.target.value)}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label>Account Number <span className="text-red-500">*</span></Label>
+                  <Input 
+                    placeholder="Enter your account number" 
+                    value={store.accountNumber}
+                    onChange={(e) => store.updateField('accountNumber', e.target.value)}
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        )
+      case 4:
+        return (
+          <div className="flex flex-col items-center justify-center text-center py-10 space-y-12">
+            <div className="space-y-8 flex flex-col items-center">
+              <div className="w-14 h-14 bg-white border-2 border-zinc-200 rounded-xl flex items-center justify-center relative">
+                <div className="w-12 h-12 border-2 border-zinc-600 rounded-lg flex items-center justify-center">
+                  <div className="w-4 h-3 border-2 border-zinc-600" />
+                </div>
+                <HiOutlineCheckCircle className="absolute -right-2 -bottom-2 w-6 h-6 text-blue-700 bg-white rounded-full" />
+              </div>
+              
+              <div className="space-y-3">
+                <h2 className="text-3xl font-bold text-neutral-700 leading-tight">
+                  Verification in progress
+                </h2>
+                <p className="text-zinc-600 text-base max-w-sm">
+                  Your account is currently under review. Once you are verified you will be available on the job marketplace and start getting orders.
+                </p>
+              </div>
+            </div>
+            
+            <Button onClick={onComplete} className="w-full h-11 bg-blue-700 rounded-xl">
+              Back to Dashboard
+            </Button>
+          </div>
+        )
+      default:
+        return null
+    }
+  }
+
+  const isStepValid = () => {
+    if (store.currentStep === 1) {
+      return store.specialty && store.categoryId && store.experience && store.idType && store.idNumber && store.idPhoto
+    }
+    if (store.currentStep === 2) {
+      return store.state && store.city && store.address && store.landmark
+    }
+    if (store.currentStep === 3) {
+      return store.guarantorName && store.guarantorEmail && store.accountName && store.bankName && store.accountNumber
+    }
+    return true
+  }
+
+  if (store.currentStep === 4) {
+    return (
+      <div className="w-full max-w-2xl mx-auto bg-white p-8 rounded-2xl shadow-sm border border-zinc-200 mt-10">
+        {renderStep()}
+      </div>
+    )
+  }
+
+  return (
+    <div className="w-full max-w-2xl mx-auto bg-white flex flex-col min-h-[600px] rounded-2xl overflow-hidden shadow-sm border border-zinc-200 mt-10">
+      {/* Header */}
+      <div className="p-6 border-b border-zinc-100">
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-2xl font-semibold text-neutral-700">Complete set up</h2>
+          <button 
+            onClick={() => store.prevStep()}
+            className="flex items-center gap-2 text-blue-700"
+            disabled={store.currentStep === 1}
+          >
+            <HiOutlineChevronLeft className="w-5 h-5" />
+            <span>Go Back</span>
+          </button>
+        </div>
+        
+        <div className="space-y-3">
+          <div className="space-y-1">
+            <h3 className="text-neutral-700 font-semibold">{steps[store.currentStep - 1]}</h3>
+            <p className="text-zinc-500 text-sm">
+              {store.currentStep === 1 && "Tell us about your skillset and verify your experience."}
+              {store.currentStep === 2 && "Provide the location where you will be working from."}
+              {store.currentStep === 3 && "This is where we send your earnings, ensure the details match."}
+            </p>
+          </div>
+          
+          <div className="flex gap-2">
+            {[1, 2, 3].map((s) => (
+              <div 
+                key={s} 
+                className={cn(
+                  "flex-1 h-1.5 rounded-full transition-all",
+                  s <= store.currentStep ? "bg-blue-700" : "bg-zinc-200"
+                )} 
+              />
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Form Content */}
+      <div className="flex-1 p-6 overflow-y-auto no-scrollbar">
+        {renderStep()}
+      </div>
+
+      {/* Footer */}
+      <div className="p-6 border-t border-zinc-100">
+        <Button
+          disabled={!isStepValid() || isPending}
+          onClick={store.currentStep === 3 ? handleFinish : () => store.nextStep()}
+          className="w-full h-12 bg-blue-700 hover:bg-blue-800 text-neutral-50 rounded-xl transition-all"
+        >
+          {store.currentStep === 3 ? (isPending ? "Submitting..." : "Finish set up") : "Continue"}
+        </Button>
+      </div>
+    </div>
+  )
+}

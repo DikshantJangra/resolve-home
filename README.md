@@ -1,39 +1,49 @@
-# ⚡ Resolve Home
+# ⚡ Resolve Home (Monorepo)
 
 **Premium Electrical & Plumbing Services Platform**
 
-Resolve Home is a modern, high-fidelity platform designed to streamline the booking and management of essential home services. Built with a focus on speed, reliability, and visual excellence, it connects users with expert engineers for seamless home maintenance.
+Resolve Home is a modern, high-fidelity platform designed to streamline the booking and management of essential home services. Built as a **Turborepo Monorepo**, it maintains a unified design system and shared API logic across its multiple interfaces.
 
 ---
 
 ## 🛠️ Technology Stack
 
-- **Core:** [Next.js 15](https://nextjs.org) (App Router) + [React 19](https://react.dev)
+- **Monorepo Engine:** [Turborepo](https://turbo.build)
+- **Framework:** [Next.js 15+](https://nextjs.org) (App Router) + [React 19](https://react.dev)
 - **Styling:** [Tailwind CSS v4](https://tailwindcss.com) + [Shadcn UI](https://ui.shadcn.com)
 - **Animations:** [Framer Motion](https://framer.com/motion) + [tw-animate-css](https://github.com/thefubuki/tw-animate-css)
-- **State Management:** [Zustand](https://zustand-demo.pmnd.rs) (UI/Form State) + [TanStack Query v5](https://tanstack.com/query) (Server State)
-- **API Client:** [Axios](https://axios-http.com) with custom interceptors
+- **State Management:** [Zustand](https://zustand-demo.pmnd.rs) + [TanStack Query v5](https://tanstack.com/query)
+- **API Client:** Shared [Axios](https://axios-http.com) package with custom interceptors
 - **Forms:** [React Hook Form](https://react-hook-form.com) + [Zod](https://zod.dev)
-- **Icons:** [React Icons](https://react-icons.github.io/react-icons/)
+
+---
+
+## 📦 Workspace Architecture
+
+This project is organized into shared packages and independent applications:
+
+### Applications (`apps/`)
+- **`apps/platform`**: The main customer-facing booking and dashboard application.
+- **`apps/admin`**: The administrative control panel for managing users, bookings, and financial statistics.
+
+### Shared Packages (`packages/`)
+- **`packages/ui`**: Centralized design system containing all Shadcn UI components and the `cn` utility.
+- **`packages/api`**: Shared logic including the `apiClient`, `ENDPOINTS` registry, and generated types.
 
 ---
 
 ## 🔌 Backend & API Integration
 
-This project follows a **Spec-First** approach for backend integration to ensure 100% type safety and a single source of truth.
-
-### 📜 Documentation
-- **[API Reference (Human Readable)](./API.md)**: Categorized list of endpoints, request bodies, and responses.
-- **[OpenAPI Spec (Raw)](./openapi.json)**: The master JSON specification fetched from the production backend.
+This project follows a **Spec-First** approach for backend integration to ensure 100% type safety.
 
 ### 🏗️ Type Generation
-We use `openapi-typescript` to generate live types from our backend schema. This prevents runtime API errors and ensures our frontend always matches the backend contract.
+We use `openapi-typescript` to generate live types from our backend schema.
 
 ```bash
-# Update local types from the latest openapi.json
+# Update shared types from the latest openapi.json
 npm run generate-api
 ```
-*Generated types live in `src/types/api.d.ts`.*
+*Generated types live in `packages/api/src/api.d.ts`.*
 
 ---
 
@@ -50,28 +60,29 @@ cd resolve-home
 npm install
 ```
 
-### 3. Environment Setup
-Create a `.env.local` file (refer to `.env.example`):
-```env
-NEXT_PUBLIC_API_URL=https://resolvhome.onrender.com
-```
+### 3. Run Development Servers
+You can run all applications simultaneously or pick a specific one:
 
-### 4. Run Development Server
 ```bash
+# Run all (Platform + Admin)
 npm run dev
+
+# Run only Platform
+npm run dev --workspace=platform
+
+# Run only Admin
+npm run dev --workspace=admin
 ```
-Open [http://localhost:3000](http://localhost:3000) to view the application.
 
 ---
 
-## 📂 Project Structure
+## 📂 Internal Directory Structure (Platform)
 
-- `src/app/`: Next.js App Router (Routes & Layouts)
-- `src/features/`: Feature-sliced components, hooks, and logic (e.g., `landing`, `booking`)
-- `src/components/ui/`: Reusable Shadcn UI base components
-- `src/lib/api/`: Centralized API client and [endpoint registry](./src/lib/api/endpoints.ts)
-- `src/store/`: Global Zustand stores for persistent UI state
-- `docs/`: Project documentation and API specifications
+Within `apps/platform/src`:
+- `app/`: Next.js App Router (Routes & Layouts)
+- `features/`: Feature-sliced components and hooks (e.g., `landing`, `booking`)
+- `components/`: App-specific shared components
+- `store/`: Global Zustand stores
 
 ---
 
