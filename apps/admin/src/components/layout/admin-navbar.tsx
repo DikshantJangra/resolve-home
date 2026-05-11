@@ -4,6 +4,7 @@ import React from 'react'
 import { HiOutlineSearch } from 'react-icons/hi'
 import { Input, formatImageUrl } from "@resolve/ui"
 import { useUserProfile } from '@/hooks/api-hooks'
+import Link from 'next/link'
 
 export const AdminNavbar = () => {
   const { data: user } = useUserProfile()
@@ -20,10 +21,10 @@ export const AdminNavbar = () => {
         </div>
       </div>
 
-      <div className="flex items-center gap-3">
+      <Link href="/settings" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
         <img 
-          className="w-12 h-12 rounded-full border border-blue-700 object-cover" 
-          src={user?.image || user?.avatar ? formatImageUrl(user.image || user.avatar) : "https://api.dicebear.com/7.x/avataaars/svg?seed=Admin"} 
+          className="w-12 h-12 rounded-full border border-blue-700 object-cover bg-zinc-100" 
+          src={formatImageUrl(user?.avatar || user?.image) || `https://api.dicebear.com/7.x/initials/svg?seed=${user?.name || 'Admin'}`} 
           alt="Profile" 
         />
         <div className="flex flex-col justify-center">
@@ -34,7 +35,7 @@ export const AdminNavbar = () => {
             {user?.role || "Admin"}
           </span>
         </div>
-      </div>
+      </Link>
     </header>
   )
 }

@@ -5,9 +5,9 @@ import { toast } from 'sonner'
 // Dev: http://localhost:3000  |  Prod: https://resolvhome.onrender.com
 const isBrowser = typeof window !== 'undefined'
 
-const apiBaseUrl = isBrowser ? '' : process.env.NEXT_PUBLIC_API_URL
-if (!apiBaseUrl && !isBrowser) {
-  console.warn('NEXT_PUBLIC_API_URL is not defined on the server.')
+const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || 'https://resolvhome.onrender.com'
+if (!apiBaseUrl) {
+  console.warn('NEXT_PUBLIC_API_URL is not defined.')
 }
 
 const apiClient = axios.create({
@@ -22,7 +22,13 @@ const apiClient = axios.create({
 // Request Interceptor
 apiClient.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
-    const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null
+    let token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null
+    
+    // Sanitize token
+    if (token === 'undefined' || token === 'null') {
+      token = null
+    }
+
     // Don't add token to auth endpoints to avoid issues with stale tokens
     const isAuthRoute = config.url?.includes('/api/auth/') || config.url?.includes('/api/signup-with-role')
     const isGetSession = config.url?.includes('/api/auth/get-session')

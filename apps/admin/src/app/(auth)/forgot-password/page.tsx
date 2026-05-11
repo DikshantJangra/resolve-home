@@ -5,7 +5,6 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
 import { Button, Input, Label, cn } from "@resolve/ui"
-import { authClient } from "@/lib/auth-client"
 import { apiClient, ENDPOINTS } from "@resolve/api"
 import { toast } from "sonner"
 import { useRouter } from 'next/navigation'
@@ -46,9 +45,10 @@ export default function ForgotPasswordPage() {
 
       setIsSubmitted(true)
       toast.success('Password reset link sent to your email')
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Forgot password error:', err)
-      toast.error(err.response?.data?.error || 'An unexpected error occurred')
+      const message = err instanceof Error ? err.message : 'An unexpected error occurred'
+      toast.error(message)
     } finally {
       setIsLoading(false)
     }
@@ -57,7 +57,17 @@ export default function ForgotPasswordPage() {
   if (isSubmitted) {
     return (
       <main className="min-h-screen flex items-center justify-center bg-stone-50 py-12 px-4 font-inter">
-        <div className="w-full max-w-[489px] p-8 bg-white rounded-[20px] flex flex-col gap-8 shadow-sm border border-zinc-100 items-center text-center">
+        <div className="w-full max-w-[489px] flex flex-col gap-8 items-center">
+          {/* Logo Section */}
+          <div className="flex flex-col items-center gap-4">
+            <img 
+              src="/resolve_home.svg" 
+              alt="Resolv Home" 
+              className="h-16 w-auto object-contain"
+            />
+          </div>
+
+          <div className="w-full p-8 bg-white rounded-[20px] flex flex-col gap-8 shadow-sm border border-zinc-100 items-center text-center">
           <div className="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center text-blue-700">
             <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
@@ -66,7 +76,7 @@ export default function ForgotPasswordPage() {
           <div className="flex flex-col gap-2">
             <h1 className="text-neutral-700 text-2xl font-bold font-heading">Check your email</h1>
             <p className="text-zinc-600 text-base font-normal leading-relaxed">
-              We've sent a password reset link to your email address. Please follow the instructions to regain access.
+              We&apos;ve sent a password reset link to your email address. Please follow the instructions to regain access.
             </p>
           </div>
           <Link href="/login" className="w-full">
@@ -75,13 +85,24 @@ export default function ForgotPasswordPage() {
             </Button>
           </Link>
         </div>
-      </main>
+      </div>
+    </main>
     )
   }
 
   return (
     <main className="min-h-screen flex items-center justify-center bg-stone-50 py-12 px-4 font-inter">
-      <div className="w-full max-w-[489px] p-8 md:p-10 bg-white rounded-[20px] flex flex-col gap-10 shadow-sm border border-zinc-100 overflow-hidden">
+      <div className="w-full max-w-[489px] flex flex-col gap-8 items-center">
+          {/* Logo Section */}
+          <div className="flex flex-col items-center gap-4">
+            <img 
+              src="/resolve_home.svg" 
+              alt="Resolv Home" 
+              className="h-16 w-auto object-contain"
+            />
+          </div>
+
+        <div className="w-full p-8 md:p-10 bg-white rounded-[20px] flex flex-col gap-10 shadow-sm border border-zinc-100 overflow-hidden">
         <div className="flex flex-col gap-6">
           <button 
             onClick={() => router.back()}
@@ -96,7 +117,7 @@ export default function ForgotPasswordPage() {
               Forgot Password
             </h1>
             <p className="text-zinc-600 text-base font-normal leading-6">
-              Don't worry, it happens. Enter your admin email and we'll send you a link to reset your password.
+              Don&apos;t worry, it happens. Enter your admin email and we&apos;ll send you a link to reset your password.
             </p>
           </div>
         </div>
@@ -132,6 +153,7 @@ export default function ForgotPasswordPage() {
           </div>
         </form>
       </div>
-    </main>
+    </div>
+  </main>
   )
 }

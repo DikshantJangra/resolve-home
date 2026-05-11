@@ -99,6 +99,7 @@ export const ENDPOINTS = {
   // ─── Admin — Users ────────────────────────────────────────────────────────
   ADMIN_USERS: {
     BASE:   '/api/admin/users',
+    STATS:  '/api/admin/users/stats',
     BY_ID:  (id: string) => `/api/admin/users/${id}`,
     BAN:    (id: string) => `/api/admin/users/${id}/ban`,
   },
@@ -118,14 +119,35 @@ export const ENDPOINTS = {
   // ─── Admin — Engineers ────────────────────────────────────────────────────
   ADMIN_ENGINEERS: {
     BASE:  '/api/admin/engineers',
+    STATS: '/api/admin/engineers/stats',
     BY_ID: (id: string) => `/api/admin/engineers/${id}`,
   },
 
   // ─── Admin — Bookings ─────────────────────────────────────────────────────
   ADMIN_BOOKINGS: {
     BASE:      '/api/admin/bookings',
+    STATS:     '/api/admin/bookings/stats',
     BY_ID:     (id: string) => `/api/admin/bookings/${id}`,
     STATUS:    (id: string) => `/api/admin/bookings/${id}/status`,
     ENGINEERS: (id: string) => `/api/admin/bookings/${id}/engineers`,
+  },
+
+  // ─── Admin — Stats (General) ──────────────────────────────────────────────
+  ADMIN_STATS: {
+    BASE: '/api/admin/stats',
+  },
+
+  // ─── Complaints ────────────────────────────────────────────────────────────
+  COMPLAINTS: {
+    BASE:  '/api/complaints',
+    BY_ID: (id: string) => `/api/complaints/${id}`,
+  },
+
+  // ─── Admin — Complaints ────────────────────────────────────────────────────
+  ADMIN_COMPLAINTS: {
+    BASE:    '/api/admin/complaints',
+    STATS:   '/api/admin/complaints/stats',
+    BY_ID:   (id: string) => `/api/admin/complaints/${id}`,
+    RESPOND: (id: string) => `/api/admin/complaints/${id}/respond`,
   },
 } as const

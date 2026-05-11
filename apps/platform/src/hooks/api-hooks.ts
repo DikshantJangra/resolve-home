@@ -487,3 +487,40 @@ export function useAssignEngineer() {
     }
   })
 }
+
+// --- Complaints ---
+
+export function useComplaints() {
+  return useQuery({
+    queryKey: ['complaints'],
+    queryFn: async () => {
+      const response = await apiClient.get(ENDPOINTS.COMPLAINTS.BASE)
+      return response.data.data?.complaints || []
+    },
+    enabled: typeof window !== 'undefined' && !!localStorage.getItem('auth_token')
+  })
+}
+
+export function useComplaintDetail(id: string) {
+  return useQuery({
+    queryKey: ['complaint-detail', id],
+    queryFn: async () => {
+      const response = await apiClient.get(ENDPOINTS.COMPLAINTS.BY_ID(id))
+      return response.data.data
+    },
+    enabled: !!id && typeof window !== 'undefined' && !!localStorage.getItem('auth_token')
+  })
+}
+
+export function useCreateComplaint() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (data: { bookingId?: string, title: string, description: string, category?: string }) => {
+      const response = await apiClient.post(ENDPOINTS.COMPLAINTS.BASE, data)
+      return response.data
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['complaints'] })
+    }
+  })
+}

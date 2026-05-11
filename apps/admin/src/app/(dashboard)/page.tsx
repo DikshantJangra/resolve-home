@@ -1,7 +1,6 @@
 "use client"
 
 import * as React from "react"
-import { motion } from "framer-motion"
 import { 
   HiOutlineSearch, 
   HiOutlineTrendingUp,
@@ -18,9 +17,9 @@ import { formatDistanceToNow } from "date-fns"
 // --- Stat Card Component ---
 const StatCard = ({ title, value, trend, icon: Icon }: { 
   title: string, 
-  value: string, 
-  trend: string, 
-  icon: any 
+  value: string | number, 
+  trend?: string, 
+  icon: React.ElementType 
 }) => (
   <div className="flex-1 min-w-[220px] p-4 rounded-xl border border-zinc-300 flex flex-col gap-3 bg-white shadow-sm hover:shadow-md transition-all">
     <div className="flex justify-between items-start">
@@ -32,10 +31,12 @@ const StatCard = ({ title, value, trend, icon: Icon }: {
         <Icon size={24} />
       </div>
     </div>
-    <div className="flex items-center gap-1">
-      <HiOutlineTrendingUp className="text-green-400 w-5 h-5" />
-      <span className="text-green-700 text-xs font-medium font-inter leading-4">{trend}</span>
-    </div>
+    {trend && (
+      <div className="flex items-center gap-1">
+        <HiOutlineTrendingUp className="text-green-400 w-5 h-5" />
+        <span className="text-green-700 text-xs font-medium font-inter leading-4">{trend}</span>
+      </div>
+    )}
   </div>
 )
 
@@ -76,6 +77,26 @@ export default function OverviewPage() {
 
   const recentBookings = bookings?.slice(0, 4) || []
 
+  const calculatedDistribution = React.useMemo(() => {
+    if (!bookings || bookings.length === 0) return []
+    const totals: Record<string, number> = {}
+    let grandTotal = 0
+    bookings.forEach((b: any) => {
+      const cat = b.serviceCategory || 'Others'
+      const price = b.price || b.totalAmount || 0
+      totals[cat] = (totals[cat] || 0) + price
+      grandTotal += price
+    })
+    
+    const colors = ['bg-blue-500', 'bg-green-500', 'bg-red-500', 'bg-orange-500', 'bg-purple-500']
+    return Object.entries(totals).map(([label, value], idx) => ({
+      label,
+      value,
+      percent: grandTotal > 0 ? `${((value / grandTotal) * 100).toFixed(1)}%` : '0%',
+      color: colors[idx % colors.length]
+    }))
+  }, [bookings])
+
   if (statsLoading || bookingsLoading) {
     return (
       <div className="p-8 flex flex-col gap-8 max-w-[1240px] mx-auto animate-pulse">
@@ -112,11 +133,11 @@ export default function OverviewPage() {
 
       {/* Stats Row */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-5">
-        <StatCard title="Platform Revenue" value={`₦${(stats?.totalRevenue || 0).toLocaleString()}`} trend="+12.5%" icon={HiOutlineCurrencyDollar} />
-        <StatCard title="Total Homeowners" value={stats?.totalHomeowners || "0"} trend="+12.5%" icon={HiOutlineUsers} />
-        <StatCard title="Total Professionals" value={stats?.totalEngineers || "0"} trend="+12.5%" icon={HiOutlineBriefcase} />
-        <StatCard title="Completed Jobs" value={stats?.completedJobs || "0"} trend="+12.5%" icon={HiOutlineCheckCircle} />
-        <StatCard title="Platform Rating" value={`${stats?.averageRating || "0"}`} trend="+12.5%" icon={HiOutlineCheckCircle} />
+        <StatCard title="Platform Revenue" value={`₦${(stats?.totalRevenue || 0).toLocaleString()}`} trend={stats?.trends?.revenue} icon={HiOutlineCurrencyDollar} />
+        <StatCard title="Total Homeowners" value={stats?.totalHomeowners || "0"} trend={stats?.trends?.homeowners} icon={HiOutlineUsers} />
+        <StatCard title="Total Professionals" value={stats?.totalEngineers || "0"} trend={stats?.trends?.engineers} icon={HiOutlineBriefcase} />
+        <StatCard title="Completed Jobs" value={stats?.completedJobs || "0"} trend={stats?.trends?.jobs} icon={HiOutlineCheckCircle} />
+        <StatCard title="Platform Rating" value={`${stats?.averageRating || "0"}`} trend={stats?.trends?.rating} icon={HiOutlineCheckCircle} />
       </div>
 
       {/* Main Content Grid */}
@@ -167,7 +188,7 @@ export default function OverviewPage() {
               </p>
             </div>
             <div className="flex flex-col mt-2">
-              {recentBookings.length > 0 ? recentBookings.map((booking: any) => (
+              {recentBookings.length > 0 ? recentBookings.map((booking: { id: string; referenceId?: string; customerName?: string; serviceName?: string; createdAt?: string; status: string }) => (
                 <AuditLogItem 
                   key={booking.id}
                   title={`New Booking: ${booking.referenceId || booking.id.slice(-6).toUpperCase()}`}
@@ -188,14 +209,14 @@ export default function OverviewPage() {
           <div className="p-6 rounded-xl border border-zinc-300 bg-white flex flex-col gap-8 shadow-sm h-fit">
             <h2 className="text-neutral-700 text-xl font-medium font-heading">Revenue Distribution</h2>
             
-            {/* Donut Chart SVG Placeholder */}
+             {/* Donut Chart SVG Placeholder */}
             <div className="flex justify-center py-10 relative">
                <svg width="180" height="180" viewBox="0 0 36 36" className="transform -rotate-90">
                 <circle cx="18" cy="18" r="15.915" fill="transparent" stroke="#f1f5f9" strokeWidth="3" />
-                <circle cx="18" cy="18" r="15.915" fill="transparent" stroke="#3b82f6" strokeWidth="3" strokeDasharray="43 57" strokeDashoffset="0" />
-                <circle cx="18" cy="18" r="15.915" fill="transparent" stroke="#10b981" strokeWidth="3" strokeDasharray="25 75" strokeDashoffset="-43" />
-                <circle cx="18" cy="18" r="15.915" fill="transparent" stroke="#ef4444" strokeWidth="3" strokeDasharray="15 85" strokeDashoffset="-68" />
-                <circle cx="18" cy="18" r="15.915" fill="transparent" stroke="#f59e0b" strokeWidth="3" strokeDasharray="17 83" strokeDashoffset="-83" />
+                {/* Simplified dynamic donut if calculation is available */}
+                {(stats?.revenueDistribution || calculatedDistribution).length > 0 ? (
+                  <circle cx="18" cy="18" r="15.915" fill="transparent" stroke="#3b82f6" strokeWidth="3" strokeDasharray="100 0" strokeDashoffset="0" />
+                ) : null}
               </svg>
               <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
                 <span className="text-zinc-400 text-xs">Total</span>
@@ -203,12 +224,20 @@ export default function OverviewPage() {
               </div>
             </div>
 
-            {/* Legend */}
+             {/* Legend */}
             <div className="flex flex-col gap-4">
-              <LegendItem color="bg-blue-500" label="Plumbing" percent="43.29%" value="₦161,466.24" />
-              <LegendItem color="bg-green-500" label="Heating and HVAC" percent="87.16%" value="₦56,411.33" />
-              <LegendItem color="bg-red-500" label="Electrical" percent="40.22%" value="₦81,981.22" />
-              <LegendItem color="bg-orange-500" label="Others" percent="25.53%" value="₦12,432.51" />
+              {(stats?.revenueDistribution || calculatedDistribution).map((item: any, idx: number) => (
+                <LegendItem 
+                  key={idx}
+                  color={item.color} 
+                  label={item.label} 
+                  percent={item.percent || item.percentage} 
+                  value={`₦${Number(item.value).toLocaleString()}`} 
+                />
+              ))}
+              {(stats?.revenueDistribution || calculatedDistribution).length === 0 && (
+                <p className="text-zinc-400 text-sm text-center">No data available</p>
+              )}
             </div>
           </div>
         </div>

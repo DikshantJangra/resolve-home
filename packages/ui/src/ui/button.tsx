@@ -40,18 +40,39 @@ const buttonVariants = cva(
   }
 )
 
+import { LoadingSpinner } from "./loading-spinner"
+
+interface ButtonProps extends ButtonPrimitive.Props {
+  isLoading?: boolean;
+}
+
 function Button({
   className,
   variant = "default",
   size = "default",
+  isLoading,
+  children,
+  disabled,
   ...props
-}: ButtonPrimitive.Props & VariantProps<typeof buttonVariants>) {
+}: ButtonProps & VariantProps<typeof buttonVariants>) {
   return (
     <ButtonPrimitive
       data-slot="button"
-      className={cn(buttonVariants({ variant, size, className }))}
+      className={cn(buttonVariants({ variant, size, className }), "relative")}
+      disabled={isLoading || disabled}
       {...props}
-    />
+    >
+      {isLoading ? (
+        <>
+          <span className="opacity-0">{children}</span>
+          <div className="absolute inset-0 flex items-center justify-center">
+            <LoadingSpinner className="w-5 h-5" />
+          </div>
+        </>
+      ) : (
+        children
+      )}
+    </ButtonPrimitive>
   )
 }
 

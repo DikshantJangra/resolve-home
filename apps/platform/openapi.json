@@ -1565,6 +1565,179 @@
         }
       }
     },
+    "/api/admin/stats": {
+      "get": {
+        "summary": "Get platform-wide statistics (Admin)",
+        "tags": [
+          "Admin - Dashboard"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Platform statistics",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "totalRevenue": { "type": "number" },
+                        "totalHomeowners": { "type": "integer" },
+                        "totalEngineers": { "type": "integer" },
+                        "completedJobs": { "type": "integer" },
+                        "averageRating": { "type": "number" },
+                        "revenueDistribution": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "label": { "type": "string" },
+                              "value": { "type": "number" },
+                              "percentage": { "type": "string" },
+                              "color": { "type": "string" }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/users/stats": {
+      "get": {
+        "summary": "Get homeowner statistics (Admin)",
+        "tags": [
+          "Admin - User Management"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Homeowner statistics",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "totalHomeowners": { "type": "integer" },
+                        "membershipPro": { "type": "integer" },
+                        "activeMembers": { "type": "integer" },
+                        "inactiveMembers": { "type": "integer" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/engineers/stats": {
+      "get": {
+        "summary": "Get engineer statistics (Admin)",
+        "tags": [
+          "Admin - Engineer Management"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Engineer statistics",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "totalEngineers": { "type": "integer" },
+                        "jobsDone": { "type": "integer" },
+                        "activeProfessionals": { "type": "integer" },
+                        "inactiveProfessionals": { "type": "integer" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/bookings/stats": {
+      "get": {
+        "summary": "Get booking statistics (Admin)",
+        "tags": [
+          "Admin - Booking Management"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Booking statistics",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "totalBookings": { "type": "integer" },
+                        "inProgress": { "type": "integer" },
+                        "emergency": { "type": "integer" },
+                        "avgResponse": { "type": "string" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/admin/users": {
       "get": {
         "summary": "Get all users with pagination",
@@ -8221,6 +8394,108 @@
           },
           "404": {
             "description": "Quotation not found"
+          }
+        }
+      }
+    },
+    "/api/admin/complaints": {
+      "get": {
+        "summary": "Get all complaints (Admin)",
+        "tags": [
+          "Admin - Complaint Management"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of complaints",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "complaints": {
+                          "type": "array",
+                          "items": { "type": "object" }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/complaints/{id}": {
+      "get": {
+        "summary": "Get complaint by ID (Admin)",
+        "tags": [
+          "Admin - Complaint Management"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Complaint details"
+          }
+        }
+      }
+    },
+    "/api/admin/complaints/{id}/respond": {
+      "put": {
+        "summary": "Respond to a complaint",
+        "tags": [
+          "Admin - Complaint Management"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "response": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Response recorded"
           }
         }
       }

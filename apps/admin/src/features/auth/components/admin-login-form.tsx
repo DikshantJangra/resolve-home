@@ -11,6 +11,7 @@ import Cookies from "js-cookie"
 import { Button, Input, Label, cn } from "@resolve/ui"
 import { toast } from "sonner"
 import { useAuthSession } from "@/hooks/api-hooks"
+import Link from 'next/link'
 
 const loginSchema = z.object({
   email: z.string().email("Invalid email address"),
@@ -45,18 +46,19 @@ export function AdminLoginForm() {
   async function onSubmit(data: LoginValues) {
     setIsLoading(true)
     try {
-      const { data: authData, error } = await authClient.signIn.email({
+      const response = await authClient.signIn.email({
         email: data.email,
         password: data.password,
       })
 
-      if (error) {
-        toast.error(error.message || "Invalid credentials")
+      if (response.error) {
+        toast.error(response.error.message || "Invalid credentials")
         return
       }
 
-      const token = (authData as any)?.token
-      const role = (authData as any)?.user?.role
+      const authData = response.data as { token?: string, user?: { role?: string } } | undefined
+      const token = authData?.token
+      const role = authData?.user?.role
 
       if (token) {
         localStorage.setItem('auth_token', token)
@@ -71,7 +73,7 @@ export function AdminLoginForm() {
       toast.success("Welcome to the Admin Panel")
       router.push(callbackUrl)
       router.refresh()
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Login error:", error)
       toast.error("An unexpected error occurred")
     } finally {
@@ -114,11 +116,19 @@ export function AdminLoginForm() {
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <div className="flex gap-0.5">
-              <Label className="text-zinc-600 text-sm font-medium font-inter leading-5">
-                Password
-              </Label>
-              <span className="text-red-600 text-sm font-medium font-inter leading-5">*</span>
+            <div className="flex justify-between items-center">
+              <div className="flex gap-0.5">
+                <Label className="text-zinc-600 text-sm font-medium font-inter leading-5">
+                  Password
+                </Label>
+                <span className="text-red-600 text-sm font-medium font-inter leading-5">*</span>
+              </div>
+              <Link 
+                href="/forgot-password" 
+                className="text-blue-700 text-xs font-semibold hover:underline transition-colors"
+              >
+                Forgot password?
+              </Link>
             </div>
             <div className="relative">
               <Input
@@ -152,7 +162,7 @@ export function AdminLoginForm() {
                 (isLoading || !form.formState.isValid) && "opacity-40"
               )}
             >
-              {isLoading ? "Signing in..." : "Create account"}
+              {isLoading ? "Signing in..." : "Sign In"}
             </Button>
           </div>
         </form>

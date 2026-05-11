@@ -136,8 +136,10 @@
 
 > All admin routes require `role: admin`.
 
-- **Users:** `/api/admin/users` (GET, POST, GET :id, PUT :id, POST :id/ban)
+- **Users:** `/api/admin/users` (GET, POST, GET :id, PUT :id, POST :id/ban, GET /stats)
 - **Categories:** `/api/admin/categories` (GET, POST, GET :id, PUT :id, DELETE :id)
 - **Services:** `/api/admin/services` (GET, POST, GET :id, PUT :id, DELETE :id)
-- **Engineers:** `/api/admin/engineers` (GET, POST, GET :id, PUT :id, DELETE :id)
-- **Bookings:** `/api/admin/bookings` (GET, GET :id, PUT :id/status, PUT :id/engineers)
+- **Engineers:** `/api/admin/engineers` (GET, POST, GET :id, PUT :id, DELETE :id, GET /stats)
+- **Bookings:** `/api/admin/bookings` (GET, GET :id, PUT :id/status, PUT :id/engineers, GET /stats)
+- **Stats:** `/api/admin/stats` (GET)
+- **Complaints:** `/api/admin/complaints` (GET, GET :id, PUT :id/respond, GET /stats)

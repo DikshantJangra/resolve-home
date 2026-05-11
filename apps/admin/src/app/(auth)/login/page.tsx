@@ -7,10 +7,12 @@ import * as z from 'zod'
 import { Button, Input, Checkbox, Label, cn } from "@resolve/ui"
 import { authClient } from "@/lib/auth-client"
 import { toast } from "sonner"
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
-import Image from 'next/image'
 import { HiEye, HiEyeOff } from 'react-icons/hi'
+import Cookies from 'js-cookie'
+import { useAuthSession } from "@/hooks/api-hooks"
+import { Suspense } from 'react'
 
 const loginSchema = z.object({
   email: z.string().email('Please enter a valid email address'),
@@ -20,10 +22,24 @@ const loginSchema = z.object({
 
 type LoginFormValues = z.infer<typeof loginSchema>
 
-export default function LoginPage() {
+function LoginContent() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const callbackUrl = searchParams.get('callbackUrl') || '/'
+  const { data: session } = useAuthSession()
   const [showPassword, setShowPassword] = React.useState(false)
   const [isLoading, setIsLoading] = React.useState(false)
+
+  // Redirect if already logged in
+  React.useEffect(() => {
+    if (session?.user) {
+      if (session.user.role === 'admin') {
+        router.push(callbackUrl)
+      } else {
+        toast.error('Access denied. Admin privileges required.')
+      }
+    }
+  }, [session, router, callbackUrl])
 
   const {
     register,
@@ -41,25 +57,53 @@ export default function LoginPage() {
   const onSubmit = async (data: LoginFormValues) => {
     setIsLoading(true)
     try {
-      const { data: authData, error } = await authClient.signIn.email({
+      const response = await authClient.signIn.email({
         email: data.email,
         password: data.password,
       })
 
-      if (error) {
-        toast.error(error.message || 'Invalid credentials')
+      if (response.error) {
+        toast.error(response.error.message || 'Invalid credentials')
         return
       }
 
-      const token = (authData as any)?.token
-      if (token) {
+      // Handle various response structures for better-auth and custom wrappers
+      const responseData = response.data as any
+      const authData = responseData?.data || responseData
+      
+      const token = authData?.token || 
+                    authData?.session?.token || 
+                    authData?.session?.sessionToken
+
+      const user = authData?.user
+      const role = user?.role
+
+      // Security: Strictly enforce admin role for this application
+      if (role && role !== 'admin') {
+        toast.error('Access denied. You do not have admin privileges.')
+        return
+      }
+
+      if (token && typeof token === 'string' && token !== 'undefined' && token !== 'null') {
+        // Set in localStorage for apiClient
         localStorage.setItem('auth_token', token)
+        
+        // Set in cookies for middleware (expires in 7 days or less if rememberMe is false)
+        const expires = data.rememberMe ? 7 : 1
+        Cookies.set('auth_token', token, { expires, path: '/' })
+        
+        if (role) {
+          localStorage.setItem('user_role', role)
+          Cookies.set('user_role', role, { expires, path: '/' })
+        }
       }
 
       toast.success('Welcome back, Admin')
-      router.push('/')
-      router.refresh()
-    } catch (err) {
+      
+      // Force a full reload to the dashboard to ensure all states (middleware, query cache) are fresh
+      window.location.href = callbackUrl
+    } catch (error) {
+      console.error('Login error:', error)
       toast.error('An unexpected error occurred')
     } finally {
       setIsLoading(false)
@@ -71,13 +115,10 @@ export default function LoginPage() {
       <div className="w-full max-w-[489px] flex flex-col gap-8 items-center">
         {/* Logo Section */}
         <div className="flex flex-col items-center gap-4">
-          <Image 
+          <img 
             src="/resolve_home.svg" 
             alt="Resolv Home" 
-            width={120} 
-            height={40} 
-            className="h-10 w-auto"
-            priority
+            className="h-12 w-auto object-contain"
           />
         </div>
 
@@ -159,5 +200,17 @@ export default function LoginPage() {
         </div>
       </div>
     </main>
+  )
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen w-full flex items-center justify-center bg-stone-50">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-700 border-t-transparent" />
+      </div>
+    }>
+      <LoginContent />
+    </Suspense>
   )
 }

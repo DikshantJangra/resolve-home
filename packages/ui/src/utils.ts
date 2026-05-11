@@ -9,7 +9,7 @@ export function formatImageUrl(url: string | null | undefined): string {
   if (!url) return ''
   if (url.startsWith('http')) return url
   
-  const baseUrl = process.env.NEXT_PUBLIC_API_URL || ''
+  const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'https://resolvhome.onrender.com'
   const cleanUrl = url.startsWith('/') ? url : `/${url}`
   
   if (cleanUrl.startsWith('/uploads')) {
