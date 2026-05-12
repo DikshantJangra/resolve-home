@@ -56,46 +56,54 @@ export function LoginForm() {
     setIsLoading(true)
     setShowResend(false)
     try {
-      const { data: authData, error } = await authClient.signIn.email({
+      const response = await apiClient.post(ENDPOINTS.AUTH.SIGN_IN_EMAIL, {
         email: data.email,
         password: data.password,
       })
 
-      if (error) {
-        // If the error indicates email not verified, show the resend option
-        if (error.status === 403 || error.message?.toLowerCase().includes('verify') || error.message?.toLowerCase().includes('verification')) {
-          setShowResend(true)
-        }
-        toast.error(error.message || "Invalid credentials")
+      // Extract the full signed session cookie from the Set-Cookie response header
+      const setCookieHeader = response.headers['set-cookie']
+      let fullSessionCookie: string | null = null
+      if (Array.isArray(setCookieHeader)) {
+        const match = setCookieHeader.find(c => c.includes('better-auth.session_token'))
+        if (match) fullSessionCookie = match.split(';')[0].split('=').slice(1).join('=')
+      }
+
+      const body = response.data
+      const token = body?.token || body?.data?.token
+      const role = body?.user?.role || body?.data?.user?.role
+
+      if (!token) {
+        toast.error("Login failed. Please try again.")
         return
       }
 
-      const token = (authData as any)?.token
-      const role = (authData as any)?.user?.role
+      const sessionValue = fullSessionCookie || token
+      localStorage.setItem('auth_token', sessionValue)
+      Cookies.set('auth_token', sessionValue, { expires: 7, path: '/' })
 
-      if (token) {
-        localStorage.setItem('auth_token', token)
-        Cookies.set('auth_token', token, { expires: 7, path: '/' })
-        
-        if (role) {
-          localStorage.setItem('user_role', role)
-          Cookies.set('user_role', role, { expires: 7, path: '/' })
-        }
+      if (role) {
+        localStorage.setItem('user_role', role)
+        Cookies.set('user_role', role, { expires: 7, path: '/' })
       }
 
       toast.success("Welcome back!")
-      
-      // Role-based redirect
+
       if (role === 'worker') {
         router.push('/engineer')
       } else {
         router.push(callbackUrl)
       }
-      
-      router.refresh()
     } catch (error: any) {
-      console.error("Login error:", error)
-      toast.error("An unexpected error occurred")
+      const status = error?.response?.status
+      const message = error?.response?.data?.error || error?.response?.data?.message
+
+      if (status === 403 || message?.toLowerCase().includes('verify')) {
+        setShowResend(true)
+        toast.error(message || "Please verify your email first.")
+      } else {
+        toast.error(message || "Invalid credentials")
+      }
     } finally {
       setIsLoading(false)
     }

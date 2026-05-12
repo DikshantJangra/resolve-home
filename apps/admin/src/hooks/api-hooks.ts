@@ -98,92 +98,40 @@ export function useUploadFile() {
 export function useAdminStats() {
   return useQuery({
     queryKey: ['admin-stats'],
-    queryFn: async () => {
-      const response = await apiClient.get(ENDPOINTS.ADMIN_STATS.BASE)
-      return response.data.data as {
-        totalRevenue?: number;
-        totalHomeowners?: number;
-        totalEngineers?: number;
-        completedJobs?: number;
-        averageRating?: number;
-        trends?: Record<string, string>;
-        revenueDistribution?: Array<{
-          label: string;
-          value: string | number;
-          percent: string;
-          color: string;
-        }>;
-      }
-    }
+    queryFn: async () => null,
+    enabled: false,
   })
 }
 
 export function useAdminUserStats() {
   return useQuery({
     queryKey: ['admin-user-stats'],
-    queryFn: async () => {
-      const response = await apiClient.get(ENDPOINTS.ADMIN_USERS.STATS)
-      return response.data.data as { 
-        totalHomeowners?: number; 
-        membershipPro?: string; 
-        activeMembers?: string; 
-        inactiveMembers?: string; 
-        trends?: Record<string, string>;
-      }
-    }
+    queryFn: async () => null,
+    enabled: false,
   })
 }
 
 export function useAdminEngineerStats() {
   return useQuery({
     queryKey: ['admin-engineer-stats'],
-    queryFn: async () => {
-      const response = await apiClient.get(ENDPOINTS.ADMIN_ENGINEERS.STATS)
-      return response.data.data as { 
-        totalEngineers?: number; 
-        activeProfessionals?: number; 
-        inactiveProfessionals?: number; 
-        jobsDone?: number;
-        verifiedEngineers?: string;
-        activeEngineers?: string;
-        inactiveEngineers?: string;
-        trends?: Record<string, string>;
-      }
-    }
+    queryFn: async () => null,
+    enabled: false,
   })
 }
 
 export function useAdminBookingStats() {
   return useQuery({
     queryKey: ['admin-booking-stats'],
-    queryFn: async () => {
-      const response = await apiClient.get(ENDPOINTS.ADMIN_BOOKINGS.STATS)
-      return response.data.data as { 
-        totalBookings?: number; 
-        completedBookings?: string; 
-        activeBookings?: string; 
-        pendingBookings?: string;
-        inProgress?: number;
-        emergency?: number;
-        avgResponse?: string;
-        trends?: Record<string, string>;
-      }
-    }
+    queryFn: async () => ({} as any),
+    enabled: false,
   })
 }
 
 export function useAdminComplaintStats() {
   return useQuery({
     queryKey: ['admin-complaint-stats'],
-    queryFn: async () => {
-      const response = await apiClient.get(ENDPOINTS.ADMIN_COMPLAINTS.STATS)
-      return response.data.data as { 
-        totalComplaints?: number; 
-        resolvedCases?: string; 
-        pendingDisputes?: string; 
-        trends?: Record<string, string>;
-      }
-    }
+    queryFn: async () => ({} as any),
+    enabled: false,
   })
 }
 
@@ -333,6 +281,78 @@ export function useRespondToComplaint() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-complaints'] })
+    }
+  })
+}
+// --- Admin Wallet ---
+export function useAdminWalletStats() {
+  return useQuery({
+    queryKey: ['admin-wallet-stats'],
+    queryFn: async () => {
+      const response = await apiClient.get(ENDPOINTS.WALLET.STATISTICS)
+      return response.data.data?.statistics || null
+    }
+  })
+}
+
+export function useAdminWalletTransactions() {
+  return useQuery({
+    queryKey: ['admin-wallet-transactions'],
+    queryFn: async () => {
+      const response = await apiClient.get(ENDPOINTS.WALLET.TRANSACTIONS)
+      return response.data.data || []
+    }
+  })
+}
+// --- Admin Engineer Verifications ---
+
+export function useAdminVerificationRequests() {
+  return useQuery({
+    queryKey: ['admin-verification-requests'],
+    queryFn: async () => {
+      const response = await apiClient.get(ENDPOINTS.ADMIN_ENGINEER_VERIFICATIONS.PENDING)
+      return response.data.data?.verifications || []
+    }
+  })
+}
+
+export function useAdminVerifyEngineer() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ id, status, notes }: { id: string, status: 'approved' | 'rejected', notes?: string }) => {
+      const response = await apiClient.post(ENDPOINTS.ADMIN_ENGINEER_VERIFICATIONS.VERIFY(id), {
+        status,
+        notes
+      })
+      return response.data
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-verification-requests'] })
+      queryClient.invalidateQueries({ queryKey: ['admin-engineers'] })
+    }
+  })
+}
+
+// --- Notifications ---
+export function useNotificationSettings() {
+  return useQuery({
+    queryKey: ['notification-settings'],
+    queryFn: async () => {
+      const response = await apiClient.get(ENDPOINTS.NOTIFICATIONS.SETTINGS)
+      return response.data.data || null
+    }
+  })
+}
+
+export function useUpdateNotificationSettings() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (data: any) => {
+      const response = await apiClient.put(ENDPOINTS.NOTIFICATIONS.SETTINGS, data)
+      return response.data
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['notification-settings'] })
     }
   })
 }

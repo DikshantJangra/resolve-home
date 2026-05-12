@@ -71,10 +71,10 @@ export default function ProfessionalsPage() {
   ) || []
 
   const stats = {
-    total: statsData?.totalEngineers || professionals.length,
-    active: statsData?.activeProfessionals || professionals.filter((u: any) => !u.isBanned).length,
-    inactive: statsData?.inactiveProfessionals || professionals.filter((u: any) => u.isBanned).length,
-    jobsDone: statsData?.jobsDone || professionals.reduce((acc: number, u: any) => acc + (u.totalJobs || 0), 0)
+    total: (statsData as any)?.totalEngineers || professionals.length,
+    active: (statsData as any)?.activeProfessionals || professionals.filter((u: any) => !u.isBanned).length,
+    inactive: (statsData as any)?.inactiveProfessionals || professionals.filter((u: any) => u.isBanned).length,
+    jobsDone: (statsData as any)?.jobsDone || professionals.reduce((acc: number, u: any) => acc + (u.totalJobs || 0), 0)
   }
 
   const handleToggleBan = (userId: string, isBanned: boolean) => {
@@ -104,10 +104,10 @@ export default function ProfessionalsPage() {
 
       {/* Stats Row */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
-        <StatCard title="Total Professionals" value={stats.total} trend={statsData?.trends?.total} icon={HiOutlineUsers} />
-        <StatCard title="Jobs Done" value={stats.jobsDone} trend={statsData?.trends?.jobs} icon={HiOutlineBriefcase} />
-        <StatCard title="Active Professionals" value={stats.active} trend={statsData?.trends?.active} icon={HiOutlineBadgeCheck} />
-        <StatCard title="Inactive members" value={stats.inactive} trend={statsData?.trends?.inactive} icon={HiOutlineUsers} />
+        <StatCard title="Total Professionals" value={stats.total} trend={(statsData as any)?.trends?.total} icon={HiOutlineUsers} />
+        <StatCard title="Jobs Done" value={stats.jobsDone} trend={(statsData as any)?.trends?.jobs} icon={HiOutlineBriefcase} />
+        <StatCard title="Active Professionals" value={stats.active} trend={(statsData as any)?.trends?.active} icon={HiOutlineBadgeCheck} />
+        <StatCard title="Inactive members" value={stats.inactive} trend={(statsData as any)?.trends?.inactive} icon={HiOutlineUsers} />
       </div>
 
       {/* Search and Filters */}

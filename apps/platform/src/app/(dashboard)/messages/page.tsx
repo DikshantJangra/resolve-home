@@ -22,7 +22,7 @@ export default function MessagesPage() {
     setMounted(true)
   }, [])
 
-  const isWorker = userProfile?.user?.role === 'worker' || userProfile?.user?.role === 'Work as a Professional'
+  const isWorker = userProfile?.user?.role === 'worker'
   const isVerified = (userProfile?.user as any)?.isVerified || (userProfile?.user as any)?.status === 'verified'
   const status = (userProfile?.user as any)?.status
 

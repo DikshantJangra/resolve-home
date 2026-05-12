@@ -11,18 +11,23 @@ import { format } from 'date-fns'
 import { FundWalletModal } from '@/features/wallet/components/fund-wallet-modal'
 import { AddBankModal } from '@/features/wallet/components/add-bank-modal'
 import { WithdrawModal } from '@/features/wallet/components/withdraw-modal'
+import { useUserProfile } from '@/hooks/api-hooks'
+import { VerificationRequired } from '@/features/professional-setup/components/verification-required'
+import { ProfessionalSetupWizard } from '@/features/professional-setup/components/professional-setup-wizard'
 
 export default function WalletPage() {
   const [isFundingModalOpen, setIsFundingModalOpen] = React.useState(false)
   const [isBankModalOpen, setIsBankModalOpen] = React.useState(false)
   const [isWithdrawModalOpen, setIsWithdrawModalOpen] = React.useState(false)
-  
+  const [isSetupOpen, setIsSetupOpen] = React.useState(false)
+
   const { data: session, isLoading: sessionLoading } = useAuthSession()
+  const { data: userProfile, isLoading: userProfileLoading } = useUserProfile()
   const { data: wallet, isLoading: walletLoading } = useWallet()
   const { data: stats, isLoading: statsLoading } = useWalletStatistics()
   const { data: transactions, isLoading: transactionsLoading } = useWalletTransactions()
 
-  const isLoading = sessionLoading || walletLoading || statsLoading || transactionsLoading
+  const isLoading = sessionLoading || userProfileLoading || walletLoading || statsLoading || transactionsLoading
 
   if (isLoading) {
     return (
@@ -47,7 +52,19 @@ export default function WalletPage() {
   }
 
   const user = session?.user
-  const isWorker = user?.role?.toLowerCase() === 'worker' || user?.role?.toLowerCase() === 'engineer'
+  const isWorker = userProfile?.user?.role === 'worker'
+  const isVerified = (userProfile?.user as any)?.isVerified || (userProfile?.user as any)?.status === 'verified'
+  const profileStatus = (userProfile?.user as any)?.status
+
+  if (isWorker && !isVerified) {
+    if (isSetupOpen) {
+      return <ProfessionalSetupWizard onComplete={() => setIsSetupOpen(false)} />
+    }
+    if (profileStatus === 'pending') {
+      return <ProfessionalSetupWizard onComplete={() => setIsSetupOpen(false)} initialStep={4} />
+    }
+    return <VerificationRequired onVerify={() => setIsSetupOpen(true)} />
+  }
 
   // Map API transactions to UI format
   const mappedTransactions = transactions?.map((t: any) => {

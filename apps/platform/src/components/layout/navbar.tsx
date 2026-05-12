@@ -52,7 +52,7 @@ export const Navbar = ({ onMenuClick }: NavbarProps) => {
           <div className="hidden md:flex flex-col items-end mr-1">
             <span className="text-xs font-semibold text-zinc-700">{user?.user?.name}</span>
             <span className="text-[10px] text-zinc-500 uppercase tracking-wider">
-              {user?.user?.role === 'Work as a Professional' ? 'worker' : user?.user?.role}
+              {user?.user?.role === 'worker' ? 'Professional' : 'Customer'}
             </span>
           </div>
         )}

@@ -13,9 +13,9 @@ export const BankDetailsSection = ({ onAdd }: BankDetailsSectionProps) => {
   const { data: banks, isLoading } = useBanks()
   const { mutate: deleteBank, isPending: isDeleting } = useDeleteBank()
 
-  const handleDelete = (id: string) => {
+  const handleDelete = () => {
     if (confirm('Are you sure you want to remove this bank account?')) {
-      deleteBank(id, {
+      deleteBank(undefined, {
         onSuccess: () => toast.success('Bank account removed'),
         onError: (err: any) => toast.error(err.message || 'Failed to remove bank')
       })
@@ -44,7 +44,7 @@ export const BankDetailsSection = ({ onAdd }: BankDetailsSectionProps) => {
                 </div>
               </div>
               <button 
-                onClick={() => handleDelete(bank.id)}
+                onClick={() => handleDelete()}
                 className="p-2 text-zinc-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-all opacity-0 group-hover:opacity-100"
               >
                 <HiOutlineTrash className="w-5 h-5" />

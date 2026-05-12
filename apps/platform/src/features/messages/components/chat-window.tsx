@@ -29,7 +29,7 @@ export const ChatWindow = ({ onBack }: ChatWindowProps) => {
   const user = userProfile?.user
   const scrollRef = useRef<HTMLDivElement>(null)
 
-  const isEngineer = user?.role === 'worker' || user?.role === 'Work as a Professional'
+  const isEngineer = user?.role === 'worker'
 
   useEffect(() => {
     if (initialMessages) {

@@ -4,7 +4,7 @@ import { AdminSidebar } from "@/components/layout/admin-sidebar"
 import { AdminNavbar } from "@/components/layout/admin-navbar"
 import { useAuthSession } from "@/hooks/api-hooks"
 import { useRouter } from "next/navigation"
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
 import { toast } from "sonner"
 
 export default function DashboardLayout({
@@ -13,6 +13,7 @@ export default function DashboardLayout({
   children: React.ReactNode
 }) {
   const { data: session, isLoading, isError } = useAuthSession()
+  const [sidebarOpen, setSidebarOpen] = useState(false)
   const router = useRouter()
 
   useEffect(() => {
@@ -71,9 +72,9 @@ export default function DashboardLayout({
 
   return (
     <div className="flex min-h-screen bg-white">
-      <AdminSidebar />
-      <div className="flex-1 flex flex-col min-w-0">
-        <AdminNavbar />
+      <AdminSidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+        <AdminNavbar onMenuClick={() => setSidebarOpen(true)} />
         <main className="flex-1 overflow-y-auto">
           {children}
         </main>

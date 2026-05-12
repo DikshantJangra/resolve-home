@@ -1,18 +1,37 @@
 'use client'
 
 import React from 'react'
-import { HiOutlineSearch } from 'react-icons/hi'
+import { HiOutlineSearch, HiOutlineMenuAlt2 } from 'react-icons/hi'
 import { Input, formatImageUrl } from "@resolve/ui"
 import { useUserProfile } from '@/hooks/api-hooks'
 import Link from 'next/link'
 
-export const AdminNavbar = () => {
+interface AdminNavbarProps {
+  onMenuClick?: () => void
+}
+
+export const AdminNavbar = ({ onMenuClick }: AdminNavbarProps) => {
   const { data: user } = useUserProfile()
 
   return (
-    <header className="h-16 px-8 bg-white border-b border-zinc-300 flex justify-between items-center sticky top-0 z-10">
-      <div className="flex-1 max-w-[911px] flex items-center gap-20">
-        <div className="relative w-80">
+    <header className="h-16 px-4 lg:px-8 bg-white border-b border-zinc-300 flex justify-between items-center sticky top-0 z-20">
+      <div className="flex items-center gap-2 sm:gap-4 lg:gap-20 flex-1">
+        <button 
+          onClick={onMenuClick}
+          className="p-2 lg:hidden text-zinc-500 hover:text-zinc-700 transition-colors"
+        >
+          <HiOutlineMenuAlt2 className="w-6 h-6" />
+        </button>
+
+        <Link href="/" className="shrink-0 lg:hidden">
+          <img 
+            src="/resolve_home.svg" 
+            alt="Resolv" 
+            className="w-20 sm:w-24 h-7 sm:h-9 object-contain" 
+          />
+        </Link>
+
+        <div className="relative w-full max-w-80 hidden md:block lg:ml-0">
           <Input 
             placeholder="Search resolv" 
             className="h-10 pl-4 pr-10 border-zinc-300 rounded-lg text-sm placeholder:text-zinc-300"
@@ -21,17 +40,17 @@ export const AdminNavbar = () => {
         </div>
       </div>
 
-      <Link href="/settings" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
+      <Link href="/settings" className="flex items-center gap-2 lg:gap-3 hover:opacity-80 transition-opacity">
         <img 
-          className="w-12 h-12 rounded-full border border-blue-700 object-cover bg-zinc-100" 
+          className="w-10 h-10 lg:w-12 lg:h-12 rounded-full border border-blue-700 object-cover bg-zinc-100" 
           src={formatImageUrl(user?.avatar || user?.image) || `https://api.dicebear.com/7.x/initials/svg?seed=${user?.name || 'Admin'}`} 
           alt="Profile" 
         />
-        <div className="flex flex-col justify-center">
-          <span className="text-zinc-600 text-base font-semibold font-inter leading-6">
+        <div className="hidden sm:flex flex-col justify-center">
+          <span className="text-zinc-600 text-sm lg:text-base font-semibold font-inter leading-tight lg:leading-6 truncate max-w-[120px]">
             {user?.name || "Tollideen Samwood"}
           </span>
-          <span className="text-zinc-600 text-sm font-normal font-inter leading-5">
+          <span className="text-zinc-600 text-xs lg:text-sm font-normal font-inter leading-tight lg:leading-5">
             {user?.role || "Admin"}
           </span>
         </div>

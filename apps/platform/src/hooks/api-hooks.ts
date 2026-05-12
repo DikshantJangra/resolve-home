@@ -111,6 +111,21 @@ export function useUpdatePassword() {
   })
 }
 
+export function useUpdateBioAddress() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (data: { bio?: string; homeAddress?: { street?: string; city?: string; state?: string; country?: string; postalCode?: string } | null }) => {
+      const response = await apiClient.put(ENDPOINTS.USER.BIO_ADDRESS, data)
+      return response.data
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['user-profile'] })
+      queryClient.invalidateQueries({ queryKey: ['auth-session'] })
+    }
+  })
+}
+
+
 // --- Bookings ---
 
 export function useUserBookings() {
@@ -204,7 +219,7 @@ export function useUpdateEngineerProfile() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: async (data: any) => {
-      const response = await apiClient.post(ENDPOINTS.ENGINEER_BOOKINGS.BASE.replace('/bookings', '/profile'), data)
+      const response = await apiClient.post(ENDPOINTS.ENGINEER.COMPLETE_PROFILE, data)
       return response.data
     },
     onSuccess: () => {
@@ -220,7 +235,7 @@ export function useEngineerBookings() {
   return useQuery({
     queryKey: ['engineer-bookings'],
     queryFn: async () => {
-      const response = await apiClient.get(ENDPOINTS.ENGINEER_BOOKINGS.BASE)
+      const response = await apiClient.get(ENDPOINTS.ENGINEER.BOOKINGS)
       return response.data.data?.bookings || []
     },
     enabled: typeof window !== 'undefined' && !!localStorage.getItem('auth_token')
@@ -231,7 +246,7 @@ export function useEngineerBookingDetail(id: string) {
   return useQuery({
     queryKey: ['engineer-booking-detail', id],
     queryFn: async () => {
-      const response = await apiClient.get(ENDPOINTS.ENGINEER_BOOKINGS.BY_ID(id))
+      const response = await apiClient.get(ENDPOINTS.ENGINEER.BOOKING_BY_ID(id))
       return response.data.data
     },
     enabled: !!id && typeof window !== 'undefined' && !!localStorage.getItem('auth_token')
@@ -242,7 +257,7 @@ export function useAcceptJob() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: async (bookingId: string) => {
-      const response = await apiClient.put(ENDPOINTS.ENGINEER_BOOKINGS.ACCEPT(bookingId))
+      const response = await apiClient.put(ENDPOINTS.BOOKINGS.ACCEPT(bookingId))
       return response.data
     },
     onSuccess: (_, bookingId) => {
@@ -256,7 +271,7 @@ export function useRejectJob() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: async (bookingId: string) => {
-      const response = await apiClient.put(ENDPOINTS.ENGINEER_BOOKINGS.REJECT(bookingId))
+      const response = await apiClient.put(ENDPOINTS.BOOKINGS.REJECT(bookingId))
       return response.data
     },
     onSuccess: (_, bookingId) => {
@@ -270,8 +285,7 @@ export function useCompleteJob() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: async (bookingId: string) => {
-      // Assuming a PUT /api/engineer/bookings/{id}/complete endpoint exists
-      const response = await apiClient.put(ENDPOINTS.ENGINEER_BOOKINGS.BY_ID(bookingId) + '/complete')
+      const response = await apiClient.put(ENDPOINTS.ENGINEER.BOOKING_BY_ID(bookingId) + '/complete')
       return response.data
     },
     onSuccess: (_, bookingId) => {
@@ -325,42 +339,47 @@ export function useInitializeDeposit() {
   })
 }
 
-export function useBanks() {
+export function useBankAccount() {
   return useQuery({
-    queryKey: ['wallet-banks'],
+    queryKey: ['wallet-bank-account'],
     queryFn: async () => {
-      const response = await apiClient.get(ENDPOINTS.WALLET.BANKS.LIST)
-      return response.data.data?.banks || []
+      const response = await apiClient.get(ENDPOINTS.WALLET.BANK_ACCOUNT)
+      return response.data.data?.bankAccount ?? null
     },
     enabled: typeof window !== 'undefined' && !!localStorage.getItem('auth_token')
   })
 }
 
-export function useAddBank() {
+export function useAddBankAccount() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: async (data: { bankName: string, accountNumber: string, accountName: string }) => {
-      const response = await apiClient.post(ENDPOINTS.WALLET.BANKS.BASE, data)
+      const response = await apiClient.post(ENDPOINTS.WALLET.BANK_ACCOUNT, data)
       return response.data
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['wallet-banks'] })
+      queryClient.invalidateQueries({ queryKey: ['wallet-bank-account'] })
     }
   })
 }
 
-export function useDeleteBank() {
+export function useDeleteBankAccount() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: async (id: string) => {
-      const response = await apiClient.delete(ENDPOINTS.WALLET.BANKS.DELETE(id))
+    mutationFn: async () => {
+      const response = await apiClient.delete(ENDPOINTS.WALLET.BANK_ACCOUNT)
       return response.data
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['wallet-banks'] })
+      queryClient.invalidateQueries({ queryKey: ['wallet-bank-account'] })
     }
   })
 }
+
+// Aliases for backward compatibility
+export const useBanks = useBankAccount
+export const useAddBank = useAddBankAccount
+export const useDeleteBank = useDeleteBankAccount
 
 export function useWithdraw() {
   const queryClient = useQueryClient()
@@ -522,5 +541,77 @@ export function useCreateComplaint() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['complaints'] })
     }
+  })
+}
+
+// --- Notifications ---
+
+export function useNotifications(unreadOnly = false) {
+  return useQuery({
+    queryKey: ['notifications', unreadOnly],
+    queryFn: async () => {
+      const response = await apiClient.get(ENDPOINTS.NOTIFICATIONS.BASE, {
+        params: unreadOnly ? { unreadOnly: true } : undefined,
+      })
+      return response.data.data || []
+    },
+    enabled: typeof window !== 'undefined' && !!localStorage.getItem('auth_token'),
+  })
+}
+
+export function useMarkNotificationRead() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const response = await apiClient.put(ENDPOINTS.NOTIFICATIONS.READ(id))
+      return response.data
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['notifications'] })
+    },
+  })
+}
+
+export function useMarkAllNotificationsRead() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async () => {
+      const response = await apiClient.put(ENDPOINTS.NOTIFICATIONS.READ_ALL)
+      return response.data
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['notifications'] })
+    },
+  })
+}
+
+export function useNotificationSettings() {
+  return useQuery({
+    queryKey: ['notification-settings'],
+    queryFn: async () => {
+      const response = await apiClient.get(ENDPOINTS.NOTIFICATIONS.SETTINGS)
+      return response.data.data?.settings ?? null
+    },
+    enabled: typeof window !== 'undefined' && !!localStorage.getItem('auth_token'),
+  })
+}
+
+export function useUpdateNotificationSettings() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (data: {
+      bookingUpdates?: boolean
+      messagesFromProfessionals?: boolean
+      pushNotifications?: boolean
+      smsAlerts?: boolean
+      weeklyEmailDigest?: boolean
+      promotionsAndOffers?: boolean
+    }) => {
+      const response = await apiClient.put(ENDPOINTS.NOTIFICATIONS.SETTINGS, data)
+      return response.data
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['notification-settings'] })
+    },
   })
 }

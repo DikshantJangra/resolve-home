@@ -133,11 +133,11 @@ export default function OverviewPage() {
 
       {/* Stats Row */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-5">
-        <StatCard title="Platform Revenue" value={`₦${(stats?.totalRevenue || 0).toLocaleString()}`} trend={stats?.trends?.revenue} icon={HiOutlineCurrencyDollar} />
-        <StatCard title="Total Homeowners" value={stats?.totalHomeowners || "0"} trend={stats?.trends?.homeowners} icon={HiOutlineUsers} />
-        <StatCard title="Total Professionals" value={stats?.totalEngineers || "0"} trend={stats?.trends?.engineers} icon={HiOutlineBriefcase} />
-        <StatCard title="Completed Jobs" value={stats?.completedJobs || "0"} trend={stats?.trends?.jobs} icon={HiOutlineCheckCircle} />
-        <StatCard title="Platform Rating" value={`${stats?.averageRating || "0"}`} trend={stats?.trends?.rating} icon={HiOutlineCheckCircle} />
+        <StatCard title="Platform Revenue" value={`₦${((stats as any)?.totalRevenue || 0).toLocaleString()}`} trend={(stats as any)?.trends?.revenue} icon={HiOutlineCurrencyDollar} />
+        <StatCard title="Total Homeowners" value={(stats as any)?.totalHomeowners || "0"} trend={(stats as any)?.trends?.homeowners} icon={HiOutlineUsers} />
+        <StatCard title="Total Professionals" value={(stats as any)?.totalEngineers || "0"} trend={(stats as any)?.trends?.engineers} icon={HiOutlineBriefcase} />
+        <StatCard title="Completed Jobs" value={(stats as any)?.completedJobs || "0"} trend={(stats as any)?.trends?.jobs} icon={HiOutlineCheckCircle} />
+        <StatCard title="Platform Rating" value={`${(stats as any)?.averageRating || "0"}`} trend={(stats as any)?.trends?.rating} icon={HiOutlineCheckCircle} />
       </div>
 
       {/* Main Content Grid */}
@@ -209,12 +209,12 @@ export default function OverviewPage() {
           <div className="p-6 rounded-xl border border-zinc-300 bg-white flex flex-col gap-8 shadow-sm h-fit">
             <h2 className="text-neutral-700 text-xl font-medium font-heading">Revenue Distribution</h2>
             
-             {/* Donut Chart SVG Placeholder */}
+              {/* Donut Chart SVG Placeholder */}
             <div className="flex justify-center py-10 relative">
                <svg width="180" height="180" viewBox="0 0 36 36" className="transform -rotate-90">
                 <circle cx="18" cy="18" r="15.915" fill="transparent" stroke="#f1f5f9" strokeWidth="3" />
                 {/* Simplified dynamic donut if calculation is available */}
-                {(stats?.revenueDistribution || calculatedDistribution).length > 0 ? (
+                {((stats as any)?.revenueDistribution || calculatedDistribution).length > 0 ? (
                   <circle cx="18" cy="18" r="15.915" fill="transparent" stroke="#3b82f6" strokeWidth="3" strokeDasharray="100 0" strokeDashoffset="0" />
                 ) : null}
               </svg>
@@ -223,10 +223,10 @@ export default function OverviewPage() {
                 <span className="text-neutral-700 font-bold text-sm">100%</span>
               </div>
             </div>
-
+ 
              {/* Legend */}
             <div className="flex flex-col gap-4">
-              {(stats?.revenueDistribution || calculatedDistribution).map((item: any, idx: number) => (
+              {((stats as any)?.revenueDistribution || calculatedDistribution).map((item: any, idx: number) => (
                 <LegendItem 
                   key={idx}
                   color={item.color} 
@@ -235,7 +235,7 @@ export default function OverviewPage() {
                   value={`₦${Number(item.value).toLocaleString()}`} 
                 />
               ))}
-              {(stats?.revenueDistribution || calculatedDistribution).length === 0 && (
+              {((stats as any)?.revenueDistribution || calculatedDistribution).length === 0 && (
                 <p className="text-zinc-400 text-sm text-center">No data available</p>
               )}
             </div>

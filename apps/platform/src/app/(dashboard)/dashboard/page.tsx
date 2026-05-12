@@ -14,7 +14,7 @@ export default function DashboardPage() {
   const [isSetupOpen, setIsSetupOpen] = React.useState(false)
 
   const user = session?.user
-  const isEngineer = user?.role === 'worker' || user?.role === 'Work as a Professional'
+  const isEngineer = user?.role === 'worker'
   const isVerified = (user as any)?.isVerified || (user as any)?.status === 'verified'
 
   React.useEffect(() => {

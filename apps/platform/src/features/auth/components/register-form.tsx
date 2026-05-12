@@ -24,6 +24,7 @@ import { useRegisterStore } from "@/store/use-register-store"
 export function RegisterForm() {
   const router = useRouter()
   const { prevStep, role } = useRegisterStore()
+  console.log('[RegisterForm] render — role from store:', role)
   const [showPassword, setShowPassword] = React.useState(false)
   const { mutate: register, isPending } = useRegister()
 
@@ -40,12 +41,12 @@ export function RegisterForm() {
   })
 
   function onSubmit(data: RegisterValues) {
-    register(data)
+    register({ ...data, role: role || 'user' })
   }
 
-  const roleTitle = role === 'pro' ? "Professional" : "Customer"
-  const roleDescription = role === 'pro' 
-    ? "Join our network of experts and start earning today." 
+  const roleTitle = role === 'worker' ? "Professional" : "Customer"
+  const roleDescription = role === 'worker'
+    ? "Join our network of experts and start earning today."
     : "Book any home service in under 60 seconds. Fill in your correct details below to get started."
 
   const password = form.watch("password")

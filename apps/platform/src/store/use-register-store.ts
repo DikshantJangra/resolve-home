@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 
-export type RegisterRole = 'client' | 'pro' | null
+export type RegisterRole = 'user' | 'worker' | null
 
 interface RegisterState {
   step: number

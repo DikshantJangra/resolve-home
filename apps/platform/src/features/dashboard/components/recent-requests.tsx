@@ -9,7 +9,7 @@ export const RecentRequests = () => {
   const { data: requests, isLoading } = useUserBookings()
   const { data: userProfile } = useUserProfile()
   
-  const isWorker = userProfile?.user?.role === 'worker' || userProfile?.user?.role === 'Work as a Professional'
+  const isWorker = userProfile?.user?.role === 'worker'
 
   if (isLoading) {
     return (

@@ -27,9 +27,9 @@ export default function ComplaintsPage() {
   }) || []
 
   const stats = [
-    { label: 'Total Complaints', value: statsData?.totalComplaints || '0', trend: '+12.5%', icon: HiOutlineClipboardList },
-    { label: 'Resolved Cases', value: statsData?.resolvedCases || '0', trend: '+12.5%', icon: HiOutlineBadgeCheck },
-    { label: 'Pending Disputes', value: statsData?.pendingDisputes || '0', trend: '+12.5%', icon: HiOutlineExclamationCircle },
+    { label: 'Total Complaints', value: (statsData as any)?.totalComplaints || '0', trend: '+12.5%', icon: HiOutlineClipboardList },
+    { label: 'Resolved Cases', value: (statsData as any)?.resolvedCases || '0', trend: '+12.5%', icon: HiOutlineBadgeCheck },
+    { label: 'Pending Disputes', value: (statsData as any)?.pendingDisputes || '0', trend: '+12.5%', icon: HiOutlineExclamationCircle },
   ]
 
   if (complaintsLoading || statsLoading) {

@@ -30,26 +30,70 @@
 
 ---
 
-## User — `User`
+## User — `User Profile`
 
 | Method | Endpoint | Summary | Auth |
 |--------|----------|---------|:---:|
-| `GET`  | `/api/user/profile` | Get own profile | ✅ |
-| `PUT`  | `/api/user/profile` | Update own profile | ✅ |
+| `GET`  | `/api/user/profile` | Get own profile (+ engineerProfile if worker) | ✅ |
+| `PUT`  | `/api/user/profile` | Update name, phone, image | ✅ |
 | `PUT`  | `/api/user/password` | Change password | ✅ |
+| `GET`  | `/api/user/bio-address` | Get bio and home address | ✅ |
+| `PUT`  | `/api/user/bio-address` | Update bio and home address | ✅ |
 
 ### User Profile Shape
 ```ts
 {
   id: string
   name: string
-  email: string
+  email: string          // read-only
   phone: string
-  image: string        // profile image URL
+  image: string
+  bio: string
+  homeAddress: { street, city, state, country, postalCode } | null
   role: "user" | "admin" | "worker"
   emailVerified: boolean
   createdAt: string
   updatedAt: string
+}
+```
+
+---
+
+## Notifications — `Notifications`
+
+| Method | Endpoint | Summary | Auth |
+|--------|----------|---------|:---:|
+| `GET`  | `/api/notifications` | Get notifications (paginated, `?unreadOnly=true`) | ✅ |
+| `PUT`  | `/api/notifications/:id/read` | Mark one as read | ✅ |
+| `PUT`  | `/api/notifications/read-all` | Mark all as read | ✅ |
+| `GET`  | `/api/notifications/settings` | Get notification preferences | ✅ |
+| `PUT`  | `/api/notifications/settings` | Update notification preferences | ✅ |
+
+### Notification Shape
+```ts
+{
+  id: string
+  type: "booking_update" | "message" | "payment" | "complaint_response" | "review" | "system"
+  title: string
+  message: string
+  relatedId: string | null
+  relatedType: "booking" | "chat" | "payment" | "complaint" | null
+  actionUrl: string | null   // e.g. "/bookings/123"
+  isRead: boolean
+  readAt: string | null
+  createdAt: string
+}
+```
+
+### Notification Settings Shape
+```ts
+{
+  bookingUpdates: boolean
+  messagesFromProfessionals: boolean
+  pushNotifications: boolean
+  smsAlerts: boolean
+  weeklyEmailDigest: boolean
+  promotionsAndOffers: boolean
 }
 ```
 
@@ -70,9 +114,11 @@
 | Method | Endpoint | Summary | Auth |
 |--------|----------|---------|:---:|
 | `POST` | `/api/bookings` | Create booking | ✅ |
-| `GET`  | `/api/bookings` | Get own bookings | ✅ |
-| `GET`  | `/api/bookings/available-engineers` | Get available engineers for a booking | ✅ |
+| `GET`  | `/api/bookings` | Get own bookings (`?filter=all\|active\|upcoming\|completed\|cancelled`) | ✅ |
+| `GET`  | `/api/bookings/available-engineers` | Get available engineers (`?bookingId=`) | ✅ |
 | `PUT`  | `/api/bookings/:id/select-engineer` | Select engineer for booking | ✅ |
+| `PUT`  | `/api/bookings/:id/accept` | Engineer accepts booking | ✅ |
+| `PUT`  | `/api/bookings/:id/reject` | Engineer rejects booking | ✅ |
 | `POST` | `/api/bookings/:id/review` | Review completed booking | ✅ |
 | `PUT`  | `/api/bookings/:id/cancel` | Cancel a booking | ✅ |
 
@@ -81,13 +127,25 @@
 {
   "serviceId": "string",
   "priority": "emergency" | "standard",
-  "scheduledDate?": "YYYY-MM-DD",
-  "scheduledTime?": "HH:MM",
+  "scheduledDate?": "YYYY-MM-DD",   // standard only
+  "scheduledTime?": "HH:MM",        // standard only
   "issueDetails": "string",
-  "photos?": ["string (URL)"],
-  "location": { "state": "string", "city": "string", "streetAddress": "string", "nearestLandmark": "string", "latitude?": number, "longitude?": number }
+  "photos?": ["string (URL)"],       // max 3
+  "location": { "state", "city", "streetAddress", "nearestLandmark", "latitude?", "longitude?" }
 }
 ```
+
+---
+
+## Engineer — `Engineer`
+
+| Method | Endpoint | Summary | Auth |
+|--------|----------|---------|:---:|
+| `POST` | `/api/engineer/complete-profile` | Submit profile for verification | ✅ |
+| `GET`  | `/api/engineer/dashboard` | Engineer dashboard stats | ✅ |
+| `PUT`  | `/api/engineer/location` | Update GPS location | ✅ |
+| `GET`  | `/api/engineer/bookings` | Get engineer bookings (`?filter=requests\|active\|upcoming\|completed\|cancelled`) | ✅ |
+| `GET`  | `/api/engineer/bookings/:id` | Get booking details | ✅ |
 
 ---
 
@@ -96,10 +154,16 @@
 | Method | Endpoint | Summary | Auth |
 |--------|----------|---------|:---:|
 | `GET`  | `/api/wallet` | Get wallet details + balance | ✅ |
+| `GET`  | `/api/wallet/balance` | Get balance only | ✅ |
 | `GET`  | `/api/wallet/statistics` | Get wallet stats | ✅ |
 | `GET`  | `/api/wallet/transactions` | Get transaction history | ✅ |
+| `POST` | `/api/wallet/top-up` | Top-up wallet — customers only (Paystack) | ✅ |
 | `POST` | `/api/wallet/deposit/initialize` | Initialize deposit (Paystack) | ✅ |
 | `GET`  | `/api/wallet/deposit/verify/:ref` | Verify deposit | ✅ |
+| `GET`  | `/api/wallet/bank-account` | Get saved bank account | ✅ |
+| `POST` | `/api/wallet/bank-account` | Add bank account | ✅ |
+| `PUT`  | `/api/wallet/bank-account` | Update bank account | ✅ |
+| `POST` | `/api/wallet/withdraw` | Withdraw — engineers only | ✅ |
 
 ---
 
@@ -119,16 +183,27 @@
 
 | Method | Endpoint | Summary | Auth |
 |--------|----------|---------|:---:|
-| `GET`  | `/api/chats` | Get all chats | ✅ |
+| `GET`  | `/api/chats` | Get all chats (inbox) | ✅ |
 | `GET`  | `/api/chats/:chatId/messages` | Get chat messages | ✅ |
 | `PUT`  | `/api/chats/:chatId/read` | Mark messages as read | ✅ |
 
 ### Socket.IO Events
 - `join_chat`: (chatId)
-- `send_message`: ({ chatId, message })
+- `send_message`: ({ chatId, message, mediaType?, mediaUrl? })
 - `receive_message`: (message)
 - `typing` / `stop_typing`: ({ chatId })
 - `user_typing` / `user_stopped_typing`: ({ chatId, userId })
+- `user_online` / `user_offline`: ({ userId })
+
+---
+
+## Complaints — `Complaints`
+
+| Method | Endpoint | Summary | Auth |
+|--------|----------|---------|:---:|
+| `POST` | `/api/complaints` | Submit complaint | ✅ |
+| `GET`  | `/api/complaints` | Get own complaints | ✅ |
+| `GET`  | `/api/complaints/:id` | Get complaint by ID | ✅ |
 
 ---
 
@@ -136,10 +211,10 @@
 
 > All admin routes require `role: admin`.
 
-- **Users:** `/api/admin/users` (GET, POST, GET :id, PUT :id, POST :id/ban, GET /stats)
+- **Users:** `/api/admin/users` (GET, POST, GET :id, PUT :id, POST :id/ban)
 - **Categories:** `/api/admin/categories` (GET, POST, GET :id, PUT :id, DELETE :id)
 - **Services:** `/api/admin/services` (GET, POST, GET :id, PUT :id, DELETE :id)
-- **Engineers:** `/api/admin/engineers` (GET, POST, GET :id, PUT :id, DELETE :id, GET /stats)
-- **Bookings:** `/api/admin/bookings` (GET, GET :id, PUT :id/status, PUT :id/engineers, GET /stats)
-- **Stats:** `/api/admin/stats` (GET)
-- **Complaints:** `/api/admin/complaints` (GET, GET :id, PUT :id/respond, GET /stats)
+- **Engineers:** `/api/admin/engineers` (GET, POST, GET :id, PUT :id, DELETE :id)
+- **Engineer Verifications:** `/api/admin/engineer-verifications/pending` (GET), `/api/admin/engineer-verifications/:id/verify` (PUT)
+- **Bookings:** `/api/admin/bookings` (GET, GET :id, PUT :id/status, PUT :id/engineers)
+- **Complaints:** `/api/admin/complaints` (GET, PUT :id/respond)

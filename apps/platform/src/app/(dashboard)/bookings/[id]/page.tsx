@@ -30,7 +30,7 @@ export default function BookingDetailsPage() {
   const { mutate: cancelBooking, isPending: isCancelling } = useCancelBooking()
   const { data: quotation } = useBookingQuotation(id as string)
 
-  const isWorker = userProfile?.user?.role === 'worker' || userProfile?.user?.role === 'Work as a Professional'
+  const isWorker = userProfile?.user?.role === 'worker'
 
   if (isLoading) {
     return (

@@ -8,7 +8,8 @@ import {
   HiOutlineTrendingUp,
   HiOutlineTrendingDown,
   HiOutlineShieldCheck,
-  HiOutlineExclamation
+  HiOutlineExclamation,
+  HiOutlineClipboardList
 } from 'react-icons/hi'
 import { cn, Button, Skeleton } from "@resolve/ui"
 import { useAdminBookings, useAdminBookingStats } from '@/hooks/api-hooks'
@@ -21,11 +22,11 @@ export default function BookingsPage() {
   const { data: statsData, isLoading: statsLoading } = useAdminBookingStats()
 
   const stats = useMemo(() => {
-    if (statsData) return {
-      total: statsData.totalBookings,
-      inProgress: statsData.inProgress,
-      emergency: statsData.emergency,
-      avgResponse: statsData.avgResponse
+    if (statsData && Object.keys(statsData).length > 0) return {
+      total: (statsData as any).totalBookings || 0,
+      inProgress: (statsData as any).inProgress || 0,
+      emergency: (statsData as any).emergency || 0,
+      avgResponse: (statsData as any).avgResponse || '0%'
     }
     if (!bookings) return { total: 0, inProgress: 0, emergency: 0, avgResponse: '0%' }
     return {
@@ -107,29 +108,29 @@ export default function BookingsPage() {
         <StatCard 
           label="Total bookings" 
           value={stats.total} 
-          trend={statsData?.trends?.total} 
-          trendUp={statsData?.trends?.total?.startsWith('+')} 
+          trend={(statsData as any)?.trends?.total} 
+          trendUp={(statsData as any)?.trends?.total?.startsWith('+')} 
           icon={<HiOutlineFilter className="w-5 h-5 text-zinc-600" />} 
         />
         <StatCard 
           label="Avg. Response" 
           value={stats.avgResponse || 'N/A'} 
-          trend={statsData?.trends?.avgResponse} 
-          trendUp={statsData?.trends?.avgResponse?.startsWith('+')} 
+          trend={(statsData as any)?.trends?.avgResponse} 
+          trendUp={(statsData as any)?.trends?.avgResponse?.startsWith('+')} 
           icon={<HiOutlineShieldCheck className="w-5 h-5 text-zinc-600" />} 
         />
         <StatCard 
           label="In Progress" 
           value={stats.inProgress} 
-          trend={statsData?.trends?.inProgress} 
-          trendUp={statsData?.trends?.inProgress?.startsWith('+')} 
+          trend={(statsData as any)?.trends?.inProgress} 
+          trendUp={(statsData as any)?.trends?.inProgress?.startsWith('+')} 
           icon={<HiOutlineClock className="w-5 h-5 text-zinc-600" />} 
         />
         <StatCard 
           label="Emergency" 
           value={stats.emergency} 
-          trend={statsData?.trends?.emergency} 
-          trendUp={statsData?.trends?.emergency?.startsWith('+')} 
+          trend={(statsData as any)?.trends?.emergency} 
+          trendUp={(statsData as any)?.trends?.emergency?.startsWith('+')} 
           icon={<HiOutlineExclamation className="w-5 h-5 text-zinc-600" />} 
         />
       </div>
@@ -195,5 +196,3 @@ function StatCard({ label, value, trend, trendUp, icon }: any) {
     </div>
   )
 }
-
-import { HiOutlineClipboardList } from 'react-icons/hi'

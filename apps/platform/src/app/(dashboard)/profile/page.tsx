@@ -42,9 +42,9 @@ export default function ProfilePage() {
     fullName: user?.name || 'User',
     email: user?.email || '',
     phone: user?.phone || 'Not provided',
-    city: 'Lagos',
-    address: 'No primary address set',
-    bio: user?.role === 'worker' ? 'Professional Service Engineer on Resolv Home.' : 'Member of Resolv Home.',
+    city: (user as any)?.city || '',
+    address: (user as any)?.homeAddress || '',
+    bio: (user as any)?.bio || '',
     memberSince: user?.createdAt ? format(new Date(user.createdAt), 'MMM yyyy') : 'Recently',
     avatarUrl: user?.image ? formatImageUrl(user.image) : `https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.name || 'User'}`
   }

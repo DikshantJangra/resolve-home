@@ -1,13 +1,15 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { HiOutlineLocationMarker, HiChevronDown } from 'react-icons/hi'
+import { HiOutlineLocationMarker, HiChevronDown, HiOutlineHome } from 'react-icons/hi'
 import { useBookingStore } from '@/store/booking-store'
-import { Button } from "@resolve/ui"
-import { Input } from "@resolve/ui"
-import { Label } from "@resolve/ui"
+import { Button, Input, Label } from "@resolve/ui"
+import { useUserProfile } from '@/hooks/api-hooks'
+
 export const LocationStep = () => {
-  const { location, setLocation, setStep, priority } = useBookingStore()
+  const { location, setLocation, setStep } = useBookingStore()
+  const { data: profile } = useUserProfile()
+  
   const [formData, setFormData] = useState({
     state: location?.state || '',
     city: location?.city || '',
@@ -17,6 +19,17 @@ export const LocationStep = () => {
 
   const handleChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }))
+  }
+
+  const handleUseHomeAddress = () => {
+    if (profile?.user?.homeAddress) {
+      setFormData({
+        state: (profile?.user as any)?.state || '',
+        city: (profile?.user as any)?.city || '',
+        streetAddress: profile?.user?.homeAddress,
+        landmark: (profile?.user as any)?.landmark || '',
+      })
+    }
   }
 
   const handleUseGPS = () => {
@@ -29,7 +42,7 @@ export const LocationStep = () => {
     })
   }
 
-  const isFormValid = Object.values(formData).every(val => val.trim().length > 0)
+  const isFormValid = formData.state.trim() && formData.city.trim() && formData.streetAddress.trim() && formData.landmark.trim()
 
   const handleContinue = () => {
     setLocation(formData)
@@ -38,14 +51,26 @@ export const LocationStep = () => {
 
   return (
     <div className="flex flex-col h-full">
-      <div className="flex-1 px-5 pt-10 space-y-8 overflow-y-auto no-scrollbar">
-        <button
-          onClick={handleUseGPS}
-          className="w-full flex justify-center items-center gap-2 py-2 text-blue-700 text-sm font-medium underline hover:text-blue-800 transition-colors"
-        >
-          <HiOutlineLocationMarker className="w-5 h-5" />
-          Use my current GPS location
-        </button>
+      <div className="flex-1 px-5 pt-6 space-y-6 overflow-y-auto no-scrollbar">
+        <div className="flex flex-col gap-2">
+          <button
+            onClick={handleUseGPS}
+            className="w-full flex justify-center items-center gap-2 py-2 text-blue-700 text-sm font-medium underline hover:text-blue-800 transition-colors"
+          >
+            <HiOutlineLocationMarker className="w-5 h-5" />
+            Use my current GPS location
+          </button>
+
+          {profile?.user?.homeAddress && (
+            <button
+              onClick={handleUseHomeAddress}
+              className="w-full flex justify-center items-center gap-2 py-2 text-blue-700 text-sm font-medium underline hover:text-blue-800 transition-colors"
+            >
+              <HiOutlineHome className="w-5 h-5" />
+              Use my home address
+            </button>
+          )}
+        </div>
 
         <div className="space-y-5">
           <div className="space-y-1.5">
@@ -137,3 +162,4 @@ export const LocationStep = () => {
     </div>
   )
 }
+

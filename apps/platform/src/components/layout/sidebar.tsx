@@ -47,7 +47,7 @@ export const Sidebar = ({ onClose, items = defaultSidebarItems }: SidebarProps) 
     setIsMounted(true)
   }, [])
 
-  const isEngineer = userProfile?.user?.role === 'worker' || userProfile?.user?.role === 'Work as a Professional'
+  const isEngineer = userProfile?.user?.role === 'worker'
   const isVerified = (userProfile?.user as any)?.isVerified || (userProfile?.user as any)?.status === 'verified'
 
   React.useEffect(() => {
@@ -124,7 +124,7 @@ export const Sidebar = ({ onClose, items = defaultSidebarItems }: SidebarProps) 
           })}
           
           {/* Book a service Button - Hide for workers entirely, and only show when loaded and verified */}
-          {!isLoadingUser && userProfile && !isEngineer && isVerified && (
+          {!isLoadingUser && userProfile && !isEngineer && (
             <button
               onClick={() => {
                 useBookingStore.getState().setIsOpen(true)

@@ -12,13 +12,13 @@ export function RoleSelection() {
 
   const roles: { id: RegisterRole; title: string; description: string; icon: any }[] = [
     {
-      id: "client",
+      id: "user",
       title: "Customer",
       description: "Find and book verified plumbers, electricians, and HVAC experts near you",
       icon: HiOutlineUsers,
     },
     {
-      id: "pro",
+      id: "worker",
       title: "Professional",
       description: "Discover exciting job opportunities in your local area and take your business to new heights.",
       icon: HiOutlineBriefcase,

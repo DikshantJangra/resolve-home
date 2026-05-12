@@ -135,7 +135,7 @@ export const Navbar = () => {
             // Logged In Links
             loggedInLinks
               .filter(link => {
-                const isWorker = user?.role === 'worker' || user?.role === 'Work as a Professional'
+                const isWorker = user?.role === 'worker'
                 return !(link.label === 'Book a service' && isWorker)
               })
               .map((link) => (
@@ -311,7 +311,7 @@ export const Navbar = () => {
               <div className="flex flex-col gap-6">
                 {(isMounted ? (session?.user ? loggedInLinks : navLinks) : [])
                   .filter(link => {
-                    const isWorker = user?.role === 'worker' || user?.role === 'Work as a Professional'
+                    const isWorker = user?.role === 'worker'
                     return !(link.label === 'Book a service' && isWorker)
                   })
                   .map((link) => (

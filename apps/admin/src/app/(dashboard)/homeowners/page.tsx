@@ -26,10 +26,10 @@ export default function HomeownersPage() {
   ) || []
 
   const stats = [
-    { label: 'Total Homeowners', value: statsData?.totalHomeowners || homeowners.length, trend: statsData?.trends?.homeowners, icon: HiOutlineUsers },
-    { label: 'Membership Pro', value: statsData?.membershipPro || 'N/A', trend: statsData?.trends?.membership, icon: HiOutlineBriefcase },
-    { label: 'Active Members', value: statsData?.activeMembers || homeowners.filter((u: any) => !u.isBanned).length, trend: statsData?.trends?.active, icon: HiOutlineUserGroup },
-    { label: 'Inactive members', value: statsData?.inactiveMembers || homeowners.filter((u: any) => u.isBanned).length, trend: statsData?.trends?.inactive, icon: HiOutlineUserGroup },
+    { label: 'Total Homeowners', value: (statsData as any)?.totalHomeowners || homeowners.length, trend: (statsData as any)?.trends?.homeowners, icon: HiOutlineUsers },
+    { label: 'Membership Pro', value: (statsData as any)?.membershipPro || 'N/A', trend: (statsData as any)?.trends?.membership, icon: HiOutlineBriefcase },
+    { label: 'Active Members', value: (statsData as any)?.activeMembers || homeowners.filter((u: any) => !u.isBanned).length, trend: (statsData as any)?.trends?.active, icon: HiOutlineUserGroup },
+    { label: 'Inactive members', value: (statsData as any)?.inactiveMembers || homeowners.filter((u: any) => u.isBanned).length, trend: (statsData as any)?.trends?.inactive, icon: HiOutlineUserGroup },
   ]
 
   if (usersLoading || statsLoading) {

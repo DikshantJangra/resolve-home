@@ -25,7 +25,7 @@ export default function BookingsPage() {
   const { data: bookings, isLoading } = useUserBookings()
   const { data: userProfile, isLoading: isUserLoading } = useUserProfile()
 
-  const isWorker = userProfile?.user?.role === 'worker' || userProfile?.user?.role === 'Work as a Professional'
+  const isWorker = userProfile?.user?.role === 'worker'
   const isVerified = (userProfile?.user as any)?.isVerified || (userProfile?.user as any)?.status === 'verified'
   const status = (userProfile?.user as any)?.status
 
