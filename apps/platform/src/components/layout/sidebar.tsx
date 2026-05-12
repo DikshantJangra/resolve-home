@@ -8,14 +8,15 @@ import {
   HiOutlineChatAlt, 
   HiOutlineUser, 
   HiOutlineCreditCard, 
-  HiOutlineCog,
-  HiOutlineLockClosed,
-  HiOutlineClipboardCheck
+  HiOutlineCog, 
+  HiOutlineLockClosed, 
+  HiOutlineClipboardCheck, 
+  HiOutlineX,
+  HiOutlinePlusCircle
 } from 'react-icons/hi'
 import { cn } from "@resolve/ui"
 import { useUserProfile } from '@/hooks/api-hooks'
 import { useBookingStore } from '@/store/booking-store'
-import { HiOutlinePlusCircle } from 'react-icons/hi'
 
 interface SidebarItem {
   label: string
@@ -65,12 +66,12 @@ export const Sidebar = ({ onClose, items = defaultSidebarItems }: SidebarProps) 
         onClick={onClose}
         className="lg:hidden absolute top-4 right-[-40px] w-8 h-8 bg-white border border-zinc-300 rounded-full flex items-center justify-center text-zinc-600 shadow-sm"
       >
-        <span className="text-xl">×</span>
+        <HiOutlineX className="w-5 h-5" />
       </button>
       {/* Logo Section */}
       <div className="h-16 px-6 border-b border-zinc-300 flex items-center">
         <Link href="/">
-          <img src="/resolve_home.svg" alt="Resolv" className="w-24 h-9 object-contain" />
+          <img src="/logo.svg" alt="ResolvHome" className="w-32 h-12 object-contain" />
         </Link>
       </div>
 

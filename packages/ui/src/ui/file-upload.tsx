@@ -6,9 +6,12 @@ import DashboardPlugin from '@uppy/dashboard'
 import XHRUpload from '@uppy/xhr-upload'
 import ImageEditor from '@uppy/image-editor'
 import Dashboard from '@uppy/react/dashboard'
+import { createPortal } from 'react-dom'
 import { apiClient } from "@resolve/api"
 import { ENDPOINTS } from "@resolve/api"
 import { toast } from 'sonner'
+
+
 
 interface FileUploadProps {
   isOpen: boolean
@@ -31,20 +34,26 @@ export const FileUpload: React.FC<FileUploadProps> = ({
   multiple = false,
   maxFiles = 1,
 }) => {
+  const [mounted, setMounted] = useState(false)
   const [uppy, setUppy] = useState<Uppy | null>(null)
+
+  useEffect(() => {
+    setMounted(true)
+    return () => setMounted(false)
+  }, [])
 
   useEffect(() => {
     // Initialize Uppy with premium features
     const uppyInstance = new Uppy({
-      id: `uppy-${uploadType}`,
+      id: `uppy-${uploadType}-${Math.random().toString(36).substring(7)}`,
       autoProceed: false,
-      debug: process.env.NODE_ENV === 'development',
+      debug: true,
       restrictions: {
         maxNumberOfFiles: multiple ? maxFiles : 1,
-        // These will be overridden by the config from backend
       }
     })
       .use(ImageEditor, {
+        id: 'ImageEditor',
         quality: 0.8,
         cropperOptions: {
           viewMode: 1,
@@ -130,21 +139,38 @@ export const FileUpload: React.FC<FileUploadProps> = ({
     return () => {
       uppyInstance.destroy()
     }
-  }, [uploadType, multiple, maxFiles, onSuccess, onRequestClose])
+  }, [uploadType, multiple, maxFiles, onSuccess, onRequestClose, isOpen])
 
-  if (!uppy || !isOpen) return null
+  useEffect(() => {
+    if (isOpen) {
+      console.log('FileUpload Debug: Uploader is open and portaling to body');
+    }
+  }, [isOpen]);
 
-  return (
-    <div className="fixed inset-0 z-[99999] flex items-center justify-center pointer-events-none">
+  if (!mounted || !uppy || !isOpen) return null
+
+  return createPortal(
+    <div className="fixed inset-0 z-[999]">
       {/* Click-outside backdrop with super minimal blur */}
       <div 
-        className="absolute inset-0 pointer-events-auto bg-black/10 backdrop-blur-[2px]" 
+        className="fixed inset-0 bg-black/60 backdrop-blur-sm" 
         onClick={onRequestClose}
       />
       
       {/* Modal Content */}
-      <div className="relative z-[100000] pointer-events-auto w-full max-w-[600px] px-4">
-        <div className="bg-white rounded-xl shadow-2xl overflow-hidden">
+      <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-[600px] px-4 z-[1000] animate-in fade-in zoom-in duration-200">
+        <div className="bg-white rounded-2xl shadow-2xl overflow-hidden border border-zinc-200">
+          <div className="p-4 border-b border-zinc-100 flex justify-between items-center bg-zinc-50/50">
+            <h3 className="text-sm font-semibold text-zinc-700">Upload {uploadType === 'image' ? 'Profile Picture' : 'Files'}</h3>
+            <button 
+              onClick={onRequestClose}
+              className="text-zinc-400 hover:text-zinc-600 transition-colors p-1"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
           <Dashboard 
             uppy={uppy}
             width="100%"
@@ -158,6 +184,7 @@ export const FileUpload: React.FC<FileUploadProps> = ({
           />
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }

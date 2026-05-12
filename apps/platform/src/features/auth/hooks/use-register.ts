@@ -11,6 +11,7 @@ export function useRegister() {
 
   return useMutation({
     mutationFn: async (data: RegisterValues & { role: string }) => {
+      console.log("[useRegister] auth_token in localStorage before request:", localStorage.getItem("auth_token"))
       const response = await apiClient.post(ENDPOINTS.AUTH.REGISTER, {
         email: data.email,
         password: data.password,
@@ -21,9 +22,15 @@ export function useRegister() {
 
       return response.data
     },
-    onSuccess: (response) => {
-      toast.success(response.message || "Welcome to Resolve Home! Please verify your email.")
-      router.push("/login")
+    onSuccess: (response: any) => {
+      console.log("[useRegister] Success response:", response)
+      // Save token if provided to allow immediate verification
+      const token = response?.data?.token
+      if (token) {
+        console.log("[useRegister] Saving auth_token to localStorage")
+        localStorage.setItem("auth_token", token)
+      }
+      toast.success(response.message || "Welcome to ResolvHome! Please verify your email.")
     },
     onError: () => {},
   })

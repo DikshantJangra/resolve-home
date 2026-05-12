@@ -28,6 +28,7 @@ export const SettingsSidebar = ({ activeSection, onSectionChange }: SettingsSide
   const [isLogoutOpen, setIsLogoutOpen] = React.useState(false)
 
   return (
+    <>
     <div className="w-full lg:w-[280px] py-5 bg-stone-50 rounded-xl border border-stone-100 flex flex-col gap-2 h-fit">
       {settingsItems.map((item) => {
         const Icon = item.icon
@@ -60,11 +61,12 @@ export const SettingsSidebar = ({ activeSection, onSectionChange }: SettingsSide
         <HiOutlineLogout className="w-5 h-5" />
         <span className="text-xs font-medium uppercase tracking-wide">Log out</span>
       </button>
-
-      <LogoutModal 
-        isOpen={isLogoutOpen} 
-        onClose={() => setIsLogoutOpen(false)} 
-      />
     </div>
+
+    <LogoutModal 
+      isOpen={isLogoutOpen} 
+      onClose={() => setIsLogoutOpen(false)} 
+    />
+    </>
   )
 }

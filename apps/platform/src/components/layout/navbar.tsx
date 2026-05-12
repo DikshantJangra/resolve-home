@@ -26,20 +26,28 @@ export const Navbar = ({ onMenuClick }: NavbarProps) => {
   }, [])
 
   return (
+    <>
     <header className="h-16 px-4 md:px-8 bg-white border-b border-zinc-300 flex items-center justify-between sticky top-0 z-50">
       {/* Mobile Hamburger */}
-      <button 
-        onClick={onMenuClick}
-        className="lg:hidden p-2 -ml-2 text-zinc-600 hover:bg-slate-50 rounded-lg transition-colors"
-      >
-        <HiOutlineMenu className="w-6 h-6" />
-      </button>
+      {/* Mobile Hamburger & Logo */}
+      <div className="flex items-center gap-2 lg:hidden">
+        <button 
+          onClick={onMenuClick}
+          className="p-2 -ml-2 text-zinc-600 hover:bg-slate-50 rounded-lg transition-colors"
+        >
+          <HiOutlineMenu className="w-6 h-6" />
+        </button>
+        
+        <Link href="/">
+          <img src="/logo.svg" alt="ResolvHome" className="w-24 sm:w-28 h-8 sm:h-10 object-contain" />
+        </Link>
+      </div>
 
       {/* Search Bar - Hidden on extra small mobile, adjustable width */}
-      <div className="flex-1 ml-2 lg:ml-0 overflow-hidden">
+      <div className="flex-1 ml-4 lg:ml-0 overflow-hidden">
         <div className="relative w-full max-w-[160px] md:max-w-xs group">
           <Input 
-            placeholder="Search resolv"
+            placeholder="Search ResolvHome"
             className="h-9 md:h-10 pl-3 md:pl-4 pr-10 border-zinc-300 rounded-lg text-xs md:text-sm placeholder:text-zinc-300 focus:border-blue-700 transition-all bg-slate-50/50 md:bg-white"
           />
           <HiOutlineSearch className="absolute right-3 md:right-4 top-1/2 -translate-y-1/2 text-zinc-600 w-4 h-4 md:w-5 md:h-5 group-focus-within:text-blue-700 pointer-events-none" />
@@ -148,11 +156,12 @@ export const Navbar = ({ onMenuClick }: NavbarProps) => {
           </div>
         </div>
       </div>
-
-      <LogoutModal 
-        isOpen={isLogoutOpen} 
-        onClose={() => setIsLogoutOpen(false)} 
-      />
     </header>
+
+    <LogoutModal 
+      isOpen={isLogoutOpen} 
+      onClose={() => setIsLogoutOpen(false)} 
+    />
+    </>
   )
 }

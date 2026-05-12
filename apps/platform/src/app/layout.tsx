@@ -1,8 +1,8 @@
 // Uppy Styles
-import "@uppy/core/css/style.min.css";
-import "@uppy/dashboard/css/style.min.css";
-import "@uppy/image-editor/css/style.min.css";
-import "@uppy/status-bar/css/style.min.css";
+import "@uppy/core/css/style.css";
+import "@uppy/dashboard/css/style.css";
+import "@uppy/image-editor/css/style.css";
+import "@uppy/status-bar/css/style.css";
 
 import type { Metadata } from "next";
 import { Inter, Plus_Jakarta_Sans } from "next/font/google";
@@ -21,10 +21,10 @@ const plusJakartaSans = Plus_Jakarta_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "Resolve Home - Professional Home Services",
-  description: "Book professional engineers for your home services with Resolve Home.",
+  title: "ResolvHome - Professional Home Services",
+  description: "Book professional engineers for your home services with ResolvHome.",
   icons: {
-    icon: "/favicon.svg",
+    icon: "/logo.svg",
   },
 };
 

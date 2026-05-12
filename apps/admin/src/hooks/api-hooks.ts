@@ -356,3 +356,101 @@ export function useUpdateNotificationSettings() {
     }
   })
 }
+
+// --- Categories ---
+
+export function useCategories() {
+  return useQuery({
+    queryKey: ['categories'],
+    queryFn: async () => {
+      const response = await apiClient.get(ENDPOINTS.CATEGORIES.LIST)
+      const data = response.data.data || response.data
+      if (Array.isArray(data)) return data
+      if (data && typeof data === 'object') {
+        return data.categories || data.items || []
+      }
+      return []
+    }
+  })
+}
+
+export function useCreateCategory() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (data: { name: string, description?: string }) => {
+      const response = await apiClient.post(ENDPOINTS.ADMIN_CATEGORIES.BASE, data)
+      return response.data
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['categories'] })
+    }
+  })
+}
+
+export function useUpdateCategory() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ id, data }: { id: string, data: any }) => {
+      const response = await apiClient.put(ENDPOINTS.ADMIN_CATEGORIES.BY_ID(id), data)
+      return response.data
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['categories'] })
+    }
+  })
+}
+
+export function useDeleteCategory() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const response = await apiClient.delete(ENDPOINTS.ADMIN_CATEGORIES.BY_ID(id))
+      return response.data
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['categories'] })
+    }
+  })
+}
+
+// --- Sub-services (Specific Services) ---
+
+export function useServices(categoryId?: string) {
+  return useQuery({
+    queryKey: ['services', categoryId],
+    queryFn: async () => {
+      const response = await apiClient.get(ENDPOINTS.SERVICES.BASE, {
+        params: { categoryId }
+      })
+      const data = response.data.data || response.data
+      return data.services || (Array.isArray(data) ? data : [])
+    },
+    enabled: !!categoryId
+  })
+}
+
+export function useCreateService() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (data: { name: string, categoryId: string, description?: string, price?: number }) => {
+      const response = await apiClient.post(ENDPOINTS.ADMIN_SERVICES.BASE, data)
+      return response.data
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['services', variables.categoryId] })
+    }
+  })
+}
+
+export function useDeleteService() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ id, categoryId }: { id: string, categoryId: string }) => {
+      const response = await apiClient.delete(ENDPOINTS.ADMIN_SERVICES.BY_ID(id))
+      return response.data
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['services', variables.categoryId] })
+    }
+  })
+}

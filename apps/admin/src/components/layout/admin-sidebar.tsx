@@ -18,6 +18,7 @@ import { cn } from "@resolve/ui"
 
 const sidebarItems = [
   { label: 'Overview', icon: HiOutlineViewGrid, href: '/' },
+  { label: 'Services', icon: HiOutlineUserGroup, href: '/categories' },
   { label: 'Bookings', icon: HiOutlineClipboardList, href: '/bookings' },
   { label: 'Homeowners', icon: HiOutlineUsers, href: '/homeowners' },
   { label: 'Professionals', icon: HiOutlineUserGroup, href: '/professionals' },
@@ -53,9 +54,9 @@ export const AdminSidebar = ({ isOpen, onClose }: AdminSidebarProps) => {
         <div className="h-16 px-6 border-b border-zinc-300 flex items-center justify-between bg-white shrink-0">
           <Link href="/" onClick={onClose}>
             <img 
-              src="/resolve_home.svg" 
-              alt="Resolv" 
-              className="w-24 h-9 object-contain" 
+              src="/logo.svg" 
+              alt="ResolvHome" 
+              className="w-32 h-12 object-contain" 
             />
           </Link>
           <button 

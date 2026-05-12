@@ -116,9 +116,9 @@ function LoginContent() {
         {/* Logo Section */}
         <div className="flex flex-col items-center gap-4">
           <img 
-            src="/resolve_home.svg" 
-            alt="Resolv Home" 
-            className="h-12 w-auto object-contain"
+            src="/logo.svg" 
+            alt="ResolvHome" 
+            className="h-16 w-auto object-contain"
           />
         </div>
 
@@ -139,7 +139,7 @@ function LoginContent() {
                 <Input 
                   {...register('email')}
                   type="email"
-                  placeholder="e.g samwood@resolv.com"
+                  placeholder="e.g samwood@resolve.com"
                   className={cn(
                     "h-12 bg-white border-zinc-300 rounded-lg px-4 py-3 text-sm placeholder:text-zinc-300 focus-visible:ring-blue-700",
                     errors.email && "border-red-500 ring-1 ring-red-500"

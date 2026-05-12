@@ -15,9 +15,9 @@ import {
 
 const engineerSidebarItems = [
   { label: 'Jobs Feed', icon: HiOutlineBriefcase, href: '/engineer' },
-  { label: 'Active Jobs', icon: HiOutlineClipboardList, href: '/engineer/jobs' },
-  { label: 'Messages', icon: HiOutlineChatAlt, href: '/engineer/messages' },
-  { label: 'Earnings', icon: HiOutlineCreditCard, href: '/wallet' },
+  { label: 'Active Jobs', icon: HiOutlineClipboardList, href: '/engineer/jobs', requiresVerification: true },
+  { label: 'Messages', icon: HiOutlineChatAlt, href: '/messages', requiresVerification: true },
+  { label: 'Earnings', icon: HiOutlineCreditCard, href: '/wallet', requiresVerification: true },
   { label: 'My Profile', icon: HiOutlineUser, href: '/profile' },
   { label: 'Settings', icon: HiOutlineCog, href: '/settings' },
 ]

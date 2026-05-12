@@ -1049,6 +1049,16 @@ export interface paths {
                                     phone?: string;
                                     /** @description Profile image URL */
                                     image?: string;
+                                    /** @description User bio/about me */
+                                    bio?: string;
+                                    /** @description Home address (optional) */
+                                    homeAddress?: {
+                                        street?: string;
+                                        city?: string;
+                                        state?: string;
+                                        country?: string;
+                                        postalCode?: string;
+                                    } | null;
                                     /** @enum {string} */
                                     role?: "user" | "admin" | "worker";
                                     emailVerified?: boolean;
@@ -1104,7 +1114,7 @@ export interface paths {
         };
         /**
          * Update user profile
-         * @description Update user profile information. Note: Email cannot be changed for security reasons. Address removed - bookings now use detailed location. Use Uppy for image uploads.
+         * @description Update basic user profile information (name, phone, image). Use separate /api/user/bio-address endpoint for bio and address.
          */
         put: {
             parameters: {
@@ -1146,6 +1156,10 @@ export interface paths {
                                     phone?: string;
                                     /** @description Profile image URL */
                                     image?: string;
+                                    /** @description User bio */
+                                    bio?: string;
+                                    /** @description Home address */
+                                    homeAddress?: Record<string, never> | null;
                                     /** @enum {string} */
                                     role?: "user" | "admin" | "worker";
                                     emailVerified?: boolean;
@@ -1185,6 +1199,132 @@ export interface paths {
                             error?: string;
                         };
                     };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/user/bio-address": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get home address
+         * @description Get user home address. Works for both customers and engineers.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Address retrieved successfully */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example true */
+                            success?: boolean;
+                            data?: {
+                                /** @description Home address */
+                                homeAddress?: {
+                                    /** @example 123 Main Street */
+                                    street?: string;
+                                    /** @example Lagos */
+                                    city?: string;
+                                    /** @example Lagos State */
+                                    state?: string;
+                                    /** @example Nigeria */
+                                    country?: string;
+                                    /** @example 100001 */
+                                    postalCode?: string;
+                                } | null;
+                            };
+                        };
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        /**
+         * Update bio and address
+         * @description Update user bio and home address. Works for both customers and engineers. Both fields are optional.
+         */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /**
+                         * @description User bio/about me (optional)
+                         * @example Experienced homeowner looking for reliable professionals.
+                         */
+                        bio?: string;
+                        /** @description Home address (optional, set to null to remove) */
+                        homeAddress?: {
+                            /** @example 123 Main Street */
+                            street?: string;
+                            /** @example Lagos */
+                            city?: string;
+                            /** @example Lagos State */
+                            state?: string;
+                            /** @example Nigeria */
+                            country?: string;
+                            /** @example 100001 */
+                            postalCode?: string;
+                        } | null;
+                    };
+                };
+            };
+            responses: {
+                /** @description Bio and address updated successfully */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example true */
+                            success?: boolean;
+                            /** @example Bio and address updated successfully */
+                            message?: string;
+                            data?: {
+                                bio?: string;
+                                homeAddress?: Record<string, never> | null;
+                            };
+                        };
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
                 };
             };
         };
@@ -3361,11 +3501,11 @@ export interface paths {
          *
          *     Connect to Socket.IO for real-time messaging:
          *
-         *     **Server URL:** `https://resolvhome.onrender.com`
+         *     **Server URL:** `https://resolve.onrender.com`
          *
          *     **Connection:**
          *     ```javascript
-         *     const socket = io('https://resolvhome.onrender.com');
+         *     const socket = io('https://resolve.onrender.com');
          *     ```
          *
          *     **Join a chat:**
@@ -5825,6 +5965,396 @@ export interface paths {
                 };
                 /** @description Engineer not found */
                 404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/notifications": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get user notifications
+         * @description Get all notifications for the authenticated user with pagination. Can filter for unread only.
+         */
+        get: {
+            parameters: {
+                query?: {
+                    /** @description Page number */
+                    page?: number;
+                    /** @description Items per page */
+                    limit?: number;
+                    /** @description Filter for unread notifications only */
+                    unreadOnly?: boolean;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description User notifications with pagination */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example true */
+                            success?: boolean;
+                            data?: {
+                                id?: string;
+                                userId?: string;
+                                /**
+                                 * @example booking_update
+                                 * @enum {string}
+                                 */
+                                type?: "booking_update" | "message" | "payment" | "complaint_response" | "review" | "system";
+                                /** @example Booking Confirmed */
+                                title?: string;
+                                /** @example Your booking has been confirmed by the engineer. */
+                                message?: string;
+                                /** @description ID of related entity (booking, chat, etc.) */
+                                relatedId?: string | null;
+                                /**
+                                 * @example booking
+                                 * @enum {string|null}
+                                 */
+                                relatedType?: "booking" | "chat" | "payment" | "complaint" | null;
+                                /**
+                                 * @description URL to navigate to when notification is clicked
+                                 * @example /bookings/123
+                                 */
+                                actionUrl?: string | null;
+                                /** @example false */
+                                isRead?: boolean;
+                                /** Format: date-time */
+                                readAt?: string | null;
+                                /** Format: date-time */
+                                createdAt?: string;
+                                /** Format: date-time */
+                                updatedAt?: string;
+                            }[];
+                            pagination?: {
+                                page?: number;
+                                limit?: number;
+                                total?: number;
+                                totalPages?: number;
+                                /** @description Total number of unread notifications */
+                                unreadCount?: number;
+                            };
+                        };
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/notifications/{id}/read": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Mark notification as read
+         * @description Mark a specific notification as read.
+         */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Notification ID */
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Notification marked as read */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example true */
+                            success?: boolean;
+                            /** @example Notification marked as read */
+                            message?: string;
+                            data?: {
+                                notification?: {
+                                    id?: string;
+                                    userId?: string;
+                                    type?: string;
+                                    title?: string;
+                                    message?: string;
+                                    /** @example true */
+                                    isRead?: boolean;
+                                    /** Format: date-time */
+                                    readAt?: string;
+                                    /** Format: date-time */
+                                    createdAt?: string;
+                                    /** Format: date-time */
+                                    updatedAt?: string;
+                                };
+                            };
+                        };
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Notification not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/notifications/read-all": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Mark all notifications as read
+         * @description Mark all unread notifications as read for the authenticated user.
+         */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description All notifications marked as read */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example true */
+                            success?: boolean;
+                            /** @example All notifications marked as read */
+                            message?: string;
+                            data?: {
+                                /**
+                                 * @description Number of notifications marked as read
+                                 * @example 5
+                                 */
+                                markedCount?: number;
+                            };
+                        };
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/notifications/settings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get notification settings
+         * @description Get notification preferences for the authenticated user. Returns default settings (all false) if none exist.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Notification settings */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example true */
+                            success?: boolean;
+                            data?: {
+                                settings?: {
+                                    id?: string;
+                                    userId?: string;
+                                    /**
+                                     * @description Status changes, engineer arrival, job completion
+                                     * @example false
+                                     */
+                                    bookingUpdates?: boolean;
+                                    /**
+                                     * @description New messages in active bookings
+                                     * @example false
+                                     */
+                                    messagesFromProfessionals?: boolean;
+                                    /**
+                                     * @description Receive push notifications on device
+                                     * @example false
+                                     */
+                                    pushNotifications?: boolean;
+                                    /**
+                                     * @description SMS notifications to registered phone
+                                     * @example false
+                                     */
+                                    smsAlerts?: boolean;
+                                    /**
+                                     * @description Summary of bookings and activity
+                                     * @example false
+                                     */
+                                    weeklyEmailDigest?: boolean;
+                                    /**
+                                     * @description Deals, discounts, and new service announcements
+                                     * @example false
+                                     */
+                                    promotionsAndOffers?: boolean;
+                                    /** Format: date-time */
+                                    createdAt?: string;
+                                    /** Format: date-time */
+                                    updatedAt?: string;
+                                };
+                            };
+                        };
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        /**
+         * Update notification settings
+         * @description Update notification preferences for the authenticated user. Only provided fields will be updated.
+         */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /** @description Status changes, engineer arrival, job completion */
+                        bookingUpdates?: boolean;
+                        /** @description New messages in active bookings */
+                        messagesFromProfessionals?: boolean;
+                        /** @description Receive push notifications on device */
+                        pushNotifications?: boolean;
+                        /** @description SMS notifications to registered phone */
+                        smsAlerts?: boolean;
+                        /** @description Summary of bookings and activity */
+                        weeklyEmailDigest?: boolean;
+                        /** @description Deals, discounts, and new service announcements */
+                        promotionsAndOffers?: boolean;
+                    };
+                };
+            };
+            responses: {
+                /** @description Notification settings updated */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example true */
+                            success?: boolean;
+                            /** @example Notification settings updated */
+                            message?: string;
+                            data?: {
+                                settings?: {
+                                    id?: string;
+                                    userId?: string;
+                                    bookingUpdates?: boolean;
+                                    messagesFromProfessionals?: boolean;
+                                    pushNotifications?: boolean;
+                                    smsAlerts?: boolean;
+                                    weeklyEmailDigest?: boolean;
+                                    promotionsAndOffers?: boolean;
+                                    /** Format: date-time */
+                                    createdAt?: string;
+                                    /** Format: date-time */
+                                    updatedAt?: string;
+                                };
+                            };
+                        };
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
                     headers: {
                         [name: string]: unknown;
                     };

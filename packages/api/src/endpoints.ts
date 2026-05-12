@@ -1,8 +1,8 @@
 /**
  * Centralized API endpoint registry for Resolve Home.
  *
- * Source of truth: openapi.json (live: https://resolvhome.onrender.com/openapi.json)
- * Backend: https://resolvhome.onrender.com
+ * Source of truth: openapi.json (live: https://resolve.onrender.com/openapi.json)
+ * Backend: https://resolve.onrender.com
  */
 
 export const ENDPOINTS = {
@@ -11,8 +11,9 @@ export const ENDPOINTS = {
     REGISTER:        '/api/signup-with-role',
     SIGN_IN_EMAIL:   '/api/auth/sign-in/email',
     SIGN_IN_SOCIAL:  '/api/auth/sign-in/social',
-    VERIFY_EMAIL:    '/api/auth/verify-email',
-    FORGET_PASSWORD: '/api/auth/forget-password',
+    VERIFY_EMAIL:             '/api/auth/verify-email',
+    RESEND_VERIFICATION_CODE: '/api/auth/resend-verification',
+    FORGET_PASSWORD:          '/api/auth/forget-password',
     RESET_PASSWORD:  '/api/auth/reset-password',
     SIGN_OUT:        '/api/auth/sign-out',
     GET_SESSION:     '/api/auth/get-session',

@@ -19,6 +19,7 @@ import { Label } from "@resolve/ui"
 import { cn } from "@resolve/ui"
 import { toast } from "sonner"
 import { useAuthSession } from "@/hooks/api-hooks"
+import { AuthOtpVerification } from "./auth-otp-verification"
 
 const loginSchema = z.object({
   email: z.string().email("Invalid email address"),
@@ -34,8 +35,8 @@ export function LoginForm() {
   const { data: session } = useAuthSession()
   const [showPassword, setShowPassword] = React.useState(false)
   const [isLoading, setIsLoading] = React.useState(false)
-  const [showResend, setShowResend] = React.useState(false)
-  const [isResending, setIsResending] = React.useState(false)
+  const [showVerification, setShowVerification] = React.useState(false)
+  const [loginEmail, setLoginEmail] = React.useState("")
 
   const form = useForm<LoginValues>({
     resolver: zodResolver(loginSchema),
@@ -54,7 +55,7 @@ export function LoginForm() {
 
   async function onSubmit(data: LoginValues) {
     setIsLoading(true)
-    setShowResend(false)
+    setLoginEmail(data.email)
     try {
       const response = await apiClient.post(ENDPOINTS.AUTH.SIGN_IN_EMAIL, {
         email: data.email,
@@ -99,7 +100,14 @@ export function LoginForm() {
       const message = error?.response?.data?.error || error?.response?.data?.message
 
       if (status === 403 || message?.toLowerCase().includes('verify')) {
-        setShowResend(true)
+        // Save the token if provided in the error response to allow verification
+        const token = error?.response?.data?.data?.token || error?.response?.data?.token
+        if (token) {
+          localStorage.setItem("auth_token", token)
+        }
+        
+        setLoginEmail(form.getValues("email"))
+        setShowVerification(true)
         toast.error(message || "Please verify your email first.")
       } else {
         toast.error(message || "Invalid credentials")
@@ -109,33 +117,6 @@ export function LoginForm() {
     }
   }
 
-  const handleResendEmail = async () => {
-    const email = form.getValues("email")
-    if (!email) {
-      toast.error("Please enter your email first")
-      return
-    }
-
-    setIsResending(true)
-    try {
-      const { error } = await authClient.sendVerificationEmail({
-        email,
-        callbackURL: typeof window !== 'undefined' ? window.location.origin + "/dashboard" : "/dashboard",
-      })
-
-      if (error) {
-        toast.error(error.message || "Failed to resend verification email")
-      } else {
-        toast.success("Verification email sent! Please check your inbox.")
-        setShowResend(false)
-      }
-    } catch (err) {
-      console.error("Resend error:", err)
-      toast.error("An unexpected error occurred")
-    } finally {
-      setIsResending(false)
-    }
-  }
 
   const handleGoogleSignIn = async () => {
     try {
@@ -157,6 +138,20 @@ export function LoginForm() {
       console.error("Google sign-in error:", error)
       toast.error("An unexpected error occurred")
     }
+  }
+
+  if (showVerification) {
+    return (
+      <AuthOtpVerification 
+        email={loginEmail}
+        context="login"
+        onVerifySuccess={() => {
+          setShowVerification(false)
+          toast.success("Email verified! You can now sign in.")
+        }}
+        onBack={() => setShowVerification(false)}
+      />
+    )
   }
 
   return (
@@ -232,22 +227,6 @@ export function LoginForm() {
             {isLoading ? "Signing in..." : "Sign in"}
           </Button>
 
-          {showResend && (
-            <div className="flex flex-col gap-2 p-4 bg-blue-50/50 rounded-xl border border-blue-100">
-              <p className="text-xs text-blue-700 font-medium text-center">
-                Email not verified? We can resend the link.
-              </p>
-              <Button
-                type="button"
-                variant="outline"
-                disabled={isResending}
-                onClick={handleResendEmail}
-                className="h-10 w-full rounded-lg border-blue-200 text-blue-700 text-xs font-semibold hover:bg-blue-50 transition-all"
-              >
-                {isResending ? "Sending..." : "Resend Verification Email"}
-              </Button>
-            </div>
-          )}
 
           <div className="flex items-center justify-center gap-3">
             <div className="h-[1px] flex-1 bg-zinc-100" />

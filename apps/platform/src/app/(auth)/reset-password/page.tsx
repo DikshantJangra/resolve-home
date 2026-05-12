@@ -46,7 +46,7 @@ export default function ResetPasswordPage() {
         <div className="relative hidden w-1/2 h-full lg:block">
           <Image
             src="/signup_work.svg"
-            alt="Resolve Home Support"
+            alt="ResolvHome Support"
             fill
             className="object-cover"
             priority

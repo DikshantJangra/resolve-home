@@ -20,9 +20,9 @@ export const BookingWizard = () => {
   const renderStep = () => {
     switch (currentStep) {
       case 1:
-        return <ServiceStep />
-      case 2:
         return <PriorityStep />
+      case 2:
+        return <ServiceStep />
       case 3:
         return <IssueDetailsStep />
       case 4:
@@ -36,16 +36,13 @@ export const BookingWizard = () => {
       case 8:
         return <FinalSuccessStep />
       default:
-        return <ServiceStep />
+        return <PriorityStep />
     }
   }
 
   return (
-    <div className="w-full max-w-[669px] min-h-[600px] max-h-[95vh] md:h-[960px] mx-auto bg-white flex flex-col shadow-2xl rounded-2xl overflow-hidden relative">
-      <BookingHeader 
-        currentStep={currentStep} 
-        totalSteps={5}
-      />
+    <div className="w-full max-w-[669px] min-h-[600px] max-h-[95vh] md:h-[960px] mx-auto bg-white flex flex-col shadow-2xl rounded-2xl overflow-hidden relative z-[998]">
+      <BookingHeader />
       <div className="flex-1 overflow-y-auto no-scrollbar">
         {renderStep()}
       </div>

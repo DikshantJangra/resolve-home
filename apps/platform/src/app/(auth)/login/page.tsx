@@ -3,8 +3,8 @@ import { Suspense } from "react"
 import { LoginForm } from "@/features/auth/components/login-form"
 
 export const metadata = {
-  title: "Sign In | Resolve Home",
-  description: "Access your Resolve Home account to manage your bookings and services.",
+  title: "Sign In | ResolvHome",
+  description: "Access your ResolvHome account to manage your bookings and services.",
 }
 
 export default function LoginPage() {
@@ -15,7 +15,7 @@ export default function LoginPage() {
         <div className="relative hidden w-1/2 h-full lg:block">
           <Image
             src="/signup_work.svg"
-            alt="Resolve Home Services"
+            alt="ResolvHome Services"
             fill
             className="object-cover"
             priority

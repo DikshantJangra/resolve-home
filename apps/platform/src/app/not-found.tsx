@@ -82,7 +82,7 @@ export default function NotFound() {
 
       {/* Brand Watermark */}
       <div className="absolute bottom-8 left-1/2 -translate-x-1/2 opacity-30 select-none">
-        <img src="/resolve_home.svg" alt="Resolv" className="h-8 grayscale" />
+        <img src="/logo.svg" alt="ResolvHome" className="h-12 grayscale" />
       </div>
     </div>
   )

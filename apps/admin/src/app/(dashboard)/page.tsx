@@ -8,10 +8,16 @@ import {
   HiOutlineUsers,
   HiOutlineBriefcase,
   HiOutlineCheckCircle,
-  HiOutlineTicket
+  HiOutlineTicket,
+  HiOutlineViewGrid
 } from "react-icons/hi"
 import { cn, Skeleton } from "@resolve/ui"
-import { useAdminStats, useAdminBookings } from "@/hooks/api-hooks"
+import { 
+  useAdminStats, 
+  useAdminBookings, 
+  useCategories, 
+  useAdminEngineers
+} from "@/hooks/api-hooks"
 import { formatDistanceToNow } from "date-fns"
 
 // --- Stat Card Component ---
@@ -74,6 +80,8 @@ const AuditLogItem = ({ title, user, category, time, status }: {
 export default function OverviewPage() {
   const { data: stats, isLoading: statsLoading } = useAdminStats()
   const { data: bookings, isLoading: bookingsLoading } = useAdminBookings()
+  const { data: categories, isLoading: categoriesLoading } = useCategories()
+  const { data: engineers, isLoading: engineersLoading } = useAdminEngineers()
 
   const recentBookings = bookings?.slice(0, 4) || []
 
@@ -97,17 +105,15 @@ export default function OverviewPage() {
     }))
   }, [bookings])
 
-  if (statsLoading || bookingsLoading) {
+  if (statsLoading || bookingsLoading || categoriesLoading || engineersLoading) {
     return (
       <div className="p-8 flex flex-col gap-8 max-w-[1240px] mx-auto animate-pulse">
         <Skeleton className="h-10 w-48" />
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-5">
           {[1, 2, 3, 4, 5].map(i => <Skeleton key={i} className="h-28 rounded-xl" />)}
         </div>
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <Skeleton className="lg:col-span-2 h-[400px] rounded-xl" />
-          <Skeleton className="h-[400px] rounded-xl" />
-        </div>
+        <Skeleton className="h-[400px] w-full rounded-xl" />
+        <Skeleton className="h-[300px] w-full rounded-xl" />
       </div>
     )
   }
@@ -119,15 +125,8 @@ export default function OverviewPage() {
         <div className="flex flex-col">
           <h1 className="text-neutral-700 text-xl font-semibold font-heading leading-8">Overview</h1>
           <p className="text-zinc-600 text-base font-normal font-inter leading-6">
-            This is the platform pulse, the system command center
+            Platform Pulse & System Command Center
           </p>
-        </div>
-        <div className="relative w-96 hidden lg:block opacity-0"> {/* Hidden as per Figma design code having opacity-0 */}
-          <input 
-            placeholder="Search booking" 
-            className="w-full h-12 px-4 py-3 rounded-xl border border-zinc-300 text-sm outline-none"
-          />
-          <HiOutlineSearch className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-300 w-5 h-5" />
         </div>
       </div>
 
@@ -140,125 +139,80 @@ export default function OverviewPage() {
         <StatCard title="Platform Rating" value={`${(stats as any)?.averageRating || "0"}`} trend={(stats as any)?.trends?.rating} icon={HiOutlineCheckCircle} />
       </div>
 
-      {/* Main Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        
-        {/* Left Column: Line Chart Placeholder & Audit Log */}
+        {/* Left Column */}
         <div className="lg:col-span-2 flex flex-col gap-8">
-          
-          {/* Line Chart Section */}
+          {/* Revenue Chart Section (Simplified SVG) */}
           <div className="p-6 rounded-xl border border-zinc-300 bg-white flex flex-col gap-6 shadow-sm">
-            <div className="flex justify-between items-center">
-              <div className="flex items-center gap-6">
+             <div className="flex items-center gap-6">
                 <div className="flex items-center gap-2">
                   <div className="w-3 h-3 rounded-full bg-blue-500" />
-                  <span className="text-neutral-700 text-sm font-medium font-inter">Total Demands</span>
+                  <span className="text-neutral-700 text-sm font-medium">Total Demands</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="w-3 h-3 rounded-full bg-emerald-500" />
-                  <span className="text-neutral-700 text-sm font-medium font-inter">Total Fulfilled</span>
+                  <span className="text-neutral-700 text-sm font-medium">Total Fulfilled</span>
                 </div>
               </div>
-            </div>
-            
-            {/* Simple SVG Chart Placeholder to match Figma's structure */}
-            <div className="h-64 relative flex flex-col justify-between">
-              {[25, 20, 15, 5, 0].map((label) => (
-                <div key={label} className="flex items-center gap-4 w-full">
-                  <span className="text-slate-400 text-xs font-normal w-6 text-right">{label}k</span>
-                  <div className="flex-1 h-[1px] bg-blue-100" />
-                </div>
-              ))}
-              <div className="absolute inset-0 pt-6 pl-10 pr-4 pb-2">
-                <div className="w-full h-full relative">
-                  {/* Area Chart Gradient Placeholder */}
-                  <div className="absolute bottom-0 left-0 w-full h-[60%] bg-gradient-to-t from-emerald-500/10 to-transparent border-t-2 border-emerald-500" />
-                  <div className="absolute bottom-0 left-0 w-full h-[80%] bg-gradient-to-t from-blue-500/10 to-transparent border-t-2 border-blue-500" />
-                </div>
+              <div className="h-64 relative border-b border-l border-zinc-100 mt-4">
+                 <div className="absolute inset-0 flex flex-col justify-between">
+                    {[1,2,3,4].map(i => <div key={i} className="w-full h-[1px] bg-zinc-50" />)}
+                 </div>
+                 <div className="absolute bottom-0 left-0 w-full h-[60%] bg-blue-500/10 border-t-2 border-blue-500" />
               </div>
-            </div>
           </div>
 
           {/* Audit Log Section */}
           <div className="p-6 rounded-xl border border-zinc-300 bg-white flex flex-col gap-4 shadow-sm overflow-hidden">
-            <div className="flex flex-col gap-1">
-              <h2 className="text-neutral-700 text-base font-semibold font-inter leading-6">System Audit Log</h2>
-              <p className="text-zinc-600 text-sm font-normal font-inter leading-5">
-                Real-time platform activity and event history
-              </p>
-            </div>
-            <div className="flex flex-col mt-2">
-              {recentBookings.length > 0 ? recentBookings.map((booking: { id: string; referenceId?: string; customerName?: string; serviceName?: string; createdAt?: string; status: string }) => (
+            <h2 className="text-neutral-700 text-base font-semibold font-inter">System Audit Log</h2>
+            <div className="flex flex-col">
+              {recentBookings.map((booking: any) => (
                 <AuditLogItem 
                   key={booking.id}
                   title={`New Booking: ${booking.referenceId || booking.id.slice(-6).toUpperCase()}`}
-                  user={booking.customerName || 'Unknown User'}
+                  user={booking.customerName || 'User'}
                   category={booking.serviceName || 'Service'}
                   time={booking.createdAt ? formatDistanceToNow(new Date(booking.createdAt), { addSuffix: true }).toUpperCase() : 'JUST NOW'}
                   status={booking.status}
                 />
-              )) : (
-                <p className="text-zinc-500 text-sm py-4">No recent activity found.</p>
-              )}
+              ))}
             </div>
           </div>
         </div>
 
-        {/* Right Column: Distribution Card */}
-        <div className="lg:col-span-1 flex flex-col">
-          <div className="p-6 rounded-xl border border-zinc-300 bg-white flex flex-col gap-8 shadow-sm h-fit">
-            <h2 className="text-neutral-700 text-xl font-medium font-heading">Revenue Distribution</h2>
-            
-              {/* Donut Chart SVG Placeholder */}
-            <div className="flex justify-center py-10 relative">
-               <svg width="180" height="180" viewBox="0 0 36 36" className="transform -rotate-90">
-                <circle cx="18" cy="18" r="15.915" fill="transparent" stroke="#f1f5f9" strokeWidth="3" />
-                {/* Simplified dynamic donut if calculation is available */}
-                {((stats as any)?.revenueDistribution || calculatedDistribution).length > 0 ? (
-                  <circle cx="18" cy="18" r="15.915" fill="transparent" stroke="#3b82f6" strokeWidth="3" strokeDasharray="100 0" strokeDashoffset="0" />
-                ) : null}
-              </svg>
-              <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
-                <span className="text-zinc-400 text-xs">Total</span>
-                <span className="text-neutral-700 font-bold text-sm">100%</span>
+        {/* Right Column: Distribution */}
+        <div className="lg:col-span-1">
+          <div className="p-6 rounded-xl border border-zinc-300 bg-white flex flex-col gap-8 shadow-sm h-full">
+            <h2 className="text-neutral-700 text-lg font-medium">Revenue Distribution</h2>
+            <div className="flex justify-center py-6">
+              <div className="w-40 h-40 rounded-full border-[12px] border-zinc-100 flex items-center justify-center relative">
+                <div className="absolute inset-0 rounded-full border-[12px] border-blue-500 border-t-transparent border-r-transparent rotate-45" />
+                <span className="text-xl font-bold">100%</span>
               </div>
             </div>
- 
-             {/* Legend */}
-            <div className="flex flex-col gap-4">
-              {((stats as any)?.revenueDistribution || calculatedDistribution).map((item: any, idx: number) => (
-                <LegendItem 
-                  key={idx}
-                  color={item.color} 
-                  label={item.label} 
-                  percent={item.percent || item.percentage} 
-                  value={`₦${Number(item.value).toLocaleString()}`} 
-                />
+            <div className="space-y-4">
+              {calculatedDistribution.map((item: any, idx: number) => (
+                <LegendItem key={idx} {...item} />
               ))}
-              {((stats as any)?.revenueDistribution || calculatedDistribution).length === 0 && (
-                <p className="text-zinc-400 text-sm text-center">No data available</p>
-              )}
             </div>
           </div>
         </div>
-
       </div>
     </div>
   )
 }
 
-const LegendItem = ({ color, label, percent, value }: { 
-  color: string, 
-  label: string, 
-  percent: string, 
-  value: string 
-}) => (
-  <div className="flex justify-between items-center group">
-    <div className="flex items-center gap-2">
-      <div className={cn("w-3 h-3 rounded-full", color)} />
-      <span className="text-neutral-700 text-sm font-medium font-inter">{label}</span>
-      <span className={cn("text-xs font-normal ml-1", color.replace('bg-', 'text-'))}>{percent}</span>
+function LegendItem({ color, label, percent, value }: any) {
+  return (
+    <div className="flex justify-between items-center">
+      <div className="flex items-center gap-2">
+        <div className={cn("w-3 h-3 rounded-full", color)} />
+        <span className="text-neutral-700 text-sm font-medium">{label}</span>
+      </div>
+      <div className="flex items-center gap-3">
+        <span className="text-xs text-zinc-400">{percent}</span>
+        <span className="text-neutral-700 text-sm font-semibold">{value}</span>
+      </div>
     </div>
-    <span className="text-neutral-700 text-sm font-normal font-inter">{value}</span>
-  </div>
-)
+  )
+}

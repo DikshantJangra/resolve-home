@@ -15,8 +15,11 @@ const plusJakartaSans = Plus_Jakarta_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "Resolv Admin",
-  description: "Resolv platform command center",
+  title: "ResolvHome Admin",
+  description: "ResolvHome platform command center",
+  icons: {
+    icon: "/logo.svg",
+  },
 };
 
 export default function RootLayout({

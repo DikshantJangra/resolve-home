@@ -97,6 +97,7 @@ export const Navbar = () => {
   };
 
   return (
+    <>
     <nav className="fixed inset-x-0 top-0 z-50 h-[72px] border-b border-zinc-200 bg-white/95 backdrop-blur-sm">
       <div className="mx-auto flex h-full w-full max-w-[1440px] items-center justify-between px-6 lg:px-16">
         <div className="flex items-center gap-4">
@@ -117,14 +118,14 @@ export const Navbar = () => {
             onClick={(e) => handleScroll(e, 'hero')}
             className="flex items-center transition-opacity hover:opacity-90"
           >
-            <div className="relative h-9 w-[102px]">
+            <div className="relative h-12 w-[136px]">
               <Image
-                src="/resolve_home.svg"
-                alt="Resolve Home"
+                src="/logo.svg"
+                alt="ResolvHome"
                 fill
                 className="object-contain"
                 priority
-                sizes="102px"
+                sizes="136px"
               />
             </div>
           </Link>
@@ -267,10 +268,6 @@ export const Navbar = () => {
                     )}
                   </AnimatePresence>
 
-                  <LogoutModal 
-                    isOpen={isLogoutOpen} 
-                    onClose={() => setIsLogoutOpen(false)} 
-                  />
                 </div>
               </div>
             </div>
@@ -374,11 +371,12 @@ export const Navbar = () => {
         )}
       </AnimatePresence>
 
-      <LogoutModal 
-        isOpen={isLogoutOpen} 
-        onClose={() => setIsLogoutOpen(false)} 
-      />
     </nav>
+    <LogoutModal 
+      isOpen={isLogoutOpen} 
+      onClose={() => setIsLogoutOpen(false)} 
+    />
+    </>
   );
 };
 

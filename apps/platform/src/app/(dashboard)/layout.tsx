@@ -14,7 +14,7 @@ export default function DashboardLayout({
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
 
   return (
-    <div className="flex min-h-screen bg-slate-50 overflow-x-hidden">
+    <div className="flex h-screen bg-slate-50 overflow-hidden">
       {/* Mobile Sidebar Backdrop */}
       {isSidebarOpen && (
         <div 
@@ -31,9 +31,9 @@ export default function DashboardLayout({
         <Sidebar onClose={() => setIsSidebarOpen(false)} />
       </div>
 
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         <Navbar onMenuClick={() => setIsSidebarOpen(true)} />
-        <main className="p-4 md:p-8 flex-grow overflow-y-auto">
+        <main className="flex-1 p-4 md:p-8 overflow-y-auto">
           <div className="max-w-[1440px] mx-auto">
             {children}
           </div>

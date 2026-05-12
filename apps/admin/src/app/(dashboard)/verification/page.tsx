@@ -82,7 +82,7 @@ export default function VerificationPage() {
         </div>
         <div className="relative w-full md:w-96">
           <input 
-            placeholder="Search resolv" 
+            placeholder="Search resolve" 
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="w-full h-12 px-4 pr-12 rounded-xl border border-zinc-300 text-sm outline-none focus:ring-2 focus:ring-blue-500/10 focus:border-blue-700 transition-all shadow-sm"

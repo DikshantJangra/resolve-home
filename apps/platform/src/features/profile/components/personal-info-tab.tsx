@@ -9,6 +9,7 @@ interface PersonalInfoTabProps {
   email: string
   phone: string
   city: string
+  state: string
   address: string
   bio: string
 }
@@ -18,12 +19,14 @@ export const PersonalInfoTab = ({
   email,
   phone,
   city: initialCity,
+  state: initialState,
   address: initialAddress,
   bio: initialBio
 }: PersonalInfoTabProps) => {
   const [isEditing, setIsEditing] = useState(false)
   const [formData, setFormData] = useState({
     city: initialCity || '',
+    state: initialState || '',
     homeAddress: initialAddress || '',
     bio: initialBio || ''
   })
@@ -36,6 +39,7 @@ export const PersonalInfoTab = ({
         bio: formData.bio,
         homeAddress: {
           city: formData.city,
+          state: formData.state,
           street: formData.homeAddress,
         }
       })
@@ -67,6 +71,14 @@ export const PersonalInfoTab = ({
             <Input 
               value={formData.city}
               onChange={(e) => setFormData({...formData, city: e.target.value})}
+              className="h-10 border-zinc-200"
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-zinc-600 text-xs font-medium uppercase tracking-wider">State</Label>
+            <Input 
+              value={formData.state}
+              onChange={(e) => setFormData({...formData, state: e.target.value})}
               className="h-10 border-zinc-200"
             />
           </div>
@@ -128,6 +140,10 @@ export const PersonalInfoTab = ({
         <div className="space-y-1.5">
           <label className="text-zinc-600 text-xs font-medium uppercase tracking-wider">City</label>
           <div className="text-neutral-700 text-sm font-normal">{initialCity || 'Not provided'}</div>
+        </div>
+        <div className="space-y-1.5">
+          <label className="text-zinc-600 text-xs font-medium uppercase tracking-wider">State</label>
+          <div className="text-neutral-700 text-sm font-normal">{initialState || 'Not provided'}</div>
         </div>
         <div className="col-span-full space-y-1.5">
           <label className="text-zinc-600 text-xs font-medium uppercase tracking-wider">Home address</label>

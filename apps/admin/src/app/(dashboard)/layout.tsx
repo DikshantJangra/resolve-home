@@ -71,7 +71,7 @@ export default function DashboardLayout({
   }
 
   return (
-    <div className="flex min-h-screen bg-white">
+    <div className="flex h-screen bg-white overflow-hidden">
       <AdminSidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         <AdminNavbar onMenuClick={() => setSidebarOpen(true)} />

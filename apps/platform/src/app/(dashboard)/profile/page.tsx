@@ -12,15 +12,15 @@ type TabType = 'Personal Info' | 'Booking History' | 'Reviews Given'
 
 export default function ProfilePage() {
   const [activeTab, setActiveTab] = useState<TabType>('Personal Info')
-  const { data: session, isLoading: sessionLoading } = useAuthSession()
-  const { data: profile, isLoading: profileLoading } = useUserProfile()
+  const { data: session, isPending: sessionPending } = useAuthSession()
+  const { data: profile, isPending: profilePending } = useUserProfile()
   const { data: bookings } = useUserBookings()
 
   const tabs: TabType[] = ['Personal Info', 'Booking History', 'Reviews Given']
 
-  const isLoading = sessionLoading || profileLoading
+  const isDataPending = sessionPending || profilePending
 
-  if (isLoading) {
+  if (isDataPending) {
     return (
       <div className="max-w-6xl mx-auto flex flex-col gap-6 md:gap-8 animate-pulse">
         <div className="space-y-3">
@@ -42,9 +42,10 @@ export default function ProfilePage() {
     fullName: user?.name || 'User',
     email: user?.email || '',
     phone: user?.phone || 'Not provided',
-    city: (user as any)?.city || '',
-    address: (user as any)?.homeAddress || '',
-    bio: (user as any)?.bio || '',
+    city: user?.homeAddress?.city || '',
+    state: user?.homeAddress?.state || '',
+    address: user?.homeAddress?.street || '',
+    bio: user?.bio || '',
     memberSince: user?.createdAt ? format(new Date(user.createdAt), 'MMM yyyy') : 'Recently',
     avatarUrl: user?.image ? formatImageUrl(user.image) : `https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.name || 'User'}`
   }
@@ -68,7 +69,7 @@ export default function ProfilePage() {
       <div className="flex flex-col gap-1">
         <h1 className="text-neutral-700 text-xl md:text-2xl font-bold font-['Plus_Jakarta_Sans'] leading-8">My Profile</h1>
         <p className="text-zinc-500 text-sm md:text-base font-normal leading-6">
-          Manage your personal information and track your activities on Resolv Home.
+          Manage your personal information and track your activities on ResolvHome.
         </p>
       </div>
 

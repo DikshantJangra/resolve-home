@@ -1,7 +1,7 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios'
 import { toast } from 'sonner'
 
-const apiBaseUrl = typeof window !== 'undefined' ? '' : (process.env.NEXT_PUBLIC_API_URL || 'https://resolvhome.onrender.com')
+const apiBaseUrl = typeof window !== 'undefined' ? '' : (process.env.NEXT_PUBLIC_API_URL || 'https://resolve.onrender.com')
 
 const apiClient = axios.create({
   baseURL: apiBaseUrl,
@@ -13,7 +13,17 @@ const apiClient = axios.create({
 
 // Request Interceptor — cookies are sent automatically via proxy (same-origin in browser)
 apiClient.interceptors.request.use(
-  (config: InternalAxiosRequestConfig) => config,
+  (config: InternalAxiosRequestConfig) => {
+    if (typeof window !== 'undefined') {
+      const token = localStorage.getItem('auth_token')
+      console.log(`[API Client] Request to ${config.url}, Token found: ${!!token}`)
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`
+        console.log(`[API Client] Attached Bearer token to request`)
+      }
+    }
+    return config
+  },
   (error) => Promise.reject(error)
 )
 

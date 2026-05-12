@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 /**
- * Route protection proxy for Resolve Home.
+ * Route protection proxy for ResolvHome.
  * Ensures protected routes are only accessible with a valid session.
  */
 export function proxy(request: NextRequest) {

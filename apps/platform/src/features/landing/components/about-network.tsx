@@ -105,7 +105,7 @@ export const AboutNetwork = () => {
             transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
             className="absolute left-[549px] top-[330px] w-[108px] h-[108px] bg-white rounded-full flex items-center justify-center z-20"
           >
-            <Image src="/resolve_home.svg" alt="Resolve" width={62} height={63} className="h-auto w-3/5" />
+            <Image src="/logo.svg" alt="ResolvHome" width={80} height={80} className="h-auto w-3/4" />
           </motion.div>
 
           {/* Floating Nodes */}

@@ -1,16 +1,13 @@
 'use client'
 
-import React from 'react'
+import React, { useState } from 'react'
 import { HiOutlinePlus, HiOutlineTrash } from 'react-icons/hi'
-import { useBookingStore } from '@/store/booking-store'
-import { Button } from "@resolve/ui"
-import { Textarea } from "@resolve/ui"
-import { Label } from "@resolve/ui"
-import { FileUpload } from "@resolve/ui"
-import { useServices } from '@/hooks/api-hooks'
-import { useState } from 'react'
 import { HiOutlineChevronDown, HiOutlineCheck } from 'react-icons/hi2'
-import { cn } from "@resolve/ui"
+import { useBookingStore } from '@/store/booking-store'
+import { Textarea, Label, cn } from "@resolve/ui"
+import { useServices } from '@/hooks/api-hooks'
+import { apiClient, ENDPOINTS } from "@resolve/api"
+import { toast } from 'sonner'
 
 export const IssueDetailsStep = () => {
   const { 
@@ -25,35 +22,74 @@ export const IssueDetailsStep = () => {
     setServiceId
   } = useBookingStore()
 
-  const [isUploaderOpen, setIsUploaderOpen] = useState(false)
   const [isServiceDropdownOpen, setIsServiceDropdownOpen] = useState(false)
+  const [isUploading, setIsUploading] = useState(false)
+  const fileInputRef = React.useRef<HTMLInputElement>(null)
   
   const { data: services, isLoading: isLoadingServices } = useServices(categoryId || undefined)
 
-  const handleUploadSuccess = (successfulFiles: any[]) => {
-    successfulFiles.forEach(file => {
-      const url = file.response.body.data.file.url
-      addPhoto(url)
-    })
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || [])
+    if (files.length === 0) return
+    
+    // Limit to 4 photos total
+    if (photos.length + files.length > 4) {
+      toast.error("You can only upload up to 4 photos")
+      return
+    }
+
+    setIsUploading(true)
+    try {
+      for (const file of files) {
+        const formData = new FormData()
+        formData.append('file', file)
+        
+        console.log('Uploading file:', file.name)
+        
+        const res = await apiClient.post(ENDPOINTS.UPLOAD.BASE, formData, {
+          params: { type: 'image' },
+          headers: { 'Content-Type': 'multipart/form-data' },
+        })
+        
+        console.log('Upload response:', res.data)
+        
+        // Correct URL extraction based on backend response structure
+        const url = res.data?.data?.file?.url || res.data?.data?.url || res.data?.url
+        
+        if (url) {
+          console.log('Photo added:', url)
+          addPhoto(url)
+        } else {
+          console.error('Failed to extract URL from response:', res.data)
+        }
+      }
+      toast.success('Photos uploaded successfully')
+    } catch (error: any) {
+      console.error('Upload error:', error)
+      toast.error(error?.response?.data?.message || 'Upload failed, please try again')
+    } finally {
+      setIsUploading(false)
+      if (fileInputRef.current) fileInputRef.current.value = ''
+    }
   }
 
   const selectedService = services?.find((s: any) => s.id === serviceId)
   const isFormValid = issueDetails.trim().length >= 10 && photos.length > 0 && serviceId
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full bg-white">
       <div className="flex-1 px-5 pt-10 space-y-8 overflow-y-auto no-scrollbar">
         {/* Service Selection */}
         <div className="space-y-1.5">
-          <Label className="flex gap-0.5 text-zinc-600 text-sm font-medium">
+          <Label className="flex gap-0.5 text-zinc-600 text-sm font-medium font-['Inter'] leading-5">
             Select Service <span className="text-red-600">*</span>
           </Label>
           <div className="relative">
             <button
               onClick={() => setIsServiceDropdownOpen(!isServiceDropdownOpen)}
-              className="w-full h-12 px-4 bg-white border border-zinc-300 rounded-lg flex items-center justify-between hover:border-zinc-400 transition-colors"
+              className="w-full h-12 px-4 bg-white border border-stone-300 rounded-lg flex items-center justify-between hover:border-zinc-400 transition-colors"
             >
-              <span className={cn("text-sm", selectedService ? "text-zinc-900" : "text-zinc-400")}>
+              <span className={cn("text-sm", selectedService ? "text-zinc-600" : "text-zinc-400")}>
                 {selectedService ? selectedService.name : "Choose a specific service"}
               </span>
               <HiOutlineChevronDown className={cn("w-5 h-5 text-zinc-400 transition-transform", isServiceDropdownOpen && "rotate-180")} />
@@ -88,74 +124,87 @@ export const IssueDetailsStep = () => {
         </div>
 
         {/* Issue Details */}
-        <div className="space-y-1.5">
-          <Label className="flex gap-0.5 text-zinc-600 text-sm font-medium">
-            Issue Details <span className="text-red-600">*</span>
-          </Label>
+        <div className="space-y-1.5 h-52 flex flex-col">
+          <div className="inline-flex justify-start items-start gap-0.5">
+            <Label className="text-zinc-600 text-sm font-medium font-['Inter'] leading-5">
+              Issue Details
+            </Label>
+            <span className="text-red-600 text-sm font-medium font-['Inter'] leading-5">*</span>
+          </div>
           <Textarea
             value={issueDetails}
             onChange={(e) => setIssueDetails(e.target.value)}
             placeholder="Tell us exactly what happened, when it started..."
-            className="h-32 resize-none border-zinc-300 rounded-lg p-4 text-sm font-normal text-zinc-600 focus:border-blue-700"
+            className="flex-1 resize-none border-stone-300 rounded-lg p-4 text-sm font-normal text-zinc-600 focus:border-blue-700 placeholder:text-zinc-300"
           />
         </div>
 
-        {/* Upload Photos */}
-        <div className="space-y-3">
-          <Label className="flex gap-0.5 text-zinc-600 text-sm font-medium">
-            Attach/Upload photos <span className="text-red-600">*</span>
-          </Label>
-          
-          <div className="grid grid-cols-4 gap-3">
-            {photos.map((photo, index) => (
-              <div key={index} className="relative aspect-square rounded-xl overflow-hidden group">
-                <img src={photo} className="w-full h-full object-cover" alt="Upload" />
-                <button 
-                  onClick={() => removePhoto(index)}
-                  className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                >
-                  <HiOutlineTrash className="text-white w-6 h-6" />
-                </button>
-              </div>
-            ))}
+        {/* Upload Photos Section */}
+        <div className="space-y-5">
+          <div className="flex flex-col gap-3">
+            <div className="inline-flex justify-start items-start gap-0.5">
+              <Label className="text-zinc-600 text-sm font-medium font-['Inter'] leading-5">
+                Attach/Upload photos
+              </Label>
+              <span className="text-red-600 text-sm font-medium font-['Inter'] leading-5">*</span>
+            </div>
+            
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+              {photos.map((photo, index) => (
+                <div key={index} className="relative aspect-square rounded-xl overflow-hidden border border-zinc-200 group">
+                  <img 
+                    src={photo} 
+                    alt={`Upload ${index + 1}`}
+                    className="w-full h-full object-cover"
+                  />
+                  <button 
+                    onClick={() => removePhoto(index)}
+                    className="absolute top-1 right-1 w-6 h-6 bg-white/80 backdrop-blur-sm rounded-full flex items-center justify-center text-red-600 hover:bg-white hover:scale-110 transition-all shadow-sm"
+                  >
+                    <HiOutlineTrash className="w-4 h-4" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
 
-            {photos.length < 3 && (
-              <button 
-                onClick={() => setIsUploaderOpen(true)}
-                className="aspect-square bg-slate-50 rounded-xl border-2 border-dashed border-zinc-200 flex flex-col justify-center items-center gap-1 cursor-pointer hover:bg-slate-100 hover:border-blue-300 transition-all"
-              >
-                <HiOutlinePlus className="w-6 h-6 text-blue-700" />
-                <span className="text-[10px] text-zinc-400 font-medium">Add Photo</span>
-              </button>
-            )}
+          <div className="flex items-center gap-4">
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              multiple
+              className="hidden"
+              onChange={handleFileChange}
+            />
+            <button 
+              onClick={() => fileInputRef.current?.click()}
+              disabled={isUploading || photos.length >= 4}
+              className="inline-flex justify-start items-center gap-1 group disabled:opacity-50"
+            >
+              {isUploading ? (
+                <div className="w-5 h-5 border-2 border-blue-700 border-t-transparent rounded-full animate-spin" />
+              ) : (
+                <HiOutlinePlus className="w-5 h-5 text-blue-700 group-hover:scale-110 transition-transform" />
+              )}
+              <span className="text-blue-700 text-sm font-normal font-['Inter'] leading-5 hover:underline">
+                {photos.length === 0 ? "Add photo" : "Add more"}
+              </span>
+            </button>
           </div>
         </div>
-
-        <FileUpload 
-          isOpen={isUploaderOpen}
-          onRequestClose={() => setIsUploaderOpen(false)}
-          onSuccess={handleUploadSuccess}
-          uploadType="image"
-          multiple={true}
-          maxFiles={3 - photos.length}
-        />
       </div>
 
-      <div className="p-5 mt-auto flex gap-4 border-t border-zinc-100 bg-white">
-        <Button
-          variant="outline"
-          onClick={() => setStep(2)}
-          className="flex-1 h-11 border-zinc-300 rounded-xl"
-        >
-          Back
-        </Button>
-        <Button
-          disabled={!isFormValid}
+      <div className="p-5 mt-auto bg-white border-t border-zinc-100">
+        <button
+          disabled={!isFormValid || isUploading}
           onClick={() => setStep(4)}
-          className="flex-1 h-11 bg-blue-700 hover:bg-blue-800 text-neutral-50 rounded-xl disabled:opacity-40 transition-all"
+          className={`w-full h-11 px-6 py-3 bg-blue-700 rounded-xl flex justify-between items-center transition-all ${
+            !isFormValid || isUploading ? 'opacity-40 cursor-not-allowed' : 'hover:bg-blue-800'
+          }`}
         >
-          Continue
-        </Button>
+          <div className="justify-start text-neutral-50 text-sm font-medium font-['Inter'] leading-5">Continue</div>
+        </button>
       </div>
     </div>
   )

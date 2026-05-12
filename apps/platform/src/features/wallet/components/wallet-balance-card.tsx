@@ -25,7 +25,7 @@ export const WalletBalanceCard = ({ balance, email, isWorker, onAction }: Wallet
             ₦{balance.toLocaleString()}
           </h2>
           <span className="text-neutral-50/80 text-xs font-normal leading-4">
-            Resolv Home Wallet · {email}
+            ResolvHome Wallet · {email}
           </span>
         </div>
       </div>

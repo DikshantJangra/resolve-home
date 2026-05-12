@@ -23,7 +23,7 @@ export const PriorityStep = () => {
   ]
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full bg-white">
       <div className="flex-1 px-5 pt-10">
         <div className="flex gap-5">
           {options.map((option) => {
@@ -34,24 +34,24 @@ export const PriorityStep = () => {
               <button
                 key={option.id}
                 onClick={() => setPriority(option.id)}
-                className={`flex-1 h-64 p-5 rounded-xl border transition-all flex flex-col justify-center items-center gap-5 overflow-hidden ${
+                className={`flex-1 h-64 p-5 rounded-xl transition-all flex flex-col justify-center items-center gap-5 overflow-hidden ${
                   isSelected
-                    ? 'bg-slate-50 border-blue-700 border-[1.5px]'
-                    : 'bg-white border-zinc-300'
+                    ? 'bg-slate-50 outline outline-[1.50px] outline-offset-[-1.50px] outline-blue-700'
+                    : 'bg-white outline outline-1 outline-offset-[-1px] outline-zinc-300'
                 }`}
               >
-                <div className={`w-11 h-11 rounded-xl flex justify-center items-center ${
+                <div className={`w-11 h-11 px-2.5 rounded-xl flex justify-center items-center ${
                   isSelected ? 'bg-white' : 'bg-slate-100'
                 }`}>
                   <Icon className={`w-5 h-5 ${isSelected ? 'text-blue-700' : 'text-zinc-600'}`} />
                 </div>
-                <div className="space-y-3">
-                  <h3 className="text-center text-neutral-700 text-xl font-semibold font-['Plus_Jakarta_Sans'] leading-8">
+                <div className="self-stretch flex flex-col justify-start items-center gap-3">
+                  <div className="self-stretch text-center text-neutral-700 text-xl font-semibold font-['Plus_Jakarta_Sans'] leading-8">
                     {option.title}
-                  </h3>
-                  <p className="text-center text-zinc-600 text-sm font-normal font-['Inter'] leading-5 px-2">
+                  </div>
+                  <div className="self-stretch text-center text-zinc-600 text-base font-normal font-['Inter'] leading-6">
                     {option.description}
-                  </p>
+                  </div>
                 </div>
               </button>
             )
@@ -60,13 +60,15 @@ export const PriorityStep = () => {
       </div>
 
       <div className="p-5 mt-auto">
-        <Button
+        <button
           disabled={!priority}
-          onClick={() => setStep(3)}
-          className="w-full h-11 px-6 py-3 bg-blue-700 hover:bg-blue-800 text-neutral-50 text-sm font-medium rounded-xl disabled:opacity-40 transition-all"
+          onClick={() => setStep(2)}
+          className={`w-full h-11 px-6 py-3 bg-blue-700 rounded-xl flex justify-between items-center transition-all ${
+            !priority ? 'opacity-40 cursor-not-allowed' : 'hover:bg-blue-800'
+          }`}
         >
-          Continue
-        </Button>
+          <div className="justify-start text-neutral-50 text-sm font-medium font-['Inter'] leading-5">Continue</div>
+        </button>
       </div>
     </div>
   )

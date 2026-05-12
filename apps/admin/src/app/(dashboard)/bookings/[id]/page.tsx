@@ -122,7 +122,7 @@ export default function BookingDetailsPage({ params }: { params: { id: string } 
               <PersonCard 
                 title="Allocated Professional"
                 name={booking.engineerName || 'Unassigned'}
-                address={booking.engineerAddress || 'Resolve Platform Partner'}
+                address={booking.engineerAddress || 'ResolvHome Platform Partner'}
                 avatar={booking.engineerAvatar || "https://placehold.co/47x47"}
                 hasReassign={!!booking.engineerName}
               />

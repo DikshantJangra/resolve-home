@@ -17,23 +17,25 @@ export const AdminNavbar = ({ onMenuClick }: AdminNavbarProps) => {
     <header className="h-16 px-4 lg:px-8 bg-white border-b border-zinc-300 flex justify-between items-center sticky top-0 z-20">
       <div className="flex items-center gap-2 sm:gap-4 lg:gap-20 flex-1">
         <button 
+          type="button"
           onClick={onMenuClick}
-          className="p-2 lg:hidden text-zinc-500 hover:text-zinc-700 transition-colors"
+          className="p-2 lg:hidden text-zinc-500 hover:text-zinc-700 transition-colors shrink-0"
+          aria-label="Open menu"
         >
           <HiOutlineMenuAlt2 className="w-6 h-6" />
         </button>
 
         <Link href="/" className="shrink-0 lg:hidden">
           <img 
-            src="/resolve_home.svg" 
-            alt="Resolv" 
-            className="w-20 sm:w-24 h-7 sm:h-9 object-contain" 
+            src="/logo.svg" 
+            alt="ResolvHome" 
+            className="w-28 sm:w-36 h-10 sm:h-12 object-contain" 
           />
         </Link>
 
         <div className="relative w-full max-w-80 hidden md:block lg:ml-0">
           <Input 
-            placeholder="Search resolv" 
+            placeholder="Search ResolvHome" 
             className="h-10 pl-4 pr-10 border-zinc-300 rounded-lg text-sm placeholder:text-zinc-300"
           />
           <HiOutlineSearch className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-600" />

@@ -1,18 +1,20 @@
 'use client'
 
-import React, { useState } from 'react'
+import React from 'react'
 import { useProfessionalSetupStore } from '@/store/professional-setup-store'
-import { Button, Input, Label, FileUpload } from "@resolve/ui"
+import { Button, Input, Label } from "@resolve/ui"
 import { HiOutlineChevronLeft, HiOutlineCheckCircle, HiOutlinePlus } from 'react-icons/hi'
 import { useCategories, useUpdateEngineerProfile } from '@/hooks/api-hooks'
 import { toast } from 'sonner'
 import { cn } from "@resolve/ui"
+import { apiClient, ENDPOINTS } from "@resolve/api"
 
 export const ProfessionalSetupWizard = ({ onComplete, initialStep }: { onComplete: () => void, initialStep?: number }) => {
   const store = useProfessionalSetupStore()
   const { data: categories } = useCategories()
   const { mutate: updateProfile, isPending } = useUpdateEngineerProfile()
-  const [isUploaderOpen, setIsUploaderOpen] = useState(false)
+  const fileInputRef = React.useRef<HTMLInputElement>(null)
+  const [isUploading, setIsUploading] = React.useState(false)
 
   React.useEffect(() => {
     if (initialStep) {
@@ -20,11 +22,45 @@ export const ProfessionalSetupWizard = ({ onComplete, initialStep }: { onComplet
     }
   }, [initialStep])
 
+  // Automatically select "Others" as default if available
+  React.useEffect(() => {
+    if (categories && !store.categoryId) {
+      const otherCategory = categories.find((cat: any) => 
+        cat.name.toLowerCase() === 'others' || cat.name.toLowerCase() === 'other'
+      )
+      if (otherCategory) {
+        store.updateField('categoryId', otherCategory.id)
+      }
+    }
+  }, [categories, store.categoryId])
+
   const steps = [
     "Professional and work profile",
     "Business location",
     "Guarantor and Bank Setup"
   ]
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setIsUploading(true)
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+      const res = await apiClient.post(ENDPOINTS.UPLOAD.BASE, formData, {
+        params: { type: 'document' },
+        headers: { 'Content-Type': 'multipart/form-data' },
+      })
+      const url = res.data?.data?.url || res.data?.url || file.name
+      store.updateField('idPhoto', url)
+      toast.success('Document uploaded')
+    } catch {
+      toast.error('Upload failed, please try again')
+    } finally {
+      setIsUploading(false)
+      if (fileInputRef.current) fileInputRef.current.value = ''
+    }
+  }
 
   const handleFinish = () => {
     const payload = {
@@ -54,7 +90,7 @@ export const ProfessionalSetupWizard = ({ onComplete, initialStep }: { onComplet
     updateProfile(payload, {
       onSuccess: () => {
         toast.success("Verification submitted successfully!")
-        store.setStep(4) // Move to pending screen
+        store.setStep(4)
       },
       onError: (err: any) => {
         toast.error(err.message || "Failed to submit verification")
@@ -70,8 +106,8 @@ export const ProfessionalSetupWizard = ({ onComplete, initialStep }: { onComplet
             <div className="space-y-4">
               <div className="space-y-1.5">
                 <Label>Primary Specialty <span className="text-red-500">*</span></Label>
-                <Input 
-                  placeholder="Select your speciality" 
+                <Input
+                  placeholder="Select your speciality"
                   value={store.specialty}
                   onChange={(e) => store.updateField('specialty', e.target.value)}
                 />
@@ -79,7 +115,7 @@ export const ProfessionalSetupWizard = ({ onComplete, initialStep }: { onComplet
 
               <div className="space-y-1.5">
                 <Label>Category <span className="text-red-500">*</span></Label>
-                <select 
+                <select
                   className="w-full h-12 px-4 rounded-lg border border-zinc-300 text-sm focus:border-blue-700 outline-none"
                   value={store.categoryId}
                   onChange={(e) => store.updateField('categoryId', e.target.value)}
@@ -113,7 +149,7 @@ export const ProfessionalSetupWizard = ({ onComplete, initialStep }: { onComplet
 
               <div className="space-y-1.5">
                 <Label>Select ID type <span className="text-red-500">*</span></Label>
-                <select 
+                <select
                   className="w-full h-12 px-4 rounded-lg border border-zinc-300 text-sm focus:border-blue-700 outline-none"
                   value={store.idType}
                   onChange={(e) => store.updateField('idType', e.target.value)}
@@ -127,8 +163,8 @@ export const ProfessionalSetupWizard = ({ onComplete, initialStep }: { onComplet
 
               <div className="space-y-1.5">
                 <Label>ID Number <span className="text-red-500">*</span></Label>
-                <Input 
-                  placeholder="000 000 000 000" 
+                <Input
+                  placeholder="000 000 000 000"
                   value={store.idNumber}
                   onChange={(e) => store.updateField('idNumber', e.target.value)}
                 />
@@ -137,29 +173,34 @@ export const ProfessionalSetupWizard = ({ onComplete, initialStep }: { onComplet
               <div className="space-y-3">
                 <Label>Attach/Upload ID Document <span className="text-red-500">*</span></Label>
                 <div className="flex items-center gap-4">
-                   <button 
-                    onClick={() => setIsUploaderOpen(true)}
-                    className="w-11 h-11 bg-slate-50 border border-indigo-400 rounded-xl flex items-center justify-center hover:bg-slate-100"
-                   >
-                     <HiOutlinePlus className="w-5 h-5 text-blue-700" />
-                   </button>
-                   <span className="text-sm text-zinc-500">
-                     {store.idPhoto ? "Document uploaded successfully" : "Upload PNG, JPG or PDF up to 5MB"}
-                   </span>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept=".png,.jpg,.jpeg,.pdf"
+                    className="hidden"
+                    onChange={handleFileChange}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={isUploading}
+                    className="w-11 h-11 bg-slate-50 border border-indigo-400 rounded-xl flex items-center justify-center hover:bg-slate-100 disabled:opacity-50"
+                  >
+                    {isUploading ? (
+                      <svg className="w-4 h-4 animate-spin text-blue-700" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
+                      </svg>
+                    ) : (
+                      <HiOutlinePlus className="w-5 h-5 text-blue-700" />
+                    )}
+                  </button>
+                  <span className="text-sm text-zinc-500">
+                    {store.idPhoto ? "Document uploaded successfully" : "Upload PNG, JPG or PDF up to 5MB"}
+                  </span>
                 </div>
               </div>
             </div>
-            
-            <FileUpload 
-              isOpen={isUploaderOpen}
-              onRequestClose={() => setIsUploaderOpen(false)}
-              onSuccess={(files) => {
-                const url = files[0].response.body.data.file.url
-                store.updateField('idPhoto', url)
-                setIsUploaderOpen(false)
-              }}
-              uploadType="image"
-            />
           </div>
         )
       case 2:
@@ -168,36 +209,36 @@ export const ProfessionalSetupWizard = ({ onComplete, initialStep }: { onComplet
             <button className="flex items-center gap-2 text-blue-700 text-sm font-medium underline">
               <HiOutlinePlus className="rotate-45" /> Use my current GPS location
             </button>
-            
+
             <div className="space-y-4">
               <div className="space-y-1.5">
                 <Label>State <span className="text-red-500">*</span></Label>
-                <Input 
-                  placeholder="Lagos" 
+                <Input
+                  placeholder="Lagos"
                   value={store.state}
                   onChange={(e) => store.updateField('state', e.target.value)}
                 />
               </div>
               <div className="space-y-1.5">
                 <Label>City <span className="text-red-500">*</span></Label>
-                <Input 
-                  placeholder="Ikeja" 
+                <Input
+                  placeholder="Ikeja"
                   value={store.city}
                   onChange={(e) => store.updateField('city', e.target.value)}
                 />
               </div>
               <div className="space-y-1.5">
                 <Label>Street Address <span className="text-red-500">*</span></Label>
-                <Input 
-                  placeholder="15 Mobolaji bank, Anthony way" 
+                <Input
+                  placeholder="15 Mobolaji bank, Anthony way"
                   value={store.address}
                   onChange={(e) => store.updateField('address', e.target.value)}
                 />
               </div>
               <div className="space-y-1.5">
                 <Label>Nearest Landmark/Area <span className="text-red-500">*</span></Label>
-                <Input 
-                  placeholder="Near ikeja mall" 
+                <Input
+                  placeholder="Near ikeja mall"
                   value={store.landmark}
                   onChange={(e) => store.updateField('landmark', e.target.value)}
                 />
@@ -213,16 +254,16 @@ export const ProfessionalSetupWizard = ({ onComplete, initialStep }: { onComplet
               <div className="space-y-4">
                 <div className="space-y-1.5">
                   <Label>Guarantor Full name <span className="text-red-500">*</span></Label>
-                  <Input 
-                    placeholder="Enter guarantor's full name" 
+                  <Input
+                    placeholder="Enter guarantor's full name"
                     value={store.guarantorName}
                     onChange={(e) => store.updateField('guarantorName', e.target.value)}
                   />
                 </div>
                 <div className="space-y-1.5">
                   <Label>Email Address <span className="text-red-500">*</span></Label>
-                  <Input 
-                    placeholder="Enter guarantor's email" 
+                  <Input
+                    placeholder="Enter guarantor's email"
                     value={store.guarantorEmail}
                     onChange={(e) => store.updateField('guarantorEmail', e.target.value)}
                   />
@@ -235,8 +276,8 @@ export const ProfessionalSetupWizard = ({ onComplete, initialStep }: { onComplet
               <div className="space-y-4">
                 <div className="space-y-1.5">
                   <Label>Account Name <span className="text-red-500">*</span></Label>
-                  <Input 
-                    placeholder="Tob Wasiu" 
+                  <Input
+                    placeholder="Tob Wasiu"
                     className="bg-zinc-100"
                     value={store.accountName}
                     onChange={(e) => store.updateField('accountName', e.target.value)}
@@ -244,16 +285,16 @@ export const ProfessionalSetupWizard = ({ onComplete, initialStep }: { onComplet
                 </div>
                 <div className="space-y-1.5">
                   <Label>Select Bank <span className="text-red-500">*</span></Label>
-                  <Input 
-                    placeholder="GtBank PLC" 
+                  <Input
+                    placeholder="GtBank PLC"
                     value={store.bankName}
                     onChange={(e) => store.updateField('bankName', e.target.value)}
                   />
                 </div>
                 <div className="space-y-1.5">
                   <Label>Account Number <span className="text-red-500">*</span></Label>
-                  <Input 
-                    placeholder="Enter your account number" 
+                  <Input
+                    placeholder="Enter your account number"
                     value={store.accountNumber}
                     onChange={(e) => store.updateField('accountNumber', e.target.value)}
                   />
@@ -272,7 +313,7 @@ export const ProfessionalSetupWizard = ({ onComplete, initialStep }: { onComplet
                 </div>
                 <HiOutlineCheckCircle className="absolute -right-2 -bottom-2 w-6 h-6 text-blue-700 bg-white rounded-full" />
               </div>
-              
+
               <div className="space-y-3">
                 <h2 className="text-3xl font-bold text-neutral-700 leading-tight">
                   Verification in progress
@@ -282,7 +323,7 @@ export const ProfessionalSetupWizard = ({ onComplete, initialStep }: { onComplet
                 </p>
               </div>
             </div>
-            
+
             <Button onClick={onComplete} className="w-full h-11 bg-blue-700 rounded-xl">
               Back to Dashboard
             </Button>
@@ -320,7 +361,7 @@ export const ProfessionalSetupWizard = ({ onComplete, initialStep }: { onComplet
       <div className="p-6 border-b border-zinc-100">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-2xl font-semibold text-neutral-700">Complete set up</h2>
-          <button 
+          <button
             onClick={() => store.prevStep()}
             className="flex items-center gap-2 text-blue-700"
             disabled={store.currentStep === 1}
@@ -329,7 +370,7 @@ export const ProfessionalSetupWizard = ({ onComplete, initialStep }: { onComplet
             <span>Go Back</span>
           </button>
         </div>
-        
+
         <div className="space-y-3">
           <div className="space-y-1">
             <h3 className="text-neutral-700 font-semibold">{steps[store.currentStep - 1]}</h3>
@@ -339,15 +380,15 @@ export const ProfessionalSetupWizard = ({ onComplete, initialStep }: { onComplet
               {store.currentStep === 3 && "This is where we send your earnings, ensure the details match."}
             </p>
           </div>
-          
+
           <div className="flex gap-2">
             {[1, 2, 3].map((s) => (
-              <div 
-                key={s} 
+              <div
+                key={s}
                 className={cn(
                   "flex-1 h-1.5 rounded-full transition-all",
                   s <= store.currentStep ? "bg-blue-700" : "bg-zinc-200"
-                )} 
+                )}
               />
             ))}
           </div>

@@ -20,12 +20,16 @@ import { toast } from "sonner"
 import { useRegister } from "../hooks/use-register"
 import { registerSchema, type RegisterValues } from "../types"
 import { useRegisterStore } from "@/store/use-register-store"
+import { AuthOtpVerification } from "./auth-otp-verification"
 
 export function RegisterForm() {
   const router = useRouter()
   const { prevStep, role } = useRegisterStore()
   console.log('[RegisterForm] render — role from store:', role)
   const [showPassword, setShowPassword] = React.useState(false)
+  const [showVerification, setShowVerification] = React.useState(false)
+  const [registeredEmail, setRegisteredEmail] = React.useState("")
+  
   const { mutate: register, isPending } = useRegister()
 
   const form = useForm<RegisterValues>({
@@ -41,7 +45,12 @@ export function RegisterForm() {
   })
 
   function onSubmit(data: RegisterValues) {
-    register({ ...data, role: role || 'user' })
+    register({ ...data, role: role || 'user' }, {
+      onSuccess: (response) => {
+        setRegisteredEmail(data.email)
+        setShowVerification(true)
+      }
+    })
   }
 
   const roleTitle = role === 'worker' ? "Professional" : "Customer"
@@ -65,6 +74,20 @@ export function RegisterForm() {
       if (country) setDefaultCountry(country)
     })
   }, [])
+
+  if (showVerification) {
+    return (
+      <AuthOtpVerification 
+        email={registeredEmail}
+        context="signup"
+        onVerifySuccess={() => {
+          toast.success("Account verified! Please sign in.")
+          router.push("/login")
+        }}
+        onBack={() => setShowVerification(false)}
+      />
+    )
+  }
 
   return (
     <div className="flex w-full flex-col gap-12">

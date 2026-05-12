@@ -21,14 +21,14 @@ export const Footer = () => {
           {/* Left Section: Logo & Info */}
           <div className="flex-1 flex flex-col justify-start items-start gap-6">
             <Link href="/" className="flex items-center transition-opacity hover:opacity-90">
-              <div className="relative h-9 w-[102px]">
+              <div className="relative h-12 w-[136px]">
                 <Image
-                  src="/resolve_home.svg"
-                  alt="Resolve Home"
+                  src="/logo.svg"
+                  alt="ResolvHome"
                   fill
                   className="object-contain brightness-0 invert"
                   priority
-                  sizes="102px"
+                  sizes="136px"
                 />
               </div>
             </Link>
@@ -49,7 +49,7 @@ export const Footer = () => {
                 <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/5 border border-white/10">
                   <IoMailOutline className="w-5 h-5" />
                 </div>
-                <span className="text-[15px] font-medium">hello@resolvhome.ng</span>
+                <span className="text-[15px] font-medium">hello@resolvehome.ng</span>
               </div>
             </div>
           </div>
@@ -92,7 +92,7 @@ export const Footer = () => {
             <div className="flex flex-col gap-6">
               <h3 className="text-white text-[18px] font-bold uppercase tracking-wider">Contact Us</h3>
               <div className="flex flex-col gap-5">
-                <p className="text-[#A4ACB8] text-[15px] font-medium max-w-[200px]">hello@resolvhome.ng</p>
+                <p className="text-[#A4ACB8] text-[15px] font-medium max-w-[200px]">hello@resolvehome.ng</p>
                 <div className="flex items-center gap-3">
                   <button className="w-11 h-11 flex items-center justify-center rounded-xl bg-white/5 border border-white/10 text-[#A4ACB8] hover:bg-brand-blue hover:text-white hover:border-brand-blue transition-all">
                     <IoLogoTwitter className="w-5 h-5" />
@@ -112,7 +112,7 @@ export const Footer = () => {
         {/* Bottom Bar */}
         <div className="w-full px-8 lg:px-12 py-8 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-6">
           <p className="text-[#6D7583] text-[14px] font-medium text-center md:text-left">
-            © 2026 Resolv Home Ltd. All rights reserved. Registered in Nigeria (RC: 1234567).
+            © 2026 ResolvHome Ltd. All rights reserved. Registered in Nigeria (RC: 1234567).
           </p>
           <div className="flex items-center gap-6">
             <Link href="#" className="text-[#6D7583] text-[13px] font-bold uppercase tracking-widest hover:text-white transition-colors">Privacy</Link>

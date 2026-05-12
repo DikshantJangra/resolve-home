@@ -10,8 +10,6 @@ export const ReviewStep = () => {
     serviceType, 
     issueDetails, 
     location, 
-    scheduledDate,
-    scheduledTime,
     setStep 
   } = useBookingStore()
 
@@ -41,34 +39,31 @@ export const ReviewStep = () => {
   ]
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full bg-white">
       <div className="flex-1 px-5 pt-10 space-y-8 overflow-y-auto no-scrollbar">
         {reviewItems.map((item, index) => (
-          <div key={index} className="space-y-1.5">
-            <Label className="text-neutral-700 text-base font-semibold font-['Inter'] leading-6">
-              {item.label}
-            </Label>
-            <div className="text-zinc-600 text-sm font-normal font-['Inter'] leading-5">
-              {item.value}
+          <div key={index} className="self-stretch flex flex-col justify-start items-start gap-1.5">
+            <div className="self-stretch inline-flex justify-start items-start gap-0.5">
+              <Label className="text-neutral-700 text-base font-semibold font-['Inter'] leading-6">
+                {item.label}
+              </Label>
+            </div>
+            <div className="self-stretch rounded-lg inline-flex justify-start items-start gap-2.5">
+              <div className="flex-1 justify-start text-zinc-600 text-sm font-normal font-['Inter'] leading-5">
+                {item.value}
+              </div>
             </div>
           </div>
         ))}
       </div>
 
-      <div className="p-5 mt-auto flex gap-4">
-        <Button
-          variant="outline"
-          onClick={() => setStep(4)}
-          className="flex-1 h-11 border-zinc-300 rounded-xl"
-        >
-          Back
-        </Button>
-        <Button
+      <div className="p-5 mt-auto bg-white border-t border-zinc-100">
+        <button
           onClick={handleConfirm}
-          className="flex-1 h-11 bg-blue-700 hover:bg-blue-800 text-neutral-50 rounded-xl"
+          className="w-full h-11 px-6 py-3 bg-blue-700 hover:bg-blue-800 text-neutral-50 rounded-xl flex justify-between items-center transition-all shadow-lg active:scale-[0.98]"
         >
-          Confirm and Match With a Pro
-        </Button>
+          <div className="justify-start text-neutral-50 text-sm font-medium font-['Inter'] leading-5">Confirm and Match With a Pro</div>
+        </button>
       </div>
     </div>
   )

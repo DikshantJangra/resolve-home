@@ -1,6 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
-import { apiClient } from "@resolve/api"
-import { ENDPOINTS } from "@resolve/api"
+import { apiClient, ENDPOINTS } from "@resolve/api"
 
 // --- Auth Session ---
 
@@ -128,14 +127,14 @@ export function useUpdateBioAddress() {
 
 // --- Bookings ---
 
-export function useUserBookings() {
+export function useUserBookings(options: { enabled?: boolean } = {}) {
   return useQuery({
     queryKey: ['user-bookings'],
     queryFn: async () => {
       const response = await apiClient.get(ENDPOINTS.BOOKINGS.BASE)
-      return response.data.data?.bookings || []
+      return response.data.data?.bookings || response.data.data || []
     },
-    enabled: typeof window !== 'undefined' && !!localStorage.getItem('auth_token')
+    enabled: (typeof window !== 'undefined' && !!localStorage.getItem('auth_token')) && (options.enabled !== false)
   })
 }
 
@@ -231,25 +230,25 @@ export function useUpdateEngineerProfile() {
 
 // --- Engineer Bookings ---
 
-export function useEngineerBookings() {
+export function useEngineerBookings(options: { enabled?: boolean } = {}) {
   return useQuery({
     queryKey: ['engineer-bookings'],
     queryFn: async () => {
       const response = await apiClient.get(ENDPOINTS.ENGINEER.BOOKINGS)
       return response.data.data?.bookings || []
     },
-    enabled: typeof window !== 'undefined' && !!localStorage.getItem('auth_token')
+    enabled: (typeof window !== 'undefined' && !!localStorage.getItem('auth_token')) && (options.enabled !== false)
   })
 }
 
-export function useEngineerBookingDetail(id: string) {
+export function useEngineerBookingDetail(id: string, options: { enabled?: boolean } = {}) {
   return useQuery({
     queryKey: ['engineer-booking-detail', id],
     queryFn: async () => {
       const response = await apiClient.get(ENDPOINTS.ENGINEER.BOOKING_BY_ID(id))
       return response.data.data
     },
-    enabled: !!id && typeof window !== 'undefined' && !!localStorage.getItem('auth_token')
+    enabled: !!id && (typeof window !== 'undefined' && !!localStorage.getItem('auth_token')) && (options.enabled !== false)
   })
 }
 
@@ -612,6 +611,49 @@ export function useUpdateNotificationSettings() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['notification-settings'] })
+    },
+  })
+}
+
+export function useUploadFile() {
+  return useMutation({
+    mutationFn: async (file: File) => {
+      const formData = new FormData()
+      formData.append('file', file)
+      const response = await apiClient.post(ENDPOINTS.UPLOAD.BASE, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      })
+      return response.data.data.file.url
+    },
+  })
+}
+
+// --- Admin Categories ---
+
+export function useCreateCategory() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (data: { name: string, description?: string }) => {
+      const response = await apiClient.post(ENDPOINTS.ADMIN_CATEGORIES.BASE, data)
+      return response.data
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['categories'] })
+    },
+  })
+}
+
+export function useDeleteCategory() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const response = await apiClient.delete(ENDPOINTS.ADMIN_CATEGORIES.BY_ID(id))
+      return response.data
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['categories'] })
     },
   })
 }
