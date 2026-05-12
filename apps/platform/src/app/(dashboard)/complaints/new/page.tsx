@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { 
   HiOutlineArrowLeft,
@@ -12,7 +12,7 @@ import { Button, Input, Label, cn } from "@resolve/ui"
 import { useCreateComplaint } from '@/hooks/api-hooks'
 import { toast } from 'sonner'
 
-export default function NewComplaintPage() {
+function NewComplaintForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const bookingId = searchParams.get('bookingId')
@@ -130,3 +130,12 @@ export default function NewComplaintPage() {
     </div>
   )
 }
+
+export default function NewComplaintPage() {
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><HiOutlineSupport className="animate-spin text-blue-700 size-8" /></div>}>
+      <NewComplaintForm />
+    </Suspense>
+  )
+}
+
