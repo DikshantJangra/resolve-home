@@ -16,8 +16,8 @@ export function useRegister() {
     mutationFn: async (data: RegisterValues) => {
       const { role: storeRole } = useRegisterStore.getState()
       
-      // Map store roles to backend-expected role identifiers
-      const backendRole = storeRole === 'pro' ? 'worker' : 'user'
+      // Map store roles to backend-expected role identifiers (short keywords)
+      const backendRole = storeRole === 'pro' ? 'pro' : 'client'
       
       const response = await apiClient.post(ENDPOINTS.AUTH.REGISTER, {
         email: data.email,
@@ -37,7 +37,7 @@ export function useRegister() {
 
       if (token) {
         const { role: storeRole } = useRegisterStore.getState()
-        const backendRole = storeRole === 'pro' ? 'worker' : 'user'
+        const backendRole = storeRole === 'pro' ? 'pro' : 'client'
         
         localStorage.setItem('auth_token', token)
         localStorage.setItem('user_role', backendRole)
