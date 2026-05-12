@@ -12,7 +12,6 @@ import { FundWalletModal } from '@/features/wallet/components/fund-wallet-modal'
 import { AddBankModal } from '@/features/wallet/components/add-bank-modal'
 import { WithdrawModal } from '@/features/wallet/components/withdraw-modal'
 import { useUserProfile } from '@/hooks/api-hooks'
-import { VerificationRequired } from '@/features/professional-setup/components/verification-required'
 import { ProfessionalSetupWizard } from '@/features/professional-setup/components/professional-setup-wizard'
 
 export default function WalletPage() {
@@ -21,15 +20,15 @@ export default function WalletPage() {
   const [isWithdrawModalOpen, setIsWithdrawModalOpen] = React.useState(false)
   const [isSetupOpen, setIsSetupOpen] = React.useState(false)
 
-  const { data: session, isLoading: sessionLoading } = useAuthSession()
-  const { data: userProfile, isLoading: userProfileLoading } = useUserProfile()
-  const { data: wallet, isLoading: walletLoading } = useWallet()
-  const { data: stats, isLoading: statsLoading } = useWalletStatistics()
-  const { data: transactions, isLoading: transactionsLoading } = useWalletTransactions()
+  const { data: session, isPending: sessionPending } = useAuthSession()
+  const { data: userProfile, isPending: userProfilePending } = useUserProfile()
+  const { data: wallet, isPending: walletPending } = useWallet()
+  const { data: stats, isPending: statsPending } = useWalletStatistics()
+  const { data: transactions, isPending: transactionsPending } = useWalletTransactions()
 
-  const isLoading = sessionLoading || userProfileLoading || walletLoading || statsLoading || transactionsLoading
+  const isDataPending = sessionPending || userProfilePending || walletPending || statsPending || transactionsPending
 
-  if (isLoading) {
+  if (isDataPending) {
     return (
       <div className="flex flex-col gap-8 max-w-6xl mx-auto animate-pulse p-6">
         <div className="h-10 w-48 bg-zinc-100 rounded-lg" />
@@ -56,14 +55,12 @@ export default function WalletPage() {
   const isVerified = (userProfile?.user as any)?.isVerified || (userProfile?.user as any)?.status === 'verified'
   const profileStatus = (userProfile?.user as any)?.status
 
+  // If worker and not verified - Auto-open wizard
   if (isWorker && !isVerified) {
-    if (isSetupOpen) {
-      return <ProfessionalSetupWizard onComplete={() => setIsSetupOpen(false)} />
-    }
     if (profileStatus === 'pending') {
       return <ProfessionalSetupWizard onComplete={() => setIsSetupOpen(false)} initialStep={4} />
     }
-    return <VerificationRequired onVerify={() => setIsSetupOpen(true)} />
+    return <ProfessionalSetupWizard onComplete={() => setIsSetupOpen(false)} />
   }
 
   // Map API transactions to UI format

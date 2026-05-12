@@ -7,7 +7,6 @@ import { cn } from "@resolve/ui"
 import { BookingRequestCard } from '@/features/dashboard/components/booking-request-card'
 import { useUserBookings, useUserProfile } from '@/hooks/api-hooks'
 import { Skeleton } from "@resolve/ui"
-import { VerificationRequired } from '@/features/professional-setup/components/verification-required'
 import { ProfessionalSetupWizard } from '@/features/professional-setup/components/professional-setup-wizard'
 
 const tabs: { label: string; value: string }[] = [
@@ -21,15 +20,15 @@ const tabs: { label: string; value: string }[] = [
 export default function BookingsPage() {
   const [activeTab, setActiveTab] = useState<string>('All')
   const [searchQuery, setSearchQuery] = useState('')
-  const [isSetupOpen, setIsSetupOpen] = React.useState(false)
-  const { data: bookings, isLoading } = useUserBookings()
-  const { data: userProfile, isLoading: isUserLoading } = useUserProfile()
+  const [isSetupOpen, setIsSetupOpen] = useState(false)
+  const { data: bookings, isPending: isBookingsPending } = useUserBookings()
+  const { data: userProfile, isPending: isUserPending } = useUserProfile()
 
   const isWorker = userProfile?.user?.role === 'worker'
   const isVerified = (userProfile?.user as any)?.isVerified || (userProfile?.user as any)?.status === 'verified'
   const status = (userProfile?.user as any)?.status
 
-  if (isLoading || isUserLoading) {
+  if (isBookingsPending || isUserPending) {
     return (
       <div className="flex flex-col gap-8">
         <div className="h-20 bg-zinc-100 animate-pulse rounded-xl" />
@@ -42,15 +41,12 @@ export default function BookingsPage() {
     )
   }
 
-  // If worker and not verified
+  // If worker and not verified - Auto-open wizard
   if (isWorker && !isVerified) {
-    if (isSetupOpen) {
-      return <ProfessionalSetupWizard onComplete={() => setIsSetupOpen(false)} />
-    }
     if (status === 'pending') {
       return <ProfessionalSetupWizard onComplete={() => setIsSetupOpen(false)} initialStep={4} />
     }
-    return <VerificationRequired onVerify={() => setIsSetupOpen(true)} />
+    return <ProfessionalSetupWizard onComplete={() => setIsSetupOpen(false)} />
   }
 
   const filteredBookings = bookings?.filter((booking: any) => {
