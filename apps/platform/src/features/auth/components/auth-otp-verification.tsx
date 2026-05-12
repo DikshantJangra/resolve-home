@@ -45,8 +45,9 @@ export function AuthOtpVerification({
         // For forgot password, we just pass the token (OTP) to the next step
         onVerifySuccess?.(code)
       } else {
-        // Using the better-auth client's fetch which handles sessions and credentials automatically
-        const result = await authClient.$fetch('/api/auth/verify-email', {
+        // Using the better-auth client's fetch.
+        // We use 'verify-email' because authClient.$fetch automatically prefixes with /api/auth
+        const result = await authClient.$fetch('verify-email', {
           method: 'POST',
           body: { code: code }
         }) as any
@@ -82,23 +83,15 @@ export function AuthOtpVerification({
 
     setIsResending(true)
     try {
-      const token = localStorage.getItem("auth_token")
-      const response = await fetch('/api/auth/resend-verification', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        credentials: 'include'
-      })
+      const result = await authClient.$fetch('resend-verification', {
+        method: 'POST'
+      }) as any
 
-      const data = await response.json()
-
-      if (data.success) {
+      if (result && !result.error) {
         toast.success("Verification code resent!")
         setTimer(59)
       } else {
-        toast.error(data.error || "Failed to resend code")
+        toast.error(result?.error || "Failed to resend code")
       }
     } catch (error: any) {
       const message = error?.response?.data?.error || error?.response?.data?.message || "Failed to resend code"
