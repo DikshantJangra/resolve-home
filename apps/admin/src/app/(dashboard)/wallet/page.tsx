@@ -19,7 +19,7 @@ export default function WalletPage() {
   const { data: transactions, isLoading: txLoading } = useAdminWalletTransactions()
 
   return (
-    <div className="p-8 flex flex-col gap-8">
+    <div className="p-4 sm:p-8 flex flex-col gap-8">
       {/* Header */}
       <div className="flex justify-between items-center">
         <div className="space-y-1">

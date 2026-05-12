@@ -272,7 +272,7 @@ export const Navbar = () => {
               </div>
             </div>
           ) : (
-            <>
+            <div className="hidden sm:flex items-center gap-3">
               <Link href="/login">
                 <button className="h-[42px] rounded-[12px] border border-blue-700 bg-transparent px-6 text-[14px] font-semibold text-blue-700 transition-colors hover:bg-blue-50 cursor-pointer">
                   Log In
@@ -283,7 +283,7 @@ export const Navbar = () => {
                   Get Started
                 </button>
               </Link>
-            </>
+            </div>
           )}
         </div>
       </div>
@@ -296,16 +296,16 @@ export const Navbar = () => {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setIsMobileMenuOpen(false)}
-              className="fixed inset-0 top-[72px] z-[40] bg-black/40 backdrop-blur-sm lg:hidden"
+              className="fixed inset-0 top-[72px] z-[40] bg-black/20 lg:hidden"
             />
             <motion.div
-              initial={{ x: '-100%' }}
-              animate={{ x: 0 }}
-              exit={{ x: '-100%' }}
-              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="fixed inset-y-0 left-0 top-[72px] z-[50] w-[280px] bg-white p-6 shadow-xl lg:hidden overflow-y-auto"
+              initial={{ opacity: 0, y: -8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.18, ease: 'easeOut' }}
+              className="absolute left-0 right-0 top-full z-[50] border-b border-zinc-200 bg-white shadow-lg lg:hidden"
             >
-              <div className="flex flex-col gap-6">
+              <div className="flex flex-col gap-1 px-6 py-4">
                 {(isMounted ? (session?.user ? loggedInLinks : navLinks) : [])
                   .filter(link => {
                     const isWorker = user?.role === 'worker'
@@ -320,22 +320,22 @@ export const Navbar = () => {
                         if (link.href.startsWith('#')) handleScroll(e, link.id);
                       }}
                       className={cn(
-                        "text-lg font-medium transition-colors",
-                        activeSection === link.id ? "text-blue-700" : "text-zinc-700"
+                        "block rounded-lg px-3 py-2.5 text-[15px] font-medium transition-colors",
+                        activeSection === link.id ? "text-blue-700 bg-blue-50" : "text-zinc-700 hover:bg-zinc-50"
                       )}
                     >
                       {link.label}
                     </Link>
                   ))}
 
-                <div className="mt-4 h-[1px] bg-zinc-100" />
-                
+                <div className="my-2 h-[1px] bg-zinc-100" />
+
                 {isMounted && (isLoggedIn ? (
-                  <div className="flex flex-col gap-4">
-                    <Link 
-                      href="/profile" 
+                  <div className="flex flex-col gap-1">
+                    <Link
+                      href="/profile"
                       onClick={() => setIsMobileMenuOpen(false)}
-                      className="flex items-center gap-3 text-zinc-700"
+                      className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-[15px] font-medium text-zinc-700 hover:bg-zinc-50"
                     >
                       <IoPersonOutline className="size-5" />
                       My Profile
@@ -345,21 +345,21 @@ export const Navbar = () => {
                         setIsMobileMenuOpen(false);
                         setIsLogoutOpen(true);
                       }}
-                      className="flex items-center gap-3 text-red-600 text-left"
+                      className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-[15px] font-medium text-red-600 hover:bg-red-50 text-left"
                     >
                       <IoLogOutOutline className="size-5" />
                       Sign Out
                     </button>
                   </div>
                 ) : (
-                  <div className="flex flex-col gap-3">
-                    <Link href="/login" onClick={() => setIsMobileMenuOpen(false)}>
-                      <button className="w-full h-12 rounded-xl border border-blue-700 text-blue-700 font-semibold">
+                  <div className="flex gap-3 pt-1 pb-2">
+                    <Link href="/login" onClick={() => setIsMobileMenuOpen(false)} className="flex-1">
+                      <button className="w-full h-10 rounded-xl border border-blue-700 text-blue-700 text-sm font-semibold">
                         Log In
                       </button>
                     </Link>
-                    <Link href="/register" onClick={() => setIsMobileMenuOpen(false)}>
-                      <button className="w-full h-12 rounded-xl bg-blue-700 text-white font-semibold">
+                    <Link href="/register" onClick={() => setIsMobileMenuOpen(false)} className="flex-1">
+                      <button className="w-full h-10 rounded-xl bg-blue-700 text-white text-sm font-semibold">
                         Get Started
                       </button>
                     </Link>

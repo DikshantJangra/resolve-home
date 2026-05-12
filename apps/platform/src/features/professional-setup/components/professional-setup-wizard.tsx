@@ -349,16 +349,16 @@ export const ProfessionalSetupWizard = ({ onComplete, initialStep }: { onComplet
 
   if (store.currentStep === 4) {
     return (
-      <div className="w-full max-w-2xl mx-auto bg-white p-8 rounded-2xl shadow-sm border border-zinc-200 mt-10">
+      <div className="w-full max-w-2xl mx-auto bg-white p-4 sm:p-8 rounded-2xl shadow-sm border border-zinc-200 mt-10">
         {renderStep()}
       </div>
     )
   }
 
   return (
-    <div className="w-full max-w-2xl mx-auto bg-white flex flex-col min-h-[600px] rounded-2xl overflow-hidden shadow-sm border border-zinc-200 mt-10">
+    <div className="w-full max-w-2xl mx-auto bg-white flex flex-col min-h-screen sm:min-h-[600px] rounded-none sm:rounded-2xl overflow-hidden shadow-sm border-0 sm:border border-zinc-200 mt-0 sm:mt-10">
       {/* Header */}
-      <div className="p-6 border-b border-zinc-100">
+      <div className="p-4 sm:p-6 border-b border-zinc-100">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-2xl font-semibold text-neutral-700">Complete set up</h2>
           <button
@@ -396,12 +396,12 @@ export const ProfessionalSetupWizard = ({ onComplete, initialStep }: { onComplet
       </div>
 
       {/* Form Content */}
-      <div className="flex-1 p-6 overflow-y-auto no-scrollbar">
+      <div className="flex-1 p-4 sm:p-6 overflow-y-auto no-scrollbar">
         {renderStep()}
       </div>
 
       {/* Footer */}
-      <div className="p-6 border-t border-zinc-100">
+      <div className="p-4 sm:p-6 border-t border-zinc-100">
         <Button
           disabled={!isStepValid() || isPending}
           onClick={store.currentStep === 3 ? handleFinish : () => store.nextStep()}

@@ -67,7 +67,7 @@ export function ForgotPasswordOtp() {
         </p>
       </div>
 
-      <div className="flex justify-between gap-3">
+      <div className="flex justify-between gap-2 sm:gap-3">
         {otp.map((digit, index) => (
           <input
             key={index}
@@ -77,7 +77,7 @@ export function ForgotPasswordOtp() {
             value={digit}
             onChange={(e) => handleChange(index, e.target.value)}
             onKeyDown={(e) => handleKeyDown(index, e)}
-            className="h-12 w-12 rounded-xl border border-stone-300 bg-white text-center text-sm font-semibold text-neutral-700 outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600 transition-all"
+            className="h-10 w-10 sm:h-12 sm:w-12 flex-1 min-w-0 max-w-14 rounded-xl border border-stone-300 bg-white text-center text-sm font-semibold text-neutral-700 outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600 transition-all"
           />
         ))}
       </div>

@@ -104,7 +104,7 @@ export function RegisterForm() {
       <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-8">
         <div className="flex flex-col gap-5">
           {/* Name Row */}
-          <div className="flex gap-5">
+          <div className="flex flex-col sm:flex-row gap-4 sm:gap-5">
             <div className="flex-1 flex flex-col gap-1.5">
               <Label className="flex gap-0.5 text-sm font-medium text-zinc-600 font-inter">
                 First Name <span className="text-red-600 font-bold">*</span>
@@ -140,7 +140,7 @@ export function RegisterForm() {
           </div>
 
           {/* Email/Phone Row */}
-          <div className="flex gap-5">
+          <div className="flex flex-col sm:flex-row gap-4 sm:gap-5">
             <div className="flex-1 flex flex-col gap-1.5">
               <Label className="flex gap-0.5 text-sm font-medium text-zinc-600 font-inter">
                 Email address <span className="text-red-600 font-bold">*</span>
@@ -177,7 +177,7 @@ export function RegisterForm() {
                       limitMaxLength
                       placeholder="Enter phone number"
                       className={cn(
-                        "flex h-12 w-full border-zinc-300 rounded-lg px-4 py-3 text-sm placeholder:text-zinc-300 focus-within:ring-1 focus-within:ring-blue-700 focus-within:border-blue-700 bg-white transition-all",
+                        "flex h-12 w-full border border-zinc-300 rounded-lg px-4 py-3 text-sm placeholder:text-zinc-300 focus-within:ring-1 focus-within:ring-blue-700 focus-within:border-blue-700 bg-white transition-all",
                         form.formState.errors.phone && "border-red-500 ring-1 ring-red-500"
                       )}
                     />

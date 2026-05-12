@@ -32,7 +32,7 @@ export default function BookingDetailsPage({ params }: { params: { id: string } 
 
   if (isLoading) {
     return (
-      <div className="p-8 flex flex-col gap-6 max-w-[1400px] mx-auto animate-pulse">
+      <div className="p-4 sm:p-8 flex flex-col gap-6 max-w-[1400px] mx-auto animate-pulse">
         <Skeleton className="h-10 w-48" />
         <div className="flex flex-col lg:flex-row gap-5">
           <Skeleton className="w-full lg:w-96 h-[600px] rounded-xl" />
@@ -44,7 +44,7 @@ export default function BookingDetailsPage({ params }: { params: { id: string } 
 
   if (error || !booking) {
     return (
-      <div className="p-8 text-center">
+      <div className="p-4 sm:p-8 text-center">
         <p className="text-red-500">Error loading booking details.</p>
         <Button onClick={() => router.back()} variant="outline" className="mt-4">Go Back</Button>
       </div>
@@ -52,7 +52,7 @@ export default function BookingDetailsPage({ params }: { params: { id: string } 
   }
 
   return (
-    <div className="p-8 flex flex-col gap-6 max-w-[1400px] mx-auto">
+    <div className="p-4 sm:p-8 flex flex-col gap-6 max-w-[1400px] mx-auto">
       {/* Back Button & Title */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">

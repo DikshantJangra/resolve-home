@@ -34,7 +34,7 @@ export default function HomeownersPage() {
 
   if (usersLoading || statsLoading) {
     return (
-      <div className="p-8 flex flex-col gap-8 max-w-[1240px]">
+      <div className="p-4 sm:p-8 flex flex-col gap-8 max-w-[1240px]">
         <Skeleton className="h-10 w-48" />
         <div className="grid grid-cols-4 gap-5">
           {[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-32 rounded-xl" />)}
@@ -45,7 +45,7 @@ export default function HomeownersPage() {
   }
 
   return (
-    <div className="p-8 flex flex-col gap-8">
+    <div className="p-4 sm:p-8 flex flex-col gap-8">
       {/* Header */}
       <div className="flex justify-between items-start">
         <div className="flex flex-col gap-1">
@@ -85,7 +85,8 @@ export default function HomeownersPage() {
 
       {/* Table Container */}
       <div className="rounded-xl border border-zinc-300 overflow-hidden">
-        <table className="w-full text-left">
+        <div className="overflow-x-auto">
+        <table className="w-full text-left min-w-[640px]">
           <thead>
             <tr className="bg-stone-50 border-b border-zinc-300">
               <th className="px-6 py-4 text-neutral-700 text-base font-semibold font-inter uppercase">NAME</th>
@@ -161,6 +162,7 @@ export default function HomeownersPage() {
             )}
           </tbody>
         </table>
+        </div>
       </div>
     </div>
   )

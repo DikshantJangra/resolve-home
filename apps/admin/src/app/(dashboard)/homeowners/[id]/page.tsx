@@ -33,7 +33,7 @@ export default function HomeownerDetailPage() {
 
   if (isUserLoading || isBookingsLoading) {
     return (
-      <div className="p-8 flex flex-col gap-8">
+      <div className="p-4 sm:p-8 flex flex-col gap-8">
         <Skeleton className="h-10 w-48" />
         <Skeleton className="h-[200px] w-full rounded-xl" />
         <div className="grid grid-cols-4 gap-5">
@@ -45,7 +45,7 @@ export default function HomeownerDetailPage() {
   }
 
   return (
-    <div className="p-8 flex flex-col gap-8">
+    <div className="p-4 sm:p-8 flex flex-col gap-8">
       {/* Header / Breadcrumb */}
       <div className="flex items-center gap-2">
         <button 

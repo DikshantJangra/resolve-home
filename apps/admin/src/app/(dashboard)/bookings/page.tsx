@@ -61,7 +61,7 @@ export default function BookingsPage() {
 
   if (bookingsLoading || statsLoading) {
     return (
-      <div className="p-8 flex flex-col gap-8 max-w-[1400px] mx-auto animate-pulse">
+      <div className="p-4 sm:p-8 flex flex-col gap-8 max-w-[1400px] mx-auto animate-pulse">
         <div className="flex justify-between items-start">
           <div className="space-y-2">
             <Skeleton className="h-8 w-48" />
@@ -83,7 +83,7 @@ export default function BookingsPage() {
   }
 
   return (
-    <div className="p-8 flex flex-col gap-9 max-w-[1400px] mx-auto">
+    <div className="p-4 sm:p-8 flex flex-col gap-9 max-w-[1400px] mx-auto">
       {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-start gap-4">
         <div className="flex flex-col gap-1">

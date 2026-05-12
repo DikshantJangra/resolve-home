@@ -6,7 +6,7 @@ import { cn } from "@resolve/ui"
 import { toast } from "sonner"
 import { apiClient, ENDPOINTS } from "@resolve/api"
 import { useRouter } from "next/navigation"
-import { useSession, authClient } from "@/lib/auth-client"
+// Removed unused imports: useSession, authClient
 
 interface AuthOtpVerificationProps {
   email: string
@@ -22,10 +22,6 @@ export function AuthOtpVerification({
   context = 'signup' 
 }: AuthOtpVerificationProps) {
   const router = useRouter()
-  const { data: session, isPending: isSessionLoading } = useSession()
-  
-  console.log("[AuthOtpVerification] Better-Auth Session:", session)
-  console.log("[AuthOtpVerification] auth_token in localStorage:", typeof window !== 'undefined' ? localStorage.getItem("auth_token") : null)
   const [otp, setOtp] = React.useState(["", "", "", "", "", ""])
   const [timer, setTimer] = React.useState(59)
   const [isLoading, setIsLoading] = React.useState(false)
@@ -40,38 +36,27 @@ export function AuthOtpVerification({
       return
     }
 
+    setIsLoading(true)
     try {
       if (context === 'forgot-password') {
-        // For forgot password, we just pass the token (OTP) to the next step
         onVerifySuccess?.(code)
       } else {
-        // Using the better-auth client's fetch.
-        // We use 'verify-email' because authClient.$fetch automatically prefixes with /api/auth
-        const result = await authClient.$fetch('verify-email', {
-          method: 'POST',
-          body: { code: code }
-        }) as any
+        const response = await apiClient.post(ENDPOINTS.AUTH.VERIFY_EMAIL, { email, code })
+        const result = response.data
 
-        console.log("[AuthOtpVerification] Verify response:", result)
-
-        if (result && !result.error) {
-          toast.success("Verification successful!")
+        if (result && result.success) {
+          toast.success("Email verified successfully!")
           if (onVerifySuccess) {
             onVerifySuccess(code)
           } else {
             router.push("/dashboard")
           }
         } else {
-          let errorMsg = result?.error || "Verification failed"
-          if (typeof errorMsg === 'object') {
-            errorMsg = errorMsg.message || JSON.stringify(errorMsg)
-          }
-          console.error("[AuthOtpVerification] Verification error:", errorMsg)
-          toast.error(errorMsg)
+          toast.error(result?.error || "Verification failed")
         }
       }
     } catch (error: any) {
-      const message = error?.response?.data?.error || error?.response?.data?.message || "Verification failed"
+      const message = error.response?.data?.error || error.response?.data?.message || error.message || "Verification failed"
       toast.error(message)
     } finally {
       setIsLoading(false)
@@ -83,18 +68,17 @@ export function AuthOtpVerification({
 
     setIsResending(true)
     try {
-      const result = await authClient.$fetch('resend-verification', {
-        method: 'POST'
-      }) as any
+      const response = await apiClient.post(ENDPOINTS.AUTH.RESEND_VERIFICATION_CODE)
+      const result = response.data
 
-      if (result && !result.error) {
+      if (result && result.success) {
         toast.success("Verification code resent!")
         setTimer(59)
       } else {
         toast.error(result?.error || "Failed to resend code")
       }
     } catch (error: any) {
-      const message = error?.response?.data?.error || error?.response?.data?.message || "Failed to resend code"
+      const message = error.response?.data?.error || error.response?.data?.message || "Failed to resend code"
       toast.error(message)
     } finally {
       setIsResending(false)
@@ -156,7 +140,7 @@ export function AuthOtpVerification({
         </p>
       </div>
 
-      <div className="flex justify-between gap-3">
+      <div className="flex justify-between gap-2 sm:gap-3">
         {otp.map((digit, index) => (
           <input
             key={index}
@@ -168,7 +152,7 @@ export function AuthOtpVerification({
             onChange={(e) => handleChange(index, e.target.value)}
             onKeyDown={(e) => handleKeyDown(index, e)}
             onPaste={handlePaste}
-            className="h-12 w-12 rounded-xl border border-stone-300 bg-white text-center text-sm font-semibold text-neutral-700 outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600 transition-all"
+            className="h-10 w-10 sm:h-12 sm:w-12 flex-1 min-w-0 max-w-[56px] rounded-xl border border-stone-300 bg-white text-center text-sm font-semibold text-neutral-700 outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600 transition-all"
           />
         ))}
       </div>

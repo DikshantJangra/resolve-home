@@ -39,7 +39,7 @@ export default function ComplaintDetailPage() {
 
   if (isLoading) {
     return (
-      <div className="p-8 flex flex-col gap-8">
+      <div className="p-4 sm:p-8 flex flex-col gap-8">
         <Skeleton className="h-10 w-32" />
         <Skeleton className="h-[600px] w-full rounded-2xl" />
       </div>
@@ -49,7 +49,7 @@ export default function ComplaintDetailPage() {
   if (!complaint) return null
 
   return (
-    <div className="p-8 flex flex-col gap-2">
+    <div className="p-4 sm:p-8 flex flex-col gap-2">
       {/* Header / Breadcrumb */}
       <div className="flex items-center gap-2 mb-2">
         <button onClick={() => router.back()} className="p-1 hover:bg-zinc-100 rounded-md transition-colors">

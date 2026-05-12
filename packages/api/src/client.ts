@@ -16,10 +16,12 @@ apiClient.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
     if (typeof window !== 'undefined') {
       const token = localStorage.getItem('auth_token')
-      console.log(`[API Client] Request to ${config.url}, Token found: ${!!token}`)
-      if (token) {
+      
+      // The backend developer specified to only send the token for /api/auth/ endpoints
+      const isAuthPath = config.url?.startsWith('/api/auth/')
+      
+      if (token && isAuthPath) {
         config.headers.Authorization = `Bearer ${token}`
-        console.log(`[API Client] Attached Bearer token to request`)
       }
     }
     return config

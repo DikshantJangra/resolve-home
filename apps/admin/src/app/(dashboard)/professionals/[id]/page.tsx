@@ -29,7 +29,7 @@ export default function ProfessionalDetailsPage() {
 
   if (isLoading) {
     return (
-      <div className="p-8 flex flex-col gap-8 max-w-[1240px] mx-auto animate-pulse">
+      <div className="p-4 sm:p-8 flex flex-col gap-8 max-w-[1240px] mx-auto animate-pulse">
         <Skeleton className="h-10 w-48" />
         <Skeleton className="h-40 w-full rounded-xl" />
         <div className="grid grid-cols-4 gap-5">
@@ -41,7 +41,7 @@ export default function ProfessionalDetailsPage() {
 
   if (error || !pro) {
     return (
-      <div className="p-8 text-center">
+      <div className="p-4 sm:p-8 text-center">
         <h2 className="text-xl font-bold text-rose-600">Failed to load professional details</h2>
         <Button onClick={() => router.back()} className="mt-4">Go Back</Button>
       </div>
@@ -91,7 +91,7 @@ export default function ProfessionalDetailsPage() {
   ]
 
   return (
-    <div className="p-8 flex flex-col gap-6 max-w-[1240px] mx-auto bg-stone-50 min-h-screen">
+    <div className="p-4 sm:p-8 flex flex-col gap-6 max-w-[1240px] mx-auto bg-stone-50 min-h-screen">
       {/* Header */}
       <div className="flex items-center gap-4">
         <button 

@@ -37,7 +37,7 @@ export default function VerificationDetailPage() {
 
   if (isLoading) {
     return (
-      <div className="p-8 flex flex-col gap-8 max-w-[1400px] mx-auto animate-pulse">
+      <div className="p-4 sm:p-8 flex flex-col gap-8 max-w-[1400px] mx-auto animate-pulse">
         <div className="h-6 w-48 bg-zinc-200 rounded" />
         <div className="h-20 w-full bg-stone-50 rounded-xl" />
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -50,7 +50,7 @@ export default function VerificationDetailPage() {
 
   if (error || !engineer) {
     return (
-      <div className="p-8 text-center">
+      <div className="p-4 sm:p-8 text-center">
         <HiOutlineExclamationCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
         <h2 className="text-xl font-semibold text-neutral-700">Failed to load engineer details</h2>
         <Button variant="outline" className="mt-4" onClick={() => router.back()}>Go Back</Button>
@@ -59,7 +59,7 @@ export default function VerificationDetailPage() {
   }
 
   return (
-    <div className="p-8 flex flex-col gap-8 max-w-[1400px] mx-auto">
+    <div className="p-4 sm:p-8 flex flex-col gap-8 max-w-[1400px] mx-auto">
       {/* Back Button */}
       <button 
         onClick={() => router.back()}

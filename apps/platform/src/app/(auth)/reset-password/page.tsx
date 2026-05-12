@@ -41,8 +41,8 @@ function ResetPasswordContent() {
 
 export default function ResetPasswordPage() {
   return (
-    <main className="flex min-h-screen items-center justify-center bg-stone-50 p-4 font-inter">
-      <div className="relative flex h-[864px] w-[1234px] overflow-hidden rounded-[20px] bg-white shadow-xl">
+    <main className="flex min-h-screen items-center justify-center bg-stone-50 p-0 sm:p-4 font-inter">
+      <div className="relative flex w-full max-w-[1234px] min-h-screen sm:min-h-0 sm:h-auto lg:h-[864px] overflow-hidden sm:rounded-[20px] bg-white sm:shadow-xl">
         <div className="relative hidden w-1/2 h-full lg:block">
           <Image
             src="/signup_work.svg"
@@ -55,7 +55,7 @@ export default function ResetPasswordPage() {
             <div className="flex flex-col gap-6">
               <div className="h-1.5 w-16 bg-blue-700/20 rounded-full" />
               <h2 className="text-5xl font-bold font-heading leading-tight tracking-tight text-neutral-800">
-                Reset your <br /> 
+                Reset your <br />
                 credentials safely.
               </h2>
               <p className="text-lg text-zinc-600 max-w-sm leading-relaxed">
@@ -66,8 +66,8 @@ export default function ResetPasswordPage() {
         </div>
 
         <div className="flex w-full h-full lg:w-1/2">
-          <div className="flex w-full h-full items-center justify-center py-10 px-8">
-            <div className="flex h-full w-full max-w-[500px] flex-col overflow-y-auto rounded-[20px] bg-white p-8 scrollbar-hide">
+          <div className="flex w-full h-full items-center justify-center py-8 px-4 sm:py-10 sm:px-8">
+            <div className="flex h-full w-full max-w-[500px] flex-col overflow-y-auto rounded-[20px] bg-white p-4 sm:p-6 lg:p-8 scrollbar-hide">
               <Suspense fallback={<div>Loading...</div>}>
                 <ResetPasswordContent />
               </Suspense>

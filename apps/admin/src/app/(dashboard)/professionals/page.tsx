@@ -49,7 +49,7 @@ export default function ProfessionalsPage() {
 
   if (usersLoading || statsLoading) {
     return (
-      <div className="p-8 flex flex-col gap-8 max-w-[1240px] mx-auto animate-pulse">
+      <div className="p-4 sm:p-8 flex flex-col gap-8 max-w-[1240px] mx-auto animate-pulse">
         <div className="flex justify-between">
           <Skeleton className="h-10 w-64" />
           <Skeleton className="h-12 w-48 rounded-xl" />
@@ -88,7 +88,7 @@ export default function ProfessionalsPage() {
   }
 
   return (
-    <div className="p-8 flex flex-col gap-8 max-w-[1240px] mx-auto">
+    <div className="p-4 sm:p-8 flex flex-col gap-8 max-w-[1240px] mx-auto">
       {/* Header */}
       <div className="flex justify-between items-center">
         <div className="flex flex-col">

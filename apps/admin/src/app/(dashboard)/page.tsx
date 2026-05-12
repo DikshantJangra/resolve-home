@@ -107,7 +107,7 @@ export default function OverviewPage() {
 
   if (statsLoading || bookingsLoading || categoriesLoading || engineersLoading) {
     return (
-      <div className="p-8 flex flex-col gap-8 max-w-[1240px] mx-auto animate-pulse">
+      <div className="p-4 sm:p-8 flex flex-col gap-8 max-w-[1240px] mx-auto animate-pulse">
         <Skeleton className="h-10 w-48" />
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-5">
           {[1, 2, 3, 4, 5].map(i => <Skeleton key={i} className="h-28 rounded-xl" />)}
@@ -119,7 +119,7 @@ export default function OverviewPage() {
   }
 
   return (
-    <div className="p-8 flex flex-col gap-8 max-w-[1240px] mx-auto">
+    <div className="p-4 sm:p-8 flex flex-col gap-8 max-w-[1240px] mx-auto">
       {/* Header */}
       <div className="flex justify-between items-end">
         <div className="flex flex-col">

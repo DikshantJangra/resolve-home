@@ -25,14 +25,14 @@ export const Hero = () => {
   };
 
   return (
-    <section id="hero" className="relative overflow-hidden bg-gradient-to-b from-white via-[#ECFDF5] to-[#F8FAFC] pt-[148px] pb-20">
+    <section id="hero" className="relative bg-gradient-to-b from-white via-[#ECFDF5] to-[#F8FAFC] pt-[148px] pb-20">
       <div className="mx-auto w-full max-w-[1440px] px-6 lg:px-16">
         <div className="relative mx-auto max-w-[680px] text-center">
           <motion.h1 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
-            className="text-[52px] leading-[60px] font-extrabold tracking-[-2px] text-[#1E293B]"
+            className="text-[36px] leading-[44px] sm:text-[46px] sm:leading-[54px] lg:text-[52px] lg:leading-[60px] font-extrabold tracking-[-2px] text-[#1E293B]"
           >
             Quality home repairs,
             <span className="text-[#6366F1]"> guaranteed.</span>
@@ -50,7 +50,7 @@ export const Hero = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.2 }}
-            className="mx-auto mt-8 flex w-full max-w-[540px] gap-3"
+            className="mx-auto mt-8 flex flex-col sm:flex-row w-full max-w-[540px] gap-3"
           >
             <div className="relative block flex-1">
               <select
@@ -67,7 +67,7 @@ export const Hero = () => {
             </div>
             <button 
               onClick={handleFindPro}
-              className="h-11 min-w-40 rounded-xl bg-[#1D4ED8] px-6 text-sm font-medium text-white transition-all hover:bg-blue-800 hover:scale-[1.02] active:scale-[0.98]"
+              className="h-11 w-full sm:w-auto sm:min-w-40 rounded-xl bg-[#1D4ED8] px-6 text-sm font-medium text-white transition-all hover:bg-blue-800 hover:scale-[1.02] active:scale-[0.98]"
             >
               Find a pro
             </button>
