@@ -156,7 +156,7 @@ export const ProfessionalSetupWizard = ({ onComplete, initialStep }: { onComplet
       const formData = new FormData()
       formData.append('file', file)
       const res = await apiClient.post(ENDPOINTS.UPLOAD.BASE, formData, {
-        params: { type: 'document' },
+        params: { type: 'any' },
         headers: { 'Content-Type': 'multipart/form-data' },
       })
       const url = res.data?.data?.url || res.data?.url || file.name
