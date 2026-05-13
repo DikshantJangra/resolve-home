@@ -3,6 +3,7 @@
 import React from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import Image from 'next/image'
 import { 
   HiOutlineHome, 
   HiOutlineChatAlt, 
@@ -71,7 +72,14 @@ export const Sidebar = ({ onClose, items = defaultSidebarItems }: SidebarProps) 
       {/* Logo Section */}
       <div className="h-16 px-6 border-b border-zinc-300 flex items-center">
         <Link href="/">
-          <img src="/logo.svg" alt="ResolvHome" className="w-32 h-12 object-contain" />
+          <Image 
+            src="/logo.svg" 
+            alt="ResolvHome" 
+            width={128} 
+            height={48} 
+            priority
+            className="w-32 h-12 object-contain" 
+          />
         </Link>
       </div>
 

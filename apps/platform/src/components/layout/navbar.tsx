@@ -7,6 +7,7 @@ import { Input } from "@resolve/ui"
 import { useAuthSession, useUserProfile } from '@/hooks/api-hooks'
 import { motion, AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
+import Image from 'next/image'
 import { cn, formatImageUrl } from "@resolve/ui"
 import { LogoutModal } from '@/features/auth/components/logout-modal'
 
@@ -39,7 +40,14 @@ export const Navbar = ({ onMenuClick }: NavbarProps) => {
         </button>
         
         <Link href="/">
-          <img src="/logo.svg" alt="ResolvHome" className="w-24 sm:w-28 h-8 sm:h-10 object-contain" />
+          <Image 
+            src="/logo.svg" 
+            alt="ResolvHome" 
+            width={112} 
+            height={40} 
+            priority
+            className="w-24 sm:w-28 h-8 sm:h-10 object-contain" 
+          />
         </Link>
       </div>
 

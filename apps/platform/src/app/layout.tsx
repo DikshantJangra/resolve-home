@@ -13,18 +13,24 @@ import { Toaster } from "@resolve/ui";
 const inter = Inter({
   variable: "--font-inter",
   subsets: ["latin"],
+  display: 'swap',
 });
 
 const plusJakartaSans = Plus_Jakarta_Sans({
   variable: "--font-heading",
   subsets: ["latin"],
+  display: 'swap',
 });
 
 export const metadata: Metadata = {
   title: "ResolvHome - Professional Home Services",
   description: "Book professional engineers for your home services with ResolvHome.",
   icons: {
-    icon: "/logo.svg",
+    icon: [
+      { url: "/logo.svg", type: "image/svg+xml" },
+    ],
+    shortcut: "/logo.svg",
+    apple: "/logo.svg",
   },
 };
 
