@@ -161,7 +161,7 @@ export const ProfessionalSetupWizard = ({ onComplete, initialStep }: { onComplet
         params: { type: 'any' },
         headers: { 'Content-Type': 'multipart/form-data' },
       })
-      const url = res.data?.data?.url || res.data?.url || file.name
+      const url = res.data?.data?.file?.url || res.data?.data?.url || res.data?.url || file.name
       store.updateField('idPhoto', url)
       toast.success('Document uploaded')
     } catch {
@@ -175,6 +175,11 @@ export const ProfessionalSetupWizard = ({ onComplete, initialStep }: { onComplet
   const handleFinish = () => {
     if (!isStepValid()) {
       toast.error("Some required fields are missing. Please check previous steps.")
+      return
+    }
+
+    if (!/^\d+$/.test(store.accountNumber)) {
+      toast.error("Bank account verification failed: Account number should be numeric. Please check your account number and try again.")
       return
     }
 
@@ -304,8 +309,23 @@ export const ProfessionalSetupWizard = ({ onComplete, initialStep }: { onComplet
                   {store.idPhoto ? (
                     <div className="flex items-center gap-4 p-4 rounded-xl border border-zinc-200 bg-zinc-50/50">
                       <div className="w-12 h-12 rounded-lg bg-white border border-zinc-200 flex items-center justify-center overflow-hidden shrink-0">
-                        {store.idPhoto.match(/\.(jpg|jpeg|png|webp|gif)$/i) ? (
-                          <img src={store.idPhoto} alt="ID Document" className="w-full h-full object-cover" />
+                        {store.idPhoto.match(/\.(jpg|jpeg|png|webp|gif|avif)(\?.*)?$/i) ? (
+                          <img 
+                            src={store.idPhoto} 
+                            alt="ID Document" 
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              // If image fails to load, fallback to icon
+                              e.currentTarget.style.display = 'none'
+                              const parent = e.currentTarget.parentElement
+                              if (parent) {
+                                const icon = document.createElement('div')
+                                icon.className = 'flex items-center justify-center w-full h-full'
+                                icon.innerHTML = '<svg class="w-6 h-6 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>'
+                                parent.appendChild(icon)
+                              }
+                            }}
+                          />
                         ) : (
                           <HiOutlineDocumentText className="w-6 h-6 text-zinc-400" />
                         )}
@@ -505,9 +525,10 @@ export const ProfessionalSetupWizard = ({ onComplete, initialStep }: { onComplet
                 <div className="space-y-1.5">
                   <Label>Account Number <span className="text-red-500">*</span></Label>
                   <Input
-                    placeholder="Enter your account number"
+                    placeholder="Enter 10-digit account number"
+                    maxLength={10}
                     value={store.accountNumber}
-                    onChange={(e) => store.updateField('accountNumber', e.target.value)}
+                    onChange={(e) => store.updateField('accountNumber', e.target.value.replace(/\D/g, ''))}
                   />
                 </div>
               </div>

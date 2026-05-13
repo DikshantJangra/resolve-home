@@ -29,6 +29,11 @@ export const AddBankModal = ({ onClose, initialData }: AddBankModalProps) => {
       return
     }
 
+    if (!/^\d+$/.test(formData.accountNumber)) {
+      toast.error("Bank account verification failed: Account number should be numeric. Please check your account number and try again.")
+      return
+    }
+
     addBank(formData, {
       onSuccess: () => {
         toast.success('Bank account details added successfully!')
