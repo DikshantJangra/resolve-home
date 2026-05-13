@@ -37,9 +37,13 @@ apiClient.interceptors.response.use(
     const data = error.response?.data as { error?: string; message?: string } | undefined
     const message = data?.error || data?.message || error.message || 'An unexpected error occurred'
     
+    // Attach the friendly message to the error object so components can use it
+    error.message = message
+    
     if (error.response?.status === 401) {
       // Silently ignore — callers handle empty/unauthenticated state
     } else if (error.response?.status !== undefined) {
+      // Show global toast for all other API errors
       toast.error(message)
     }
 

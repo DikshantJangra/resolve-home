@@ -41,7 +41,7 @@ export const ReviewForm = ({ bookingId, onSuccess, onCancel }: ReviewFormProps) 
         onSuccess?.()
       },
       onError: (err: any) => {
-        toast.error(err.message || 'Failed to submit review')
+        console.error('[ReviewForm] Failed to submit review:', err)
       }
     })
   }

@@ -42,7 +42,7 @@ export const SuccessStep = () => {
             setStep(8)
           },
           onError: (err: any) => {
-            toast.error(err.message || "Failed to confirm engineer")
+            console.error('[SuccessStep] Failed to confirm engineer:', err)
           }
         })
       },

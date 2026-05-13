@@ -41,7 +41,7 @@ export const WithdrawModal = ({ onClose, availableBalance }: WithdrawModalProps)
         onClose()
       },
       onError: (err: any) => {
-        toast.error(err.message || 'Failed to process withdrawal')
+        console.error('[WithdrawModal] Failed to process withdrawal:', err)
       }
     })
   }

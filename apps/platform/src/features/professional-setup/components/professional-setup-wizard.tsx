@@ -217,7 +217,7 @@ export const ProfessionalSetupWizard = ({ onComplete, initialStep }: { onComplet
         store.setStep(4)
       },
       onError: (err: any) => {
-        toast.error(err.message || "Failed to submit verification")
+        console.error('[SetupWizard] Submission failed:', err)
       }
     })
   }

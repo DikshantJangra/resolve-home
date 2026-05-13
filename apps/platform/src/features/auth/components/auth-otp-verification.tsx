@@ -56,8 +56,7 @@ export function AuthOtpVerification({
         }
       }
     } catch (error: any) {
-      const message = error.response?.data?.error || error.response?.data?.message || error.message || "Verification failed"
-      toast.error(message)
+      console.error("[OTP] Verification error:", error)
     } finally {
       setIsLoading(false)
     }
@@ -78,8 +77,7 @@ export function AuthOtpVerification({
         toast.error(result?.error || "Failed to resend code")
       }
     } catch (error: any) {
-      const message = error.response?.data?.error || error.response?.data?.message || "Failed to resend code"
-      toast.error(message)
+      console.error("[OTP] Resend error:", error)
     } finally {
       setIsResending(false)
     }

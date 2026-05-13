@@ -41,7 +41,7 @@ export const FundWalletModal = ({ onClose, onAddBank }: FundWalletModalProps) =>
         }
       },
       onError: (err: any) => {
-        toast.error(err.message || 'Failed to initialize deposit')
+        console.error('[FundWalletModal] Failed to initialize deposit:', err)
       }
     })
   }

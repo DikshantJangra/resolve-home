@@ -40,7 +40,7 @@ export const AddBankModal = ({ onClose, initialData }: AddBankModalProps) => {
         onClose()
       },
       onError: (err: any) => {
-        toast.error(err.message || 'Failed to add bank account')
+        console.error('[AddBankModal] Failed to add bank:', err)
       }
     })
   }
