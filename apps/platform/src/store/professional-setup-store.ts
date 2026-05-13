@@ -26,6 +26,7 @@ interface ProfessionalSetupState {
   guarantorEmail: string
   accountName: string
   bankName: string
+  bankCode: string
   accountNumber: string
   
   // Actions
@@ -61,6 +62,7 @@ export const useProfessionalSetupStore = create<ProfessionalSetupState>()(
       guarantorEmail: '',
       accountName: '',
       bankName: '',
+      bankCode: '',
       accountNumber: '',
       
       setStep: (step) => set({ currentStep: step }),
@@ -87,6 +89,7 @@ export const useProfessionalSetupStore = create<ProfessionalSetupState>()(
         guarantorEmail: '',
         accountName: '',
         bankName: '',
+        bankCode: '',
         accountNumber: '',
       }),
     }),

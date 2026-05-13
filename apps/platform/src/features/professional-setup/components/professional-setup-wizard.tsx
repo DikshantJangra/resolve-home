@@ -4,15 +4,17 @@ import React from 'react'
 import { useProfessionalSetupStore } from '@/store/professional-setup-store'
 import { Button, Input, Label } from "@resolve/ui"
 import { HiOutlineChevronLeft, HiOutlineCheckCircle, HiOutlinePlus, HiOutlineTrash, HiOutlineDocumentText } from 'react-icons/hi'
-import { useCategories, useUpdateEngineerProfile } from '@/hooks/api-hooks'
+import { useCategories, useUpdateEngineerProfile, useNigerianBanks } from '@/hooks/api-hooks'
 import { toast } from 'sonner'
 import { cn } from "@resolve/ui"
 import { apiClient, ENDPOINTS } from "@resolve/api"
 import { Country, State, City } from 'country-state-city'
+import { HiChevronDown } from 'react-icons/hi'
 
 export const ProfessionalSetupWizard = ({ onComplete, initialStep }: { onComplete: () => void, initialStep?: number }) => {
   const store = useProfessionalSetupStore()
   const { data: categories } = useCategories()
+  const { data: banks = [], isLoading: loadingBanks } = useNigerianBanks()
   const { mutate: updateProfile, isPending } = useUpdateEngineerProfile()
   const fileInputRef = React.useRef<HTMLInputElement>(null)
   const [isUploading, setIsUploading] = React.useState(false)
@@ -186,6 +188,7 @@ export const ProfessionalSetupWizard = ({ onComplete, initialStep }: { onComplet
       bankDetails: {
         accountName: store.accountName,
         bankName: store.bankName,
+        bankCode: store.bankCode,
         accountNumber: store.accountNumber,
       },
       location: {
@@ -480,11 +483,24 @@ export const ProfessionalSetupWizard = ({ onComplete, initialStep }: { onComplet
                 </div>
                 <div className="space-y-1.5">
                   <Label>Select Bank <span className="text-red-500">*</span></Label>
-                  <Input
-                    placeholder="GtBank PLC"
-                    value={store.bankName}
-                    onChange={(e) => store.updateField('bankName', e.target.value)}
-                  />
+                  <div className="relative">
+                    <select
+                      className="w-full h-12 px-4 rounded-lg border border-zinc-300 text-sm focus:border-blue-700 outline-none appearance-none"
+                      value={store.bankName}
+                      onChange={(e) => {
+                        const bank = banks.find((b: any) => b.name === e.target.value)
+                        store.updateField('bankName', e.target.value)
+                        store.updateField('bankCode', bank?.code || '')
+                      }}
+                      required
+                    >
+                      <option value="">{loadingBanks ? 'Loading banks...' : 'Choose your bank'}</option>
+                      {banks.map((bank: any) => (
+                        <option key={`${bank.code}-${bank.name}`} value={bank.name}>{bank.name}</option>
+                      ))}
+                    </select>
+                    <HiChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-400 w-5 h-5 pointer-events-none" />
+                  </div>
                 </div>
                 <div className="space-y-1.5">
                   <Label>Account Number <span className="text-red-500">*</span></Label>
@@ -534,7 +550,7 @@ export const ProfessionalSetupWizard = ({ onComplete, initialStep }: { onComplet
   const isStepValid = () => {
     const step1Valid = store.specialty && store.categoryId && store.experience && store.idType && store.idNumber && store.idPhoto
     const step2Valid = store.state && store.city && store.address && store.landmark
-    const step3Valid = store.guarantorName && store.guarantorEmail && store.accountName && store.bankName && store.accountNumber
+    const step3Valid = store.guarantorName && store.guarantorEmail && store.accountName && store.bankName && store.bankCode && store.accountNumber
 
     if (store.currentStep === 1) return step1Valid
     if (store.currentStep === 2) return step1Valid && step2Valid
