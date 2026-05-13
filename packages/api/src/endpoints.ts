@@ -63,6 +63,7 @@ export const ENDPOINTS = {
     DASHBOARD:        '/api/engineer/dashboard',
     LOCATION:         '/api/engineer/location',
     BOOKINGS:         '/api/engineer/bookings',
+    MY_BOOKINGS:      '/api/bookings/engineer/my-bookings',
     BOOKING_BY_ID:    (id: string) => `/api/engineer/bookings/${id}`,
   },
 
@@ -75,6 +76,7 @@ export const ENDPOINTS = {
     TOP_UP:             '/api/wallet/top-up',
     DEPOSIT_INITIALIZE: '/api/wallet/deposit/initialize',
     DEPOSIT_VERIFY:     (ref: string) => `/api/wallet/deposit/verify/${ref}`,
+    BANKS:              '/api/wallet/banks',
     BANK_ACCOUNT:       '/api/wallet/bank-account',
     WITHDRAW:           '/api/wallet/withdraw',
   },

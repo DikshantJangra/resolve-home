@@ -4,30 +4,7 @@ import React, { useState } from 'react'
 import { Button, Input, cn } from "@resolve/ui"
 import { toast } from 'sonner'
 import { HiOutlineX, HiOutlineLibrary, HiChevronDown } from 'react-icons/hi'
-import { useAddBank } from '@/hooks/api-hooks'
-
-const NIGERIAN_BANKS = [
-  { name: 'Access Bank', code: '044' },
-  { name: 'Zenith Bank', code: '057' },
-  { name: 'Guaranty Trust Bank', code: '058' },
-  { name: 'First Bank of Nigeria', code: '011' },
-  { name: 'United Bank for Africa', code: '033' },
-  { name: 'Fidelity Bank', code: '070' },
-  { name: 'Stanbic IBTC Bank', code: '221' },
-  { name: 'Sterling Bank', code: '050' },
-  { name: 'Union Bank of Nigeria', code: '032' },
-  { name: 'Wema Bank', code: '035' },
-  { name: 'First City Monument Bank', code: '214' },
-  { name: 'Unity Bank', code: '215' },
-  { name: 'Heritage Bank', code: '030' },
-  { name: 'Keystone Bank', code: '082' },
-  { name: 'Polaris Bank', code: '076' },
-  { name: 'Standard Chartered Bank', code: '068' },
-  { name: 'EcoBank Nigeria', code: '050' },
-  { name: 'Kuda Bank', code: '50211' },
-  { name: 'Opay', code: '999992' },
-  { name: 'Palmpay', code: '999991' },
-]
+import { useAddBank, useNigerianBanks } from '@/hooks/api-hooks'
 
 interface AddBankModalProps {
   onClose: () => void
@@ -36,21 +13,14 @@ interface AddBankModalProps {
 
 export const AddBankModal = ({ onClose, initialData }: AddBankModalProps) => {
   const { mutate: addBank, isPending: loading } = useAddBank()
+  const { data: banks = [], isLoading: loadingBanks } = useNigerianBanks()
+  
   const [formData, setFormData] = useState({
     bankName: initialData?.bankName || initialData?.bank_name || '',
     bankCode: initialData?.bankCode || initialData?.bank_code || '',
     accountNumber: initialData?.accountNumber || initialData?.account_number || '',
     accountName: initialData?.accountName || initialData?.account_name || ''
   })
-
-  const handleBankChange = (bankName: string) => {
-    const bank = NIGERIAN_BANKS.find(b => b.name === bankName)
-    setFormData({
-      ...formData,
-      bankName: bankName,
-      bankCode: bank?.code || ''
-    })
-  }
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -90,12 +60,16 @@ export const AddBankModal = ({ onClose, initialData }: AddBankModalProps) => {
               <div className="relative">
                 <select
                   value={formData.bankName}
-                  onChange={(e) => handleBankChange(e.target.value)}
-                  className="w-full h-12 px-4 rounded-xl border border-zinc-200 bg-white text-sm text-neutral-700 focus:border-blue-700 outline-none appearance-none cursor-pointer"
+                  onChange={(e) => {
+                    const bank = banks.find((b: any) => b.name === e.target.value)
+                    setFormData({ ...formData, bankName: e.target.value, bankCode: bank?.code || '' })
+                  }}
+                  className="w-full bg-stone-50 border border-stone-200 rounded-xl px-4 py-3.5 outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all appearance-none text-stone-800"
+                  required
                 >
-                  <option value="">Choose your bank</option>
-                  {NIGERIAN_BANKS.map((bank) => (
-                    <option key={bank.name} value={bank.name}>{bank.name}</option>
+                  <option value="">{loadingBanks ? 'Loading banks...' : 'Choose your bank'}</option>
+                  {banks.map((bank: any) => (
+                    <option key={`${bank.code}-${bank.name}`} value={bank.name}>{bank.name}</option>
                   ))}
                 </select>
                 <HiChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-400 w-5 h-5 pointer-events-none" />

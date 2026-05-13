@@ -5,14 +5,22 @@ import { WalletBalanceCard } from '@/features/wallet/components/wallet-balance-c
 import { WalletStatCard } from '@/features/wallet/components/wallet-stat-card'
 import { BankDetailsSection } from '@/features/wallet/components/bank-details-section'
 import { TransactionHistory } from '@/features/wallet/components/transaction-history'
-import { useAuthSession, useWallet, useWalletStatistics, useWalletTransactions } from '@/hooks/api-hooks'
+import { 
+  useAuthSession, 
+  useWallet, 
+  useWalletStatistics, 
+  useWalletTransactions, 
+  useVerifyDeposit, 
+  useUserProfile 
+} from '@/hooks/api-hooks'
 import { Skeleton } from "@resolve/ui"
 import { format } from 'date-fns'
 import { FundWalletModal } from '@/features/wallet/components/fund-wallet-modal'
 import { AddBankModal } from '@/features/wallet/components/add-bank-modal'
 import { WithdrawModal } from '@/features/wallet/components/withdraw-modal'
-import { useUserProfile } from '@/hooks/api-hooks'
 import { ProfessionalSetupWizard } from '@/features/professional-setup/components/professional-setup-wizard'
+import { useQueryClient } from '@tanstack/react-query'
+import { toast } from 'sonner'
 
 export default function WalletPage() {
   const [isFundingModalOpen, setIsFundingModalOpen] = React.useState(false)
@@ -27,7 +35,29 @@ export default function WalletPage() {
   const { data: stats, isPending: statsPending } = useWalletStatistics()
   const { data: transactions, isPending: transactionsPending } = useWalletTransactions()
 
-  const isDataPending = sessionPending || userProfilePending || walletPending || statsPending || transactionsPending
+  // Payment Verification Logic
+  const searchParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null
+  const reference = searchParams?.get('reference')
+  const { data: verificationResult, isLoading: isVerifying } = useVerifyDeposit(reference || '')
+  const queryClient = useQueryClient()
+  const [hasShownSuccess, setHasShownSuccess] = React.useState(false)
+
+  React.useEffect(() => {
+    if (verificationResult?.success && !hasShownSuccess) {
+      toast.success('Wallet Funded Successfully!', {
+        description: `₦${verificationResult.amount.toLocaleString()} has been added to your balance.`
+      })
+      setHasShownSuccess(true)
+      // Clean up URL
+      window.history.replaceState({}, '', window.location.pathname)
+      // Refresh data
+      queryClient.invalidateQueries({ queryKey: ['wallet'] })
+      queryClient.invalidateQueries({ queryKey: ['wallet-transactions'] })
+      queryClient.invalidateQueries({ queryKey: ['wallet-statistics'] })
+    }
+  }, [verificationResult, hasShownSuccess, queryClient])
+
+  const isDataPending = sessionPending || userProfilePending || walletPending || statsPending || transactionsPending || isVerifying
 
   if (isDataPending) {
     return (

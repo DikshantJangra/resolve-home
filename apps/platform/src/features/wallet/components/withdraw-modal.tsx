@@ -15,16 +15,15 @@ interface WithdrawModalProps {
 
 export const WithdrawModal = ({ onClose, availableBalance }: WithdrawModalProps) => {
   const [amount, setAmount] = useState('')
-  const [selectedBankId, setSelectedBankId] = useState<string>('')
-  const { data: banks, isLoading: isLoadingBanks } = useBanks()
+  const { data: bank, isLoading: isLoadingBank } = useBanks()
   const { mutate: withdraw, isPending } = useWithdraw()
 
   const handleWithdraw = (e: React.FormEvent) => {
     e.preventDefault()
     const numAmount = parseFloat(amount)
     
-    if (!selectedBankId) {
-      toast.error('Please select a bank account')
+    if (!bank) {
+      toast.error('Please add a bank account first')
       return
     }
     if (isNaN(numAmount) || numAmount < 1000) {
@@ -36,7 +35,7 @@ export const WithdrawModal = ({ onClose, availableBalance }: WithdrawModalProps)
       return
     }
 
-    withdraw({ amount: numAmount, bankId: selectedBankId }, {
+    withdraw({ amount: numAmount }, {
       onSuccess: () => {
         toast.success('Withdrawal request submitted successfully!')
         onClose()
@@ -78,41 +77,27 @@ export const WithdrawModal = ({ onClose, availableBalance }: WithdrawModalProps)
             </div>
 
             <div className="space-y-2">
-              <label className="text-neutral-700 text-sm font-semibold">Select Payout Account</label>
-              <div className="grid grid-cols-1 gap-2 max-h-[200px] overflow-y-auto pr-1">
-                {isLoadingBanks ? (
+              <label className="text-neutral-700 text-sm font-semibold">Payout Account</label>
+              <div className="grid grid-cols-1 gap-2">
+                {isLoadingBank ? (
                   <div className="h-20 bg-zinc-50 rounded-xl animate-pulse" />
-                ) : banks?.length > 0 ? (
-                  banks.map((bank: any) => (
-                    <button
-                      key={bank.id}
-                      type="button"
-                      onClick={() => setSelectedBankId(bank.id)}
-                      className={cn(
-                        "flex items-center justify-between p-3 rounded-xl border transition-all text-left",
-                        selectedBankId === bank.id 
-                          ? "border-blue-600 bg-blue-50/50" 
-                          : "border-zinc-100 hover:border-zinc-300"
-                      )}
-                    >
-                      <div className="flex items-center gap-3">
-                        <HiOutlineLibrary className={cn("w-5 h-5", selectedBankId === bank.id ? "text-blue-600" : "text-zinc-400")} />
-                        <div>
-                          <p className="text-sm font-bold text-neutral-800">{bank.bankName}</p>
-                          <p className="text-[10px] text-zinc-500 font-mono tracking-tight">**** {bank.accountNumber.slice(-4)}</p>
-                        </div>
+                ) : bank ? (
+                  <div className="flex items-center justify-between p-4 rounded-xl border border-blue-600 bg-blue-50/50 transition-all text-left">
+                    <div className="flex items-center gap-3">
+                      <HiOutlineLibrary className="w-5 h-5 text-blue-600" />
+                      <div>
+                        <p className="text-sm font-bold text-neutral-800">{bank.bankName}</p>
+                        <p className="text-[10px] text-zinc-500 font-mono tracking-tight">**** {bank.accountNumber?.slice(-4)}</p>
                       </div>
-                      {selectedBankId === bank.id && (
-                        <div className="w-5 h-5 bg-blue-600 rounded-full flex items-center justify-center">
-                          <HiOutlineCheck className="w-3 h-3 text-white" />
-                        </div>
-                      )}
-                    </button>
-                  ))
+                    </div>
+                    <div className="w-5 h-5 bg-blue-600 rounded-full flex items-center justify-center">
+                      <HiOutlineCheck className="w-3 h-3 text-white" />
+                    </div>
+                  </div>
                 ) : (
                   <div className="p-4 bg-amber-50 rounded-xl border border-amber-100 text-center">
-                    <p className="text-amber-700 text-xs font-medium">No bank accounts found.</p>
-                    <p className="text-amber-600 text-[10px] mt-0.5">Add a bank account in your wallet first.</p>
+                    <p className="text-amber-700 text-xs font-medium">No bank account linked.</p>
+                    <p className="text-amber-600 text-[10px] mt-0.5">Please add your bank account in the wallet settings.</p>
                   </div>
                 )}
               </div>
@@ -122,7 +107,7 @@ export const WithdrawModal = ({ onClose, availableBalance }: WithdrawModalProps)
           <div className="pt-4 flex flex-col gap-3">
             <Button
               type="submit"
-              disabled={isPending || !selectedBankId}
+              disabled={isPending || !bank}
               className="w-full h-14 bg-blue-700 hover:bg-blue-800 text-white rounded-2xl text-base font-semibold shadow-lg shadow-blue-700/10"
             >
               {isPending ? 'Processing...' : 'Withdraw Now'}

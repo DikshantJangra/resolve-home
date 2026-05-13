@@ -241,6 +241,17 @@ export function useEngineerBookings(options: { enabled?: boolean } = {}) {
   })
 }
 
+export function useEngineerMyBookings(options: { enabled?: boolean } = {}) {
+  return useQuery({
+    queryKey: ['engineer-my-bookings'],
+    queryFn: async () => {
+      const response = await apiClient.get(ENDPOINTS.ENGINEER.MY_BOOKINGS)
+      return response.data.data?.bookings || []
+    },
+    enabled: (typeof window !== 'undefined' && !!localStorage.getItem('auth_token')) && (options.enabled !== false)
+  })
+}
+
 export function useEngineerBookingDetail(id: string, options: { enabled?: boolean } = {}) {
   return useQuery({
     queryKey: ['engineer-booking-detail', id],
@@ -338,22 +349,43 @@ export function useInitializeDeposit() {
   })
 }
 
+export function useVerifyDeposit(reference: string) {
+  return useQuery({
+    queryKey: ['verify-deposit', reference],
+    queryFn: async () => {
+      const response = await apiClient.get(ENDPOINTS.WALLET.DEPOSIT_VERIFY(reference))
+      return response.data.data
+    },
+    enabled: !!reference
+  })
+}
+
 export function useBankAccount() {
   return useQuery({
     queryKey: ['wallet-bank-account'],
     queryFn: async () => {
       const response = await apiClient.get(ENDPOINTS.WALLET.BANK_ACCOUNT)
       // The API might return the bank account directly in data.data or nested in bankAccount
-      return response.data.data?.bankAccount || response.data.data || null
+      return response.data.data?.bankAccount || response.data.data?.bankDetails || response.data.data || null
     },
     enabled: typeof window !== 'undefined' && !!localStorage.getItem('auth_token')
+  })
+}
+
+export function useNigerianBanks() {
+  return useQuery({
+    queryKey: ['nigerian-banks'],
+    queryFn: async () => {
+      const response = await apiClient.get(ENDPOINTS.WALLET.BANKS)
+      return response.data.data?.banks || []
+    }
   })
 }
 
 export function useAddBankAccount() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: async (data: { bankName: string, accountNumber: string, accountName: string }) => {
+    mutationFn: async (data: { bankName: string, accountNumber: string, accountName: string, bankCode: string }) => {
       const response = await apiClient.post(ENDPOINTS.WALLET.BANK_ACCOUNT, data)
       return response.data
     },
@@ -384,7 +416,7 @@ export const useDeleteBank = useDeleteBankAccount
 export function useWithdraw() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: async (data: { amount: number, bankId: string }) => {
+    mutationFn: async (data: { amount: number }) => {
       const response = await apiClient.post(ENDPOINTS.WALLET.WITHDRAW, data)
       return response.data
     },
