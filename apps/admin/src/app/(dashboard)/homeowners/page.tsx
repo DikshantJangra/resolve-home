@@ -7,23 +7,24 @@ import {
   HiOutlineBriefcase,
   HiOutlineUsers,
   HiOutlineUserGroup,
-  HiOutlineDotsVertical
+  HiOutlineDotsVertical,
+  HiOutlineBadgeCheck
 } from 'react-icons/hi'
 import { cn, Button, Skeleton, Input } from "@resolve/ui"
-import { useAdminUsers, useAdminUserStats } from '@/hooks/api-hooks'
+import { useAdminUsers, useAdminStats } from '@/hooks/api-hooks'
 import Link from 'next/link'
 
 export default function HomeownersPage() {
   const [search, setSearch] = useState('')
   const { data: users, isLoading: usersLoading } = useAdminUsers()
-  const { data: statsData, isLoading: statsLoading } = useAdminUserStats()
+  const { data: statsData, isLoading: statsLoading } = useAdminStats()
 
   const homeowners = users?.filter((u: any) => 
     u.role?.toLowerCase() === 'user' || u.role?.toLowerCase() === 'customer'
-  ).filter((u: any) => 
-    u.name?.toLowerCase().includes(search.toLowerCase()) || 
-    u.email?.toLowerCase().includes(search.toLowerCase())
-  ) || []
+  ).filter((u: any) => {
+    const searchStr = `${u.name || u.fullName} ${u.email}`.toLowerCase()
+    return searchStr.includes(search.toLowerCase())
+  }) || []
 
   const stats = [
     { label: 'Total Homeowners', value: (statsData as any)?.totalHomeowners || homeowners.length, trend: (statsData as any)?.trends?.homeowners, icon: HiOutlineUsers },
@@ -54,22 +55,27 @@ export default function HomeownersPage() {
             Manage user accounts, subscriptions, and platform access.
           </p>
         </div>
-        <div className="relative w-96 opacity-0">
-          <Input placeholder="Search booking" className="pl-4 pr-10" />
-          <HiOutlineSearch className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-600" />
+        <div className="relative w-full md:w-96">
+          <Input 
+            placeholder="Search homeowner" 
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="pl-4 pr-10 rounded-xl" 
+          />
+          <HiOutlineSearch className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-400" />
         </div>
       </div>
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
         {stats.map((stat, idx) => (
-          <div key={idx} className="p-4 rounded-xl border border-zinc-300 flex flex-col gap-3">
+          <div key={idx} className="p-4 rounded-xl border border-zinc-300 flex flex-col gap-3 shadow-sm bg-white">
             <div className="flex justify-between items-start">
               <div className="flex flex-col gap-1">
                 <span className="text-neutral-700 text-sm font-normal font-inter leading-5">{stat.label}</span>
                 <span className="text-neutral-700 text-2xl font-bold font-plus-jakarta leading-8">{stat.value}</span>
               </div>
-              <div className="w-6 h-6 flex items-center justify-center text-zinc-600">
+              <div className="p-2 rounded-lg bg-stone-50 border border-zinc-100 text-zinc-600">
                 <stat.icon className="w-5 h-5" />
               </div>
             </div>
@@ -84,34 +90,37 @@ export default function HomeownersPage() {
       </div>
 
       {/* Table Container */}
-      <div className="rounded-xl border border-zinc-300 overflow-hidden">
+      <div className="rounded-xl border border-zinc-300 overflow-hidden bg-white shadow-sm">
         <div className="overflow-x-auto">
         <table className="w-full text-left min-w-[640px]">
           <thead>
             <tr className="bg-stone-50 border-b border-zinc-300">
-              <th className="px-6 py-4 text-neutral-700 text-base font-semibold font-inter uppercase">NAME</th>
-              <th className="px-6 py-4 text-neutral-700 text-base font-semibold font-inter uppercase">LOCATION</th>
-              <th className="px-6 py-4 text-neutral-700 text-base font-semibold font-inter uppercase">PLAN</th>
-              <th className="px-6 py-4 text-neutral-700 text-base font-semibold font-inter uppercase">BOOKINGS</th>
-              <th className="px-6 py-4 text-neutral-700 text-base font-semibold font-inter uppercase">STATUS</th>
+              <th className="px-6 py-4 text-neutral-700 text-sm font-semibold font-inter uppercase">NAME</th>
+              <th className="px-6 py-4 text-neutral-700 text-sm font-semibold font-inter uppercase">LOCATION</th>
+              <th className="px-6 py-4 text-neutral-700 text-sm font-semibold font-inter uppercase">PLAN</th>
+              <th className="px-6 py-4 text-neutral-700 text-sm font-semibold font-inter uppercase">BOOKINGS</th>
+              <th className="px-6 py-4 text-neutral-700 text-sm font-semibold font-inter uppercase">STATUS</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-zinc-300">
+          <tbody className="divide-y divide-zinc-200">
             {homeowners.length > 0 ? homeowners.map((user: any) => (
               <tr key={user.id} className="hover:bg-zinc-50/50 transition-colors">
                 <td className="px-6 py-4">
                   <Link href={`/homeowners/${user.id}`} className="flex items-center gap-3 group">
-                    <div className="w-12 h-12 bg-zinc-600/10 rounded-full flex items-center justify-center text-neutral-700 font-medium text-sm overflow-hidden">
-                      {user.avatar ? (
-                        <img src={user.avatar} alt={user.name} className="w-full h-full object-cover" />
+                    <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center text-blue-700 font-bold text-sm overflow-hidden">
+                      {user.avatar || user.profileImage ? (
+                        <img src={user.avatar || user.profileImage} alt={user.name} className="w-full h-full object-cover" />
                       ) : (
-                        user.name?.charAt(0) || 'A'
+                        (user.name || user.fullName)?.charAt(0) || 'A'
                       )}
                     </div>
                     <div className="flex flex-col">
-                      <span className="text-neutral-800 text-sm font-medium font-inter group-hover:text-blue-700 transition-colors">
-                        {user.name || 'Unnamed User'}
-                      </span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-neutral-800 text-sm font-medium font-inter group-hover:text-blue-700 transition-colors">
+                          {user.name || user.fullName || 'Unnamed User'}
+                        </span>
+                        {user.emailVerified && <HiOutlineBadgeCheck className="text-blue-700 w-3.5 h-3.5" title="Verified Account" />}
+                      </div>
                       <span className="text-zinc-500 text-xs font-normal font-inter">{user.email}</span>
                     </div>
                   </Link>

@@ -27,9 +27,12 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(loginUrl)
   }
 
-  // 2. If trying to access login WITH a token, redirect to dashboard
-  if (sessionToken && pathname.startsWith('/login')) {
-    return NextResponse.redirect(new URL('/', request.url))
+  // 2. If trying to access login WITH a token, ONLY redirect to dashboard if they are an admin
+  // This prevents infinite loops for non-admin users (like workers) trying to access the admin portal
+  const userRole = request.cookies.get('user_role')?.value
+  
+  if (sessionToken && pathname.startsWith('/login') && userRole === 'admin') {
+    return NextResponse.redirect(new URL('/dashboard', request.url))
   }
 
   return NextResponse.next()

@@ -13,7 +13,10 @@ interface ProfessionalSetupState {
   idPhoto: string | null
   
   // Step 2: Location
+  country: string
+  countryCode: string
   state: string
+  stateCode: string
   city: string
   address: string
   landmark: string
@@ -46,7 +49,10 @@ export const useProfessionalSetupStore = create<ProfessionalSetupState>()(
       idNumber: '',
       idPhoto: null,
       
+      country: 'Nigeria',
+      countryCode: 'NG',
       state: '',
+      stateCode: '',
       city: '',
       address: '',
       landmark: '',
@@ -70,7 +76,10 @@ export const useProfessionalSetupStore = create<ProfessionalSetupState>()(
         idType: '',
         idNumber: '',
         idPhoto: null,
+        country: 'Nigeria',
+        countryCode: 'NG',
         state: '',
+        stateCode: '',
         city: '',
         address: '',
         landmark: '',

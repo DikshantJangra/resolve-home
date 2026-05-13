@@ -19,20 +19,7 @@ export default function DashboardLayout({
   useEffect(() => {
     // If we've finished loading and there's no session, or if an error occurred (e.g., 401)
     if (!isLoading) {
-      if (!session || isError) {
-        // Check for any token that looks valid
-        const rawToken = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null
-        const hasToken = rawToken && rawToken !== 'undefined' && rawToken !== 'null' && rawToken.length > 10
-
-        if (!hasToken) {
-          console.log("[Dashboard] No session and no token found. Redirecting to login.")
-          window.location.href = '/login'
-          return
-        }
-
-        // If we HAVE a token but the session is missing after loading, the token is likely invalid/stale
-        console.warn("[Dashboard] Session invalid or expired despite token existence. Clearing and redirecting.")
-        
+      const handleLogout = () => {
         localStorage.removeItem('auth_token')
         localStorage.removeItem('user_role')
         
@@ -43,14 +30,27 @@ export default function DashboardLayout({
         })
         
         window.location.href = '/login'
+      }
+
+      if (!session || isError) {
+        // Check for any token that looks valid
+        const rawToken = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null
+        const hasToken = rawToken && rawToken !== 'undefined' && rawToken !== 'null' && rawToken.length > 10
+
+        if (!hasToken) {
+          console.log("[Dashboard] No session and no token found. Redirecting to login.")
+          handleLogout()
+          return
+        }
+
+        // If we HAVE a token but the session is missing after loading, the token is likely invalid/stale
+        console.warn("[Dashboard] Session invalid or expired despite token existence. Clearing and redirecting.")
+        handleLogout()
       } else if (session?.user && session.user.role !== 'admin') {
         // Security check: If they ARE logged in but are not an admin
         console.error("[Dashboard] Access denied: User is not an admin.", session.user.role)
         toast.error('Access denied. Admin privileges required.')
-        
-        // Logout if they are not an admin to clear the session
-        localStorage.removeItem('auth_token')
-        window.location.href = '/login'
+        handleLogout()
       } else {
         console.log("[Dashboard] Session verified for admin:", session?.user?.email)
       }

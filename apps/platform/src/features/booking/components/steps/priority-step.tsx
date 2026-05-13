@@ -5,7 +5,16 @@ import { HiOutlineLightningBolt, HiOutlineCalendar } from 'react-icons/hi'
 import { useBookingStore, Priority } from '@/store/booking-store'
 import { Button } from "@resolve/ui"
 export const PriorityStep = () => {
-  const { priority, setPriority, setStep } = useBookingStore()
+  const { priority, setPriority, setStep, setScheduledDate, setScheduledTime } = useBookingStore()
+
+  const handleSelect = (id: Priority) => {
+    setPriority(id)
+    if (id === 'Emergency') {
+      const today = new Date().toISOString().split('T')[0]
+      setScheduledDate(today)
+      setScheduledTime('ASAP')
+    }
+  }
 
   const options = [
     {
@@ -23,8 +32,8 @@ export const PriorityStep = () => {
   ]
 
   return (
-    <div className="flex flex-col h-full bg-white">
-      <div className="flex-1 px-5 pt-10">
+    <div className="flex flex-col h-full bg-white min-h-0">
+      <div className="flex-1 px-5 pt-10 overflow-y-auto scrollbar-thin">
         <div className="flex gap-5">
           {options.map((option) => {
             const Icon = option.icon
@@ -33,7 +42,7 @@ export const PriorityStep = () => {
             return (
               <button
                 key={option.id}
-                onClick={() => setPriority(option.id)}
+                onClick={() => handleSelect(option.id)}
                 className={`flex-1 h-64 p-5 rounded-xl transition-all flex flex-col justify-center items-center gap-5 overflow-hidden ${
                   isSelected
                     ? 'bg-slate-50 outline outline-[1.50px] outline-offset-[-1.50px] outline-blue-700'

@@ -4,6 +4,8 @@ import { persist } from 'zustand/middleware'
 export type Priority = 'Emergency' | 'Standard' | null
 
 interface BookingLocation {
+  country?: string
+  countryCode?: string
   state: string
   city: string
   streetAddress: string

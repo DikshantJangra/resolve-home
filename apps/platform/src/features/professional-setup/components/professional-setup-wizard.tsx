@@ -3,11 +3,12 @@
 import React from 'react'
 import { useProfessionalSetupStore } from '@/store/professional-setup-store'
 import { Button, Input, Label } from "@resolve/ui"
-import { HiOutlineChevronLeft, HiOutlineCheckCircle, HiOutlinePlus } from 'react-icons/hi'
+import { HiOutlineChevronLeft, HiOutlineCheckCircle, HiOutlinePlus, HiOutlineTrash, HiOutlineDocumentText } from 'react-icons/hi'
 import { useCategories, useUpdateEngineerProfile } from '@/hooks/api-hooks'
 import { toast } from 'sonner'
 import { cn } from "@resolve/ui"
 import { apiClient, ENDPOINTS } from "@resolve/api"
+import { Country, State, City } from 'country-state-city'
 
 export const ProfessionalSetupWizard = ({ onComplete, initialStep }: { onComplete: () => void, initialStep?: number }) => {
   const store = useProfessionalSetupStore()
@@ -15,6 +16,80 @@ export const ProfessionalSetupWizard = ({ onComplete, initialStep }: { onComplet
   const { mutate: updateProfile, isPending } = useUpdateEngineerProfile()
   const fileInputRef = React.useRef<HTMLInputElement>(null)
   const [isUploading, setIsUploading] = React.useState(false)
+  const [isLocating, setIsLocating] = React.useState(false)
+
+  const handleUseGPS = () => {
+    if (!navigator.geolocation) {
+      toast.error("Geolocation is not supported by your browser")
+      return
+    }
+
+    setIsLocating(true)
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        try {
+          const { latitude, longitude } = position.coords
+          // Using Nominatim (OpenStreetMap) for free reverse geocoding
+          const response = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=18&addressdetails=1`
+          )
+          const data = await response.json()
+
+          if (data && data.address) {
+            const { state, city, town, village, road, neighbourhood, suburb, country_code } = data.address
+
+            const detectedCountryCode = country_code?.toUpperCase() || 'NG'
+            const country = Country.getCountryByCode(detectedCountryCode)
+
+            if (country) {
+              store.updateField('country', country.name)
+              store.updateField('countryCode', country.isoCode)
+
+              // Try to find the state code
+              const states = State.getStatesOfCountry(country.isoCode)
+              const cleanStateName = (state || '').replace(/ State$/i, '')
+              const matchedState = states.find(s =>
+                s.name.toLowerCase().includes(cleanStateName.toLowerCase()) ||
+                cleanStateName.toLowerCase().includes(s.name.toLowerCase())
+              )
+
+              if (matchedState) {
+                store.updateField('state', matchedState.name)
+                store.updateField('stateCode', matchedState.isoCode)
+
+                // Try to find the city
+                const cities = City.getCitiesOfState(country.isoCode, matchedState.isoCode)
+                const cleanCityName = (city || town || village || suburb || '').replace(/ (City|LGA|Local Government Area)$/i, '')
+                const matchedCity = cities.find(c =>
+                  c.name.toLowerCase().includes(cleanCityName.toLowerCase()) ||
+                  cleanCityName.toLowerCase().includes(c.name.toLowerCase())
+                )
+
+                if (matchedCity) {
+                  store.updateField('city', matchedCity.name)
+                } else {
+                  store.updateField('city', cleanCityName)
+                }
+              }
+            }
+
+            store.updateField('address', road || neighbourhood || data.display_name.split(',')[0] || '')
+            toast.success("Location detected!")
+          }
+        } catch (error) {
+          console.error("Reverse geocoding failed:", error)
+          toast.error("Failed to resolve address. Please enter manually.")
+        } finally {
+          setIsLocating(false)
+        }
+      },
+      (error) => {
+        setIsLocating(false)
+        console.error("Geolocation error:", error)
+        toast.error("Location access denied or unavailable.")
+      }
+    )
+  }
 
   React.useEffect(() => {
     if (initialStep) {
@@ -22,10 +97,36 @@ export const ProfessionalSetupWizard = ({ onComplete, initialStep }: { onComplet
     }
   }, [initialStep])
 
+  React.useEffect(() => {
+    // Prevent scrolling when the setup wizard is active
+    const originalBodyOverflow = window.getComputedStyle(document.body).overflow
+    const originalHtmlOverflow = window.getComputedStyle(document.documentElement).overflow
+
+    document.body.style.overflow = 'hidden'
+    document.documentElement.style.overflow = 'hidden'
+    document.body.style.position = 'fixed'
+    document.body.style.width = '100%'
+
+    return () => {
+      document.body.style.overflow = originalBodyOverflow
+      document.documentElement.style.overflow = originalHtmlOverflow
+      document.body.style.position = ''
+      document.body.style.width = ''
+    }
+  }, [])
+
+  // Sanity check for experience enum
+  React.useEffect(() => {
+    const validRanges = ['1-3', '4-7', '8-12', '13+']
+    if (store.experience && !validRanges.includes(store.experience)) {
+      console.log('Resetting invalid experience value:', store.experience)
+      store.updateField('experience', '')
+    }
+  }, [store.experience])
   // Automatically select "Others" as default if available
   React.useEffect(() => {
     if (categories && !store.categoryId) {
-      const otherCategory = categories.find((cat: any) => 
+      const otherCategory = categories.find((cat: any) =>
         cat.name.toLowerCase() === 'others' || cat.name.toLowerCase() === 'other'
       )
       if (otherCategory) {
@@ -43,6 +144,13 @@ export const ProfessionalSetupWizard = ({ onComplete, initialStep }: { onComplet
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
+
+    // 5MB limit
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('File size exceeds 5MB limit')
+      return
+    }
+
     setIsUploading(true)
     try {
       const formData = new FormData()
@@ -63,29 +171,37 @@ export const ProfessionalSetupWizard = ({ onComplete, initialStep }: { onComplet
   }
 
   const handleFinish = () => {
+    if (!isStepValid()) {
+      toast.error("Some required fields are missing. Please check previous steps.")
+      return
+    }
+
     const payload = {
-      specialty: store.specialty,
-      categoryId: store.categoryId,
-      experience: parseInt(store.experience),
+      primarySpecialty: store.specialty,
+      category: store.categoryId,
+      yearsOfExperience: store.experience,
       idType: store.idType,
       idNumber: store.idNumber,
-      idPhoto: store.idPhoto,
+      idDocument: store.idPhoto,
+      bankDetails: {
+        accountName: store.accountName,
+        bankName: store.bankName,
+        accountNumber: store.accountNumber,
+      },
       location: {
+        country: store.country,
         state: store.state,
         city: store.city,
-        address: store.address,
-        landmark: store.landmark,
+        streetAddress: store.address,
+        nearestLandmark: store.landmark,
       },
       guarantor: {
         name: store.guarantorName,
         email: store.guarantorEmail,
-      },
-      bank: {
-        accountName: store.accountName,
-        bankName: store.bankName,
-        accountNumber: store.accountNumber,
       }
     }
+
+    console.log('[SetupWizard] Submitting payload:', payload)
 
     updateProfile(payload, {
       onSuccess: () => {
@@ -129,19 +245,20 @@ export const ProfessionalSetupWizard = ({ onComplete, initialStep }: { onComplet
 
               <div className="space-y-1.5">
                 <Label>Years of experience <span className="text-red-500">*</span></Label>
-                <div className="flex gap-3">
-                  {['1 - 3', '4 - 7', '8 - 12', '13+'].map((range) => (
+                <div className="flex flex-wrap gap-3">
+                  {['1-3', '4-7', '8-12', '13+'].map((range) => (
                     <button
                       key={range}
-                      onClick={() => store.updateField('experience', range === '13+' ? '13' : range.split(' - ')[0])}
+                      type="button"
+                      onClick={() => store.updateField('experience', range)}
                       className={cn(
-                        "flex-1 py-3 px-4 rounded-lg border text-sm transition-all",
-                        store.experience === (range === '13+' ? '13' : range.split(' - ')[0])
-                          ? "border-blue-700 bg-blue-50 text-blue-700 font-medium"
-                          : "border-zinc-300 text-zinc-600 hover:border-zinc-400"
+                        "px-4 py-2 rounded-lg border text-sm font-medium transition-all",
+                        store.experience === range
+                          ? "bg-blue-700 border-blue-700 text-white"
+                          : "border-zinc-200 text-zinc-600 hover:border-blue-700 hover:text-blue-700"
                       )}
                     >
-                      {range}
+                      {range} {range === '13+' ? 'years' : 'years'}
                     </button>
                   ))}
                 </div>
@@ -172,32 +289,62 @@ export const ProfessionalSetupWizard = ({ onComplete, initialStep }: { onComplet
 
               <div className="space-y-3">
                 <Label>Attach/Upload ID Document <span className="text-red-500">*</span></Label>
-                <div className="flex items-center gap-4">
+                <div className="flex flex-col gap-4">
                   <input
                     ref={fileInputRef}
                     type="file"
-                    accept=".png,.jpg,.jpeg,.pdf"
+                    accept="*"
                     className="hidden"
                     onChange={handleFileChange}
                   />
-                  <button
-                    type="button"
-                    onClick={() => fileInputRef.current?.click()}
-                    disabled={isUploading}
-                    className="w-11 h-11 bg-slate-50 border border-indigo-400 rounded-xl flex items-center justify-center hover:bg-slate-100 disabled:opacity-50"
-                  >
-                    {isUploading ? (
-                      <svg className="w-4 h-4 animate-spin text-blue-700" fill="none" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
-                      </svg>
-                    ) : (
-                      <HiOutlinePlus className="w-5 h-5 text-blue-700" />
-                    )}
-                  </button>
-                  <span className="text-sm text-zinc-500">
-                    {store.idPhoto ? "Document uploaded successfully" : "Upload PNG, JPG or PDF up to 5MB"}
-                  </span>
+
+                  {store.idPhoto ? (
+                    <div className="flex items-center gap-4 p-4 rounded-xl border border-zinc-200 bg-zinc-50/50">
+                      <div className="w-12 h-12 rounded-lg bg-white border border-zinc-200 flex items-center justify-center overflow-hidden shrink-0">
+                        {store.idPhoto.match(/\.(jpg|jpeg|png|webp|gif)$/i) ? (
+                          <img src={store.idPhoto} alt="ID Document" className="w-full h-full object-cover" />
+                        ) : (
+                          <HiOutlineDocumentText className="w-6 h-6 text-zinc-400" />
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-zinc-700 truncate">
+                          ID Document Uploaded
+                        </p>
+                        <p className="text-xs text-zinc-500">
+                          Click trash icon to remove
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => store.updateField('idPhoto', '')}
+                        className="p-2 text-zinc-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
+                      >
+                        <HiOutlineTrash className="w-5 h-5" />
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-4">
+                      <button
+                        type="button"
+                        onClick={() => fileInputRef.current?.click()}
+                        disabled={isUploading}
+                        className="w-11 h-11 bg-slate-50 border border-indigo-400 rounded-xl flex items-center justify-center hover:bg-slate-100 disabled:opacity-50"
+                      >
+                        {isUploading ? (
+                          <svg className="w-4 h-4 animate-spin text-blue-700" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
+                          </svg>
+                        ) : (
+                          <HiOutlinePlus className="w-5 h-5 text-blue-700" />
+                        )}
+                      </button>
+                      <span className="text-sm text-zinc-500">
+                        Upload any document type up to 5MB
+                      </span>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -206,27 +353,74 @@ export const ProfessionalSetupWizard = ({ onComplete, initialStep }: { onComplet
       case 2:
         return (
           <div className="space-y-6">
-            <button className="flex items-center gap-2 text-blue-700 text-sm font-medium underline">
-              <HiOutlinePlus className="rotate-45" /> Use my current GPS location
+            <button
+              onClick={handleUseGPS}
+              disabled={isLocating}
+              className="flex items-center gap-2 text-blue-700 text-sm font-medium underline disabled:opacity-50"
+            >
+              <HiOutlinePlus className={cn("transition-transform", isLocating ? "animate-spin" : "rotate-45")} />
+              {isLocating ? "Getting location..." : "Use my current GPS location"}
             </button>
 
             <div className="space-y-4">
               <div className="space-y-1.5">
-                <Label>State <span className="text-red-500">*</span></Label>
-                <Input
-                  placeholder="Lagos"
-                  value={store.state}
-                  onChange={(e) => store.updateField('state', e.target.value)}
-                />
+                <Label>Country <span className="text-red-500">*</span></Label>
+                <select
+                  className="w-full h-12 px-4 rounded-lg border border-zinc-300 text-sm focus:border-blue-700 outline-none"
+                  value={store.countryCode}
+                  onChange={(e) => {
+                    const country = Country.getCountryByCode(e.target.value)
+                    if (country) {
+                      store.updateField('country', country.name)
+                      store.updateField('countryCode', country.isoCode)
+                      store.updateField('state', '')
+                      store.updateField('stateCode', '')
+                      store.updateField('city', '')
+                    }
+                  }}
+                >
+                  {Country.getAllCountries().map((c) => (
+                    <option key={c.isoCode} value={c.isoCode}>{c.name}</option>
+                  ))}
+                </select>
               </div>
+
+              <div className="space-y-1.5">
+                <Label>State <span className="text-red-500">*</span></Label>
+                <select
+                  className="w-full h-12 px-4 rounded-lg border border-zinc-300 text-sm focus:border-blue-700 outline-none"
+                  value={store.stateCode}
+                  onChange={(e) => {
+                    const state = State.getStateByCodeAndCountry(e.target.value, store.countryCode)
+                    if (state) {
+                      store.updateField('state', state.name)
+                      store.updateField('stateCode', state.isoCode)
+                      store.updateField('city', '')
+                    }
+                  }}
+                >
+                  <option value="">Select State</option>
+                  {State.getStatesOfCountry(store.countryCode).map((s) => (
+                    <option key={s.isoCode} value={s.isoCode}>{s.name}</option>
+                  ))}
+                </select>
+              </div>
+
               <div className="space-y-1.5">
                 <Label>City <span className="text-red-500">*</span></Label>
-                <Input
-                  placeholder="Ikeja"
+                <select
+                  className="w-full h-12 px-4 rounded-lg border border-zinc-300 text-sm focus:border-blue-700 outline-none"
                   value={store.city}
                   onChange={(e) => store.updateField('city', e.target.value)}
-                />
+                  disabled={!store.stateCode}
+                >
+                  <option value="">Select City</option>
+                  {City.getCitiesOfState(store.countryCode, store.stateCode).map((c) => (
+                    <option key={c.name} value={c.name}>{c.name}</option>
+                  ))}
+                </select>
               </div>
+
               <div className="space-y-1.5">
                 <Label>Street Address <span className="text-red-500">*</span></Label>
                 <Input
@@ -235,6 +429,7 @@ export const ProfessionalSetupWizard = ({ onComplete, initialStep }: { onComplet
                   onChange={(e) => store.updateField('address', e.target.value)}
                 />
               </div>
+
               <div className="space-y-1.5">
                 <Label>Nearest Landmark/Area <span className="text-red-500">*</span></Label>
                 <Input
@@ -319,14 +514,16 @@ export const ProfessionalSetupWizard = ({ onComplete, initialStep }: { onComplet
                   Verification in progress
                 </h2>
                 <p className="text-zinc-600 text-base max-w-sm">
-                  Your account is currently under review. Once you are verified you will be available on the job marketplace and start getting orders.
+                  Your account is currently under review. Once verified, you'll be visible on the marketplace to start receiving jobs.
                 </p>
               </div>
             </div>
 
-            <Button onClick={onComplete} className="w-full h-11 bg-blue-700 rounded-xl">
-              Back to Dashboard
-            </Button>
+            <div className="w-full py-4 px-6 bg-blue-50 rounded-xl border border-blue-100 flex items-center justify-center">
+              <p className="text-blue-700 font-medium text-sm">
+                Please check back within 24 hours
+              </p>
+            </div>
           </div>
         )
       default:
@@ -335,15 +532,13 @@ export const ProfessionalSetupWizard = ({ onComplete, initialStep }: { onComplet
   }
 
   const isStepValid = () => {
-    if (store.currentStep === 1) {
-      return store.specialty && store.categoryId && store.experience && store.idType && store.idNumber && store.idPhoto
-    }
-    if (store.currentStep === 2) {
-      return store.state && store.city && store.address && store.landmark
-    }
-    if (store.currentStep === 3) {
-      return store.guarantorName && store.guarantorEmail && store.accountName && store.bankName && store.accountNumber
-    }
+    const step1Valid = store.specialty && store.categoryId && store.experience && store.idType && store.idNumber && store.idPhoto
+    const step2Valid = store.state && store.city && store.address && store.landmark
+    const step3Valid = store.guarantorName && store.guarantorEmail && store.accountName && store.bankName && store.accountNumber
+
+    if (store.currentStep === 1) return step1Valid
+    if (store.currentStep === 2) return step1Valid && step2Valid
+    if (store.currentStep === 3) return step1Valid && step2Valid && step3Valid
     return true
   }
 

@@ -343,7 +343,8 @@ export function useBankAccount() {
     queryKey: ['wallet-bank-account'],
     queryFn: async () => {
       const response = await apiClient.get(ENDPOINTS.WALLET.BANK_ACCOUNT)
-      return response.data.data?.bankAccount ?? null
+      // The API might return the bank account directly in data.data or nested in bankAccount
+      return response.data.data?.bankAccount || response.data.data || null
     },
     enabled: typeof window !== 'undefined' && !!localStorage.getItem('auth_token')
   })

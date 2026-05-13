@@ -17,10 +17,10 @@ apiClient.interceptors.request.use(
     if (typeof window !== 'undefined') {
       const token = localStorage.getItem('auth_token')
       
-      // The backend developer specified to only send the token for /api/auth/ endpoints
-      const isAuthPath = config.url?.startsWith('/api/auth/')
+      // Attach token to all /api/ requests if it exists
+      const isApiPath = config.url?.startsWith('/api/')
       
-      if (token && isAuthPath) {
+      if (token && isApiPath) {
         config.headers.Authorization = `Bearer ${token}`
       }
     }

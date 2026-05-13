@@ -14,8 +14,21 @@ import dynamic from 'next/dynamic'
 const SuccessStep = dynamic(() => import('./steps/success-step').then(mod => mod.SuccessStep), { ssr: false })
 const FinalSuccessStep = dynamic(() => import('./steps/final-success-step').then(mod => mod.FinalSuccessStep), { ssr: false })
 
+import { useSearchParams } from 'next/navigation'
+import { useEffect } from 'react'
+
 export const BookingWizard = () => {
-  const { currentStep } = useBookingStore()
+  const { currentStep, setCategoryId, setServiceType } = useBookingStore()
+  const searchParams = useSearchParams()
+  const categoryIdParam = searchParams.get('categoryId')
+
+  useEffect(() => {
+    if (categoryIdParam) {
+      setCategoryId(categoryIdParam)
+      // If we are at step 1 and have a category, maybe we should jump to step 2?
+      // Or just keep it as is. The user usually selects priority first.
+    }
+  }, [categoryIdParam, setCategoryId])
 
   const renderStep = () => {
     switch (currentStep) {
@@ -43,7 +56,7 @@ export const BookingWizard = () => {
   return (
     <div className="w-full max-w-[669px] min-h-[80vh] sm:min-h-[600px] max-h-[95vh] md:h-[960px] mx-auto bg-white flex flex-col shadow-2xl rounded-2xl overflow-hidden relative z-[998]">
       <BookingHeader />
-      <div className="flex-1 overflow-y-auto no-scrollbar">
+      <div className="flex-1 overflow-hidden relative">
         {renderStep()}
       </div>
     </div>

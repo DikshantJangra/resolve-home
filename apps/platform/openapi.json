@@ -213,6 +213,143 @@
           }
         }
       }
+    },
+    "/api/engineer/complete-profile": {
+      "post": {
+        "summary": "Submit profile for verification",
+        "description": "Engineers must submit their professional details, location, and documents for verification.",
+        "tags": [
+          "Engineer"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "primarySpecialty",
+                  "category",
+                  "yearsOfExperience",
+                  "idType",
+                  "idNumber",
+                  "idDocument",
+                  "bankDetails",
+                  "location",
+                  "guarantor"
+                ],
+                "properties": {
+                  "primarySpecialty": {
+                    "type": "string"
+                  },
+                  "category": {
+                    "type": "string",
+                    "description": "Category ID"
+                  },
+                  "yearsOfExperience": {
+                    "type": "string",
+                    "enum": [
+                      "1-3",
+                      "4-7",
+                      "8-12",
+                      "13+"
+                    ]
+                  },
+                  "idType": {
+                    "type": "string"
+                  },
+                  "idNumber": {
+                    "type": "string"
+                  },
+                  "idDocument": {
+                    "type": "string",
+                    "format": "url",
+                    "description": "URL of the uploaded ID document"
+                  },
+                  "bankDetails": {
+                    "type": "object",
+                    "required": [
+                      "accountName",
+                      "bankName",
+                      "accountNumber"
+                    ],
+                    "properties": {
+                      "accountName": {
+                        "type": "string"
+                      },
+                      "bankName": {
+                        "type": "string"
+                      },
+                      "accountNumber": {
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "location": {
+                    "type": "object",
+                    "required": [
+                      "country",
+                      "state",
+                      "city",
+                      "streetAddress",
+                      "nearestLandmark"
+                    ],
+                    "properties": {
+                      "country": {
+                        "type": "string"
+                      },
+                      "state": {
+                        "type": "string"
+                      },
+                      "city": {
+                        "type": "string"
+                      },
+                      "streetAddress": {
+                        "type": "string"
+                      },
+                      "nearestLandmark": {
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "guarantor": {
+                    "type": "object",
+                    "required": [
+                      "name",
+                      "email"
+                    ],
+                    "properties": {
+                      "name": {
+                        "type": "string"
+                      },
+                      "email": {
+                        "type": "string",
+                        "format": "email"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Profile submitted successfully"
+          },
+          "400": {
+            "description": "Invalid input data"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
     }
   },
   "components": {

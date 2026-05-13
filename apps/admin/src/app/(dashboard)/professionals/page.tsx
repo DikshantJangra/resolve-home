@@ -10,10 +10,11 @@ import {
   HiOutlineStar,
   HiOutlineCurrencyDollar,
   HiOutlineUsers,
-  HiOutlineBadgeCheck
+  HiOutlineBadgeCheck,
+  HiOutlineChevronDown
 } from 'react-icons/hi'
-import { cn, Button, Skeleton } from "@resolve/ui"
-import { useAdminUsers, useBanUser, useAdminEngineerStats } from '@/hooks/api-hooks'
+import { cn, Button, Skeleton, Input } from "@resolve/ui"
+import { useAdminUsers, useBanUser, useAdminStats, useCategories } from '@/hooks/api-hooks'
 import { toast } from 'sonner'
 
 const StatCard = ({ title, value, trend, icon: Icon }: { 
@@ -43,9 +44,52 @@ const StatCard = ({ title, value, trend, icon: Icon }: {
 
 export default function ProfessionalsPage() {
   const [search, setSearch] = useState('')
+  const [categoryFilter, setCategoryFilter] = useState('all')
+  const [statusFilter, setStatusFilter] = useState('all')
+
   const { data: users, isLoading: usersLoading, error } = useAdminUsers()
-  const { data: statsData, isLoading: statsLoading } = useAdminEngineerStats()
+  const { data: statsData, isLoading: statsLoading } = useAdminStats()
+  const { data: categories } = useCategories()
   const { mutate: banUser, isPending: isBanning } = useBanUser()
+
+  const professionals = (users || [])
+    .filter((u: { role?: string }) => 
+      u.role?.toLowerCase() === 'worker' || u.role?.toLowerCase() === 'engineer'
+    )
+    .filter((u: any) => {
+      // Search logic
+      const searchStr = `${u.name || u.fullName} ${u.email} ${u.category || u.primarySpecialty}`.toLowerCase()
+      const matchesSearch = searchStr.includes(search.toLowerCase())
+
+      // Category logic
+      const matchesCategory = categoryFilter === 'all' || 
+        (u.category?.toLowerCase() === categoryFilter.toLowerCase()) || 
+        (u.primarySpecialty?.toLowerCase() === categoryFilter.toLowerCase())
+
+      // Status logic
+      const matchesStatus = statusFilter === 'all' || 
+        (statusFilter === 'active' && !u.isBanned) || 
+        (statusFilter === 'suspended' && u.isBanned)
+
+      return matchesSearch && matchesCategory && matchesStatus
+    })
+
+  const stats = {
+    total: (statsData as any)?.totalEngineers || professionals.length,
+    active: (statsData as any)?.activeProfessionals || (users || []).filter((u: any) => (u.role?.toLowerCase() === 'worker' || u.role?.toLowerCase() === 'engineer') && !u.isBanned).length,
+    inactive: (statsData as any)?.inactiveProfessionals || (users || []).filter((u: any) => (u.role?.toLowerCase() === 'worker' || u.role?.toLowerCase() === 'engineer') && u.isBanned).length,
+    jobsDone: (statsData as any)?.jobsDone || professionals.reduce((acc: number, u: any) => acc + (u.totalJobs || 0), 0)
+  }
+
+  const handleToggleBan = (userId: string, isBanned: boolean) => {
+    const action = isBanned ? 'unban' : 'ban'
+    if (confirm(`Are you sure you want to ${action} this professional?`)) {
+      banUser(userId, {
+        onSuccess: () => toast.success(`Professional ${action}ned successfully`),
+        onError: (err: any) => toast.error(err.message || `Failed to ${action} professional`)
+      })
+    }
+  }
 
   if (usersLoading || statsLoading) {
     return (
@@ -62,69 +106,71 @@ export default function ProfessionalsPage() {
     )
   }
 
-  const professionals = users?.filter((u: { role?: string }) => 
-    u.role?.toLowerCase() === 'worker' || u.role?.toLowerCase() === 'engineer'
-  ).filter((u: { name?: string; email?: string; category?: string }) => 
-    u.name?.toLowerCase().includes(search.toLowerCase()) || 
-    u.email?.toLowerCase().includes(search.toLowerCase()) ||
-    u.category?.toLowerCase().includes(search.toLowerCase())
-  ) || []
-
-  const stats = {
-    total: (statsData as any)?.totalEngineers || professionals.length,
-    active: (statsData as any)?.activeProfessionals || professionals.filter((u: any) => !u.isBanned).length,
-    inactive: (statsData as any)?.inactiveProfessionals || professionals.filter((u: any) => u.isBanned).length,
-    jobsDone: (statsData as any)?.jobsDone || professionals.reduce((acc: number, u: any) => acc + (u.totalJobs || 0), 0)
-  }
-
-  const handleToggleBan = (userId: string, isBanned: boolean) => {
-    const action = isBanned ? 'unban' : 'ban'
-    if (confirm(`Are you sure you want to ${action} this professional?`)) {
-      banUser(userId, {
-        onSuccess: () => toast.success(`Professional ${action}ned successfully`),
-        onError: (err: any) => toast.error(err.message || `Failed to ${action} professional`)
-      })
-    }
-  }
-
   return (
-    <div className="p-4 sm:p-8 flex flex-col gap-8 max-w-[1240px] mx-auto">
-      {/* Header */}
-      <div className="flex justify-between items-center">
-        <div className="flex flex-col">
-          <h1 className="text-neutral-700 text-xl font-semibold font-heading leading-8">Service Professionals</h1>
-          <p className="text-zinc-600 text-base font-normal font-inter leading-6">
-            Onboard, verify, and monitor field service experts.
-          </p>
+    <div className="p-4 sm:p-8 flex flex-col gap-8 max-w-[1400px] mx-auto">
+      {/* Header Area */}
+      <div className="flex flex-col gap-6">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+          <div className="flex flex-col">
+            <h1 className="text-neutral-700 text-xl font-semibold font-plus-jakarta leading-8">Service Professionals</h1>
+            <p className="text-zinc-600 text-base font-normal font-inter leading-6">
+              Onboard, verify, and monitor field service experts.
+            </p>
+          </div>
+          <Button className="bg-blue-700 hover:bg-blue-800 text-white px-8 py-3 rounded-xl h-auto font-medium text-sm transition-all shadow-sm">
+            Onboard Pro
+          </Button>
         </div>
-        <Button className="bg-blue-700 hover:bg-blue-800 text-white px-8 py-3 rounded-xl h-auto font-medium text-sm">
-          Onboard Pro
-        </Button>
+
+        {/* Stats Row */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+          <StatCard title="Total Professionals" value={stats.total} trend={(statsData as any)?.trends?.total} icon={HiOutlineUsers} />
+          <StatCard title="Jobs Done" value={stats.jobsDone} trend={(statsData as any)?.trends?.jobs} icon={HiOutlineBriefcase} />
+          <StatCard title="Active Professionals" value={stats.active} trend={(statsData as any)?.trends?.active} icon={HiOutlineBadgeCheck} />
+          <StatCard title="Suspended Professionals" value={stats.inactive} trend={(statsData as any)?.trends?.inactive} icon={HiOutlineUsers} />
+        </div>
       </div>
 
-      {/* Stats Row */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
-        <StatCard title="Total Professionals" value={stats.total} trend={(statsData as any)?.trends?.total} icon={HiOutlineUsers} />
-        <StatCard title="Jobs Done" value={stats.jobsDone} trend={(statsData as any)?.trends?.jobs} icon={HiOutlineBriefcase} />
-        <StatCard title="Active Professionals" value={stats.active} trend={(statsData as any)?.trends?.active} icon={HiOutlineBadgeCheck} />
-        <StatCard title="Inactive members" value={stats.inactive} trend={(statsData as any)?.trends?.inactive} icon={HiOutlineUsers} />
-      </div>
-
-      {/* Search and Filters */}
-      <div className="flex justify-between items-center gap-4">
-        <div className="relative flex-1 max-w-md">
-          <input 
-            placeholder="Search professional" 
+      {/* Filter Section */}
+      <div className="bg-stone-50 p-4 rounded-2xl border border-zinc-200 flex flex-col md:flex-row items-center gap-4 shadow-sm">
+        <div className="relative flex-1 w-full">
+          <Input 
+            placeholder="Search professionals by name, email or specialty..." 
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full h-11 px-4 pl-10 rounded-xl border border-zinc-200 text-sm outline-none focus:ring-2 focus:ring-blue-500/10 focus:border-blue-500 transition-all"
+            className="w-full pl-11 h-12 bg-white"
           />
-          <HiOutlineSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400 w-4 h-4" />
+          <HiOutlineSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400 w-5 h-5" />
         </div>
-        <Button variant="outline" className="h-11 rounded-xl border-zinc-200 text-zinc-600 gap-2">
-          <HiOutlineFilter className="w-4 h-4" />
-          Filter
-        </Button>
+        
+        <div className="flex items-center gap-3 w-full md:w-auto">
+          <div className="relative w-full md:w-48">
+            <select 
+              value={categoryFilter}
+              onChange={(e) => setCategoryFilter(e.target.value)}
+              className="w-full h-12 pl-4 pr-10 rounded-xl border border-zinc-300 bg-white text-sm text-zinc-700 outline-none focus:ring-2 focus:ring-blue-500/10 focus:border-blue-500 transition-all appearance-none cursor-pointer"
+            >
+              <option value="all">All Specialties</option>
+              {categories?.map((cat: any) => (
+                <option key={cat.id} value={cat.name}>{cat.name}</option>
+              ))}
+            </select>
+            <HiOutlineChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 w-4 h-4 pointer-events-none" />
+          </div>
+
+          <div className="relative w-full md:w-40">
+            <select 
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="w-full h-12 pl-4 pr-10 rounded-xl border border-zinc-300 bg-white text-sm text-zinc-700 outline-none focus:ring-2 focus:ring-blue-500/10 focus:border-blue-500 transition-all appearance-none cursor-pointer"
+            >
+              <option value="all">All Status</option>
+              <option value="active">Active Only</option>
+              <option value="suspended">Suspended Only</option>
+            </select>
+            <HiOutlineChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 w-4 h-4 pointer-events-none" />
+          </div>
+        </div>
       </div>
 
       {/* Professionals Table */}
@@ -148,17 +194,17 @@ export default function ProfessionalsPage() {
                 >
                   <td className="px-6 py-5">
                     <Link href={`/professionals/${pro.id}`} className="flex items-center gap-3">
-                      <div className="w-12 h-12 rounded-full bg-zinc-100 flex items-center justify-center text-zinc-600 font-medium text-sm border border-zinc-200 overflow-hidden">
-                        {pro.profileImage ? (
-                          <img src={pro.profileImage} alt={pro.name} className="w-full h-full object-cover" />
+                      <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-bold text-sm border border-zinc-200 overflow-hidden">
+                        {pro.profileImage || pro.avatar ? (
+                          <img src={pro.profileImage || pro.avatar} alt={pro.name || pro.fullName} className="w-full h-full object-cover" />
                         ) : (
-                          pro.name?.charAt(0) || 'P'
+                          (pro.name || pro.fullName)?.charAt(0) || 'P'
                         )}
                       </div>
                       <div className="flex flex-col gap-0.5">
                         <div className="flex items-center gap-2">
-                          <span className="text-sm font-medium text-neutral-900">{pro.name || 'Unnamed Pro'}</span>
-                          {pro.isVerified && <HiOutlineBadgeCheck className="text-blue-700 w-3.5 h-3.5" />}
+                          <span className="text-sm font-medium text-neutral-900">{pro.name || pro.fullName || 'Unnamed Pro'}</span>
+                          {(pro.isVerified || pro.status === 'approved') && <HiOutlineBadgeCheck className="text-blue-700 w-3.5 h-3.5" title="Verified Professional" />}
                         </div>
                         <span className="text-xs text-zinc-500">{pro.email}</span>
                       </div>
@@ -166,7 +212,7 @@ export default function ProfessionalsPage() {
                   </td>
                   <td className="px-6 py-5">
                     <Link href={`/professionals/${pro.id}`} className="block">
-                      <span className="text-sm text-zinc-600 font-medium">{pro.category || pro.specialty || 'General'}</span>
+                      <span className="text-sm text-zinc-600 font-medium">{pro.category || pro.primarySpecialty || pro.specialty || 'General'}</span>
                     </Link>
                   </td>
                    <td className="px-6 py-5">

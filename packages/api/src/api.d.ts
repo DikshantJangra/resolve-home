@@ -287,6 +287,91 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/engineer/complete-profile": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Submit profile for verification
+         * @description Engineers must submit their professional details, location, and documents for verification.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        primarySpecialty: string;
+                        /** @description Category ID */
+                        category: string;
+                        /** @enum {string} */
+                        yearsOfExperience: "1-3" | "4-7" | "8-12" | "13+";
+                        idType: string;
+                        idNumber: string;
+                        /**
+                         * Format: url
+                         * @description URL of the uploaded ID document
+                         */
+                        idDocument: string;
+                        bankDetails: {
+                            accountName: string;
+                            bankName: string;
+                            accountNumber: string;
+                        };
+                        location: {
+                            country: string;
+                            state: string;
+                            city: string;
+                            streetAddress: string;
+                            nearestLandmark: string;
+                        };
+                        guarantor: {
+                            name: string;
+                            /** Format: email */
+                            email: string;
+                        };
+                    };
+                };
+            };
+            responses: {
+                /** @description Profile submitted successfully */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Invalid input data */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {

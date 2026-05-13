@@ -19,6 +19,7 @@ export default function WalletPage() {
   const [isBankModalOpen, setIsBankModalOpen] = React.useState(false)
   const [isWithdrawModalOpen, setIsWithdrawModalOpen] = React.useState(false)
   const [isSetupOpen, setIsSetupOpen] = React.useState(false)
+  const [selectedBank, setSelectedBank] = React.useState<any>(null)
 
   const { data: session, isPending: sessionPending } = useAuthSession()
   const { data: userProfile, isPending: userProfilePending } = useUserProfile()
@@ -83,6 +84,11 @@ export default function WalletPage() {
     }
   }) || []
 
+  const handleOpenBankModal = (bank?: any) => {
+    setSelectedBank(bank || null)
+    setIsBankModalOpen(true)
+  }
+
   return (
     <div className="flex flex-col gap-6 md:gap-8 max-w-6xl mx-auto pb-10">
       {/* Page Header */}
@@ -116,7 +122,7 @@ export default function WalletPage() {
             />
           </div>
 
-          <BankDetailsSection onAdd={() => setIsBankModalOpen(true)} />
+          <BankDetailsSection onAdd={handleOpenBankModal} />
         </div>
 
         {/* Right Column: Transaction History */}
@@ -126,11 +132,23 @@ export default function WalletPage() {
       </div>
 
       {isFundingModalOpen && (
-        <FundWalletModal onClose={() => setIsFundingModalOpen(false)} />
+        <FundWalletModal 
+          onClose={() => setIsFundingModalOpen(false)} 
+          onAddBank={() => {
+            setIsFundingModalOpen(false)
+            setIsBankModalOpen(true)
+          }}
+        />
       )}
       
       {isBankModalOpen && (
-        <AddBankModal onClose={() => setIsBankModalOpen(false)} />
+        <AddBankModal 
+          onClose={() => {
+            setIsBankModalOpen(false)
+            setSelectedBank(null)
+          }} 
+          initialData={selectedBank}
+        />
       )}
 
       {isWithdrawModalOpen && (

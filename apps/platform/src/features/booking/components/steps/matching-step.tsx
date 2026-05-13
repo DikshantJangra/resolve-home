@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useEffect, useRef } from 'react'
+import { motion } from 'framer-motion'
 import { useBookingStore } from '@/store/booking-store'
 import { useCreateBooking } from '@/hooks/api-hooks'
 import { toast } from 'sonner'
@@ -24,12 +25,17 @@ export const MatchingStep = () => {
     if (hasCalled.current) return
     hasCalled.current = true
 
+    const { scheduledDate, scheduledTime } = useBookingStore.getState()
+
     // Real API Call
     createBooking({
       serviceId,
       priority: priority?.toLowerCase() as 'emergency' | 'standard',
       issueDetails,
+      scheduledDate,
+      scheduledTime,
       location: {
+        country: location?.country,
         state: location?.state,
         city: location?.city,
         streetAddress: location?.streetAddress,
@@ -56,7 +62,17 @@ export const MatchingStep = () => {
   return (
     <div className="flex flex-col items-center justify-center h-full px-5 space-y-10 bg-white">
       <div className="w-80 h-72 relative overflow-hidden flex items-center justify-center">
-        <div className="w-20 h-20 relative">
+        <motion.div 
+          animate={{ 
+            rotate: 360,
+            y: [0, -10, 0] 
+          }}
+          transition={{ 
+            rotate: { duration: 4, repeat: Infinity, ease: "linear" },
+            y: { duration: 2, repeat: Infinity, ease: "easeInOut" }
+          }}
+          className="w-20 h-20 relative"
+        >
           {/* Pulsing Dots Animation */}
           <div className="absolute left-[33.33px] top-[16.67px] w-3.5 h-3.5 bg-indigo-200 rounded-full animate-pulse" />
           <div className="absolute left-[33.33px] top-[50px] w-3.5 h-3.5 bg-indigo-200 rounded-full animate-pulse delay-75" />
@@ -65,7 +81,7 @@ export const MatchingStep = () => {
           
           <div className="absolute left-[16.67px] top-[33.33px] w-3.5 h-3.5 bg-blue-700 rounded-full animate-ping" />
           <div className="absolute left-[50px] top-[33.33px] w-3.5 h-3.5 bg-blue-700 rounded-full animate-ping delay-150" />
-        </div>
+        </motion.div>
       </div>
       
       <div className="text-center space-y-2">

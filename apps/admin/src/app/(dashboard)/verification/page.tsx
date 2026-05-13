@@ -13,33 +13,53 @@ import {
   HiOutlineArrowRight
 } from 'react-icons/hi'
 import { cn, Button, Skeleton } from "@resolve/ui"
-import { useAdminVerificationRequests, useAdminVerifyEngineer } from '@/hooks/api-hooks'
+import { useAdminVerificationRequests, useAdminVerifyEngineer, useAdminEngineers } from '@/hooks/api-hooks'
 import Link from 'next/link'
 import { toast } from 'sonner'
 
 export default function VerificationPage() {
   const [search, setSearch] = useState('')
-  const { data: verifications, isLoading, error } = useAdminVerificationRequests()
+  const { data: verifications, isLoading: verifLoading, error: verifError } = useAdminVerificationRequests()
+  const { data: engineers, isLoading: engLoading } = useAdminEngineers()
   const { mutate: verifyEngineer } = useAdminVerifyEngineer()
 
+  const isLoading = verifLoading || engLoading
+
   const stats = useMemo(() => {
-    if (!verifications) return { pending: 0, rate: '0%', rejected: 0 }
-    const pending = verifications.length
-    const approved = 0 // This should come from a different stat hook if available
-    const rejected = 0
+    const pending = verifications?.length || 0
+    const total = engineers?.length || 0
+    const approved = engineers?.filter((e: any) => e.status === 'approved').length || 0
+    const rejected = engineers?.filter((e: any) => e.status === 'rejected').length || 0
+    
+    // Calculate rate (percentage of approved engineers)
+    const rate = total > 0 ? `${((approved / total) * 100).toFixed(1)}%` : '0%'
+
     return {
       pending,
-      rate: '9.8%', // Hardcoded as per design or calculated if possible
-      rejected: 47 // Hardcoded as per design
+      rate,
+      rejected
     }
-  }, [verifications])
+  }, [verifications, engineers])
 
   const filteredVerifications = useMemo(() => {
-    return verifications?.filter((v: any) => {
-      const searchStr = `${v.fullName} ${v.email} ${v.category}`.toLowerCase()
+    // Merge verifications from the specific endpoint with pending engineers from the general list
+    // This provides a fallback if the verifications endpoint structure is different
+    const pendingFromEngineers = engineers?.filter((e: any) => e.status === 'pending') || []
+    
+    // Combine and deduplicate by ID
+    const combined = [...(verifications || [])]
+    
+    pendingFromEngineers.forEach((pe: any) => {
+      if (!combined.find(v => v.id === pe.id)) {
+        combined.push(pe)
+      }
+    })
+
+    return combined.filter((v: any) => {
+      const searchStr = `${v.fullName || v.name} ${v.email} ${v.category || v.primarySpecialty}`.toLowerCase()
       return searchStr.includes(search.toLowerCase())
-    }) || []
-  }, [verifications, search])
+    })
+  }, [verifications, engineers, search])
 
   const handleAction = (id: string, status: 'approved' | 'rejected') => {
     verifyEngineer({ id, status }, {
@@ -75,9 +95,9 @@ export default function VerificationPage() {
       {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-start gap-4">
         <div className="flex flex-col gap-1">
-          <h1 className="text-neutral-700 text-xl font-semibold font-plus-jakarta leading-8">Conflict Resolution</h1>
+          <h1 className="text-neutral-700 text-xl font-semibold font-plus-jakarta leading-8">Verification</h1>
           <p className="text-zinc-600 text-base font-normal font-inter leading-6">
-            Manage sensitive customer disputes and reports.
+            Manage and review professional registration requests.
           </p>
         </div>
         <div className="relative w-full md:w-96">
@@ -134,10 +154,10 @@ export default function VerificationPage() {
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-bold text-sm">
-                        {v.fullName?.charAt(0) || 'U'}
+                        {v.fullName?.charAt(0) || v.name?.charAt(0) || 'U'}
                       </div>
                       <div className="flex flex-col">
-                        <span className="text-neutral-700 text-sm font-medium font-inter">{v.fullName}</span>
+                        <span className="text-neutral-700 text-sm font-medium font-inter">{v.fullName || v.name}</span>
                         <span className="text-zinc-500 text-xs font-normal font-inter">{v.email}</span>
                       </div>
                     </div>

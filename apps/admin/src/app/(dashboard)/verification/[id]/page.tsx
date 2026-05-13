@@ -73,11 +73,11 @@ export default function VerificationDetailPage() {
       <div className="bg-stone-50 rounded-2xl border border-zinc-300 p-5 flex flex-col md:flex-row justify-between items-center gap-6 shadow-sm overflow-hidden relative">
         <div className="flex items-center gap-4">
           <div className="w-14 h-14 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-bold text-xl border-2 border-blue-700">
-            {engineer.fullName?.charAt(0) || 'U'}
+            {engineer.fullName?.charAt(0) || engineer.name?.charAt(0) || 'U'}
           </div>
           <div className="flex flex-col">
             <div className="flex items-center gap-2">
-              <h2 className="text-neutral-700 text-lg font-semibold font-plus-jakarta">{engineer.fullName}</h2>
+              <h2 className="text-neutral-700 text-lg font-semibold font-plus-jakarta">{engineer.fullName || engineer.name}</h2>
               {engineer.status === 'approved' && <HiOutlineCheckCircle className="text-blue-700 w-4 h-4" />}
             </div>
             <p className="text-zinc-500 text-sm font-normal font-inter">{engineer.email}</p>
@@ -116,13 +116,17 @@ export default function VerificationDetailPage() {
           <h3 className="text-neutral-700 text-lg font-semibold font-inter">Information Details</h3>
           
           <div className="flex flex-col gap-5">
-            <InfoRow label="Full Name" value={engineer.fullName} icon={<HiOutlineIdentification />} />
-            <InfoRow label="Category" value={engineer.category || 'N/A'} icon={<HiOutlineBriefcase />} />
-            <InfoRow label="Phone Number" value={engineer.phoneNumber || 'N/A'} icon={<HiOutlinePhone />} />
+            <InfoRow label="Full Name" value={engineer.fullName || engineer.name} icon={<HiOutlineIdentification />} />
+            <InfoRow label="Category" value={engineer.category || engineer.primarySpecialty || 'N/A'} icon={<HiOutlineBriefcase />} />
+            <InfoRow label="Phone Number" value={engineer.phoneNumber || engineer.phone || 'N/A'} icon={<HiOutlinePhone />} />
             <InfoRow label="Email Address" value={engineer.email} icon={<HiOutlineMail />} />
-            <InfoRow label="Experience" value={engineer.experience || 'N/A'} />
-            <InfoRow label="Home Address" value={engineer.address || 'N/A'} icon={<HiOutlineLocationMarker />} />
-            <InfoRow label="NIN" value={engineer.nin || 'N/A'} />
+            <InfoRow label="Experience" value={engineer.experience || engineer.yearsOfExperience || 'N/A'} />
+            <InfoRow 
+              label="Home Address" 
+              value={engineer.address || (engineer.location ? `${engineer.location.streetAddress}, ${engineer.location.city}` : 'N/A')} 
+              icon={<HiOutlineLocationMarker />} 
+            />
+            <InfoRow label="NIN" value={engineer.nin || engineer.idNumber || 'N/A'} />
           </div>
         </div>
 

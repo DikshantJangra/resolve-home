@@ -65,7 +65,7 @@ export const Navbar = () => {
   const loggedInLinks = [
     { label: 'Home', href: '/dashboard', id: 'dashboard-home' },
     { label: 'Messages', href: '/messages', id: 'messages' },
-    { label: 'Book a service', href: '/booking', id: 'booking' },
+    { label: 'Book a service', href: '/book-service', id: 'booking' },
     { label: 'FAQ', href: '#faq', id: 'faq-logged' },
     { label: 'My Bookings', href: '/bookings', id: 'bookings' },
   ];

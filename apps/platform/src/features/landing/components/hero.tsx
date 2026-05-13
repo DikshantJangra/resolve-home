@@ -4,23 +4,40 @@ import Link from "next/link";
 import { ChevronDown } from "lucide-react";
 import { motion } from "framer-motion";
 import { WorkerMarquee } from "./worker-marquee";
-import { useCategories } from "@/hooks/api-hooks";
+import { useCategories, useAuthSession } from "@/hooks/api-hooks";
 import { useState } from "react";
 import { useBookingStore } from "@/store/booking-store";
 import { useRouter } from "next/navigation";
 
 export const Hero = () => {
+  const { data: session } = useAuthSession();
   const { data: categories, isLoading } = useCategories();
   const [selectedCategory, setSelectedCategory] = useState("");
-  const { setCategoryId } = useBookingStore();
+  const { setCategoryId, setServiceType } = useBookingStore();
   const router = useRouter();
 
   const handleFindPro = () => {
+    // 1. Check if user is logged in
+    if (!session) {
+      const callbackUrl = selectedCategory 
+        ? `/book-service?categoryId=${selectedCategory}` 
+        : `/book-service`;
+      router.push(`/login?callbackUrl=${encodeURIComponent(callbackUrl)}`);
+      return;
+    }
+
+    // 2. Handle selected category
     if (selectedCategory) {
       setCategoryId(selectedCategory);
-      router.push("/booking");
+      
+      const category = categories?.find((cat: any) => cat.id === selectedCategory);
+      if (category) {
+        setServiceType(category.name);
+      }
+      
+      router.push(`/book-service?categoryId=${selectedCategory}`);
     } else {
-      router.push("/booking");
+      router.push("/book-service");
     }
   };
 
