@@ -2,9 +2,9 @@
 
 import React, { useState } from 'react'
 import Link from 'next/link'
-import { 
-  HiOutlineSearch, 
-  HiOutlineFilter, 
+import {
+  HiOutlineSearch,
+  HiOutlineFilter,
   HiOutlineTrendingUp,
   HiOutlineBriefcase,
   HiOutlineStar,
@@ -17,11 +17,11 @@ import { cn, Button, Skeleton, Input } from "@resolve/ui"
 import { useAdminUsers, useBanUser, useAdminStats, useCategories } from '@/hooks/api-hooks'
 import { toast } from 'sonner'
 
-const StatCard = ({ title, value, trend, icon: Icon }: { 
-  title: string, 
-  value: string | number, 
-  trend?: string, 
-  icon: React.ElementType 
+const StatCard = ({ title, value, trend, icon: Icon }: {
+  title: string,
+  value: string | number,
+  trend?: string,
+  icon: React.ElementType
 }) => (
   <div className="flex-1 min-w-[240px] p-4 rounded-xl border border-zinc-300 flex flex-col gap-3 bg-white shadow-sm hover:shadow-md transition-all">
     <div className="flex justify-between items-start">
@@ -53,7 +53,7 @@ export default function ProfessionalsPage() {
   const { mutate: banUser, isPending: isBanning } = useBanUser()
 
   const professionals = (users || [])
-    .filter((u: { role?: string }) => 
+    .filter((u: { role?: string }) =>
       u.role?.toLowerCase() === 'worker' || u.role?.toLowerCase() === 'engineer'
     )
     .filter((u: any) => {
@@ -62,13 +62,13 @@ export default function ProfessionalsPage() {
       const matchesSearch = searchStr.includes(search.toLowerCase())
 
       // Category logic
-      const matchesCategory = categoryFilter === 'all' || 
-        (u.category?.toLowerCase() === categoryFilter.toLowerCase()) || 
+      const matchesCategory = categoryFilter === 'all' ||
+        (u.category?.toLowerCase() === categoryFilter.toLowerCase()) ||
         (u.primarySpecialty?.toLowerCase() === categoryFilter.toLowerCase())
 
       // Status logic
-      const matchesStatus = statusFilter === 'all' || 
-        (statusFilter === 'active' && !u.isBanned) || 
+      const matchesStatus = statusFilter === 'all' ||
+        (statusFilter === 'active' && !u.isBanned) ||
         (statusFilter === 'suspended' && u.isBanned)
 
       return matchesSearch && matchesCategory && matchesStatus
@@ -133,18 +133,18 @@ export default function ProfessionalsPage() {
       {/* Filter Section */}
       <div className="bg-stone-50 p-4 rounded-2xl border border-zinc-200 flex flex-col md:flex-row items-center gap-4 shadow-sm">
         <div className="relative flex-1 w-full">
-          <Input 
-            placeholder="Search professionals by name, email or specialty..." 
+          <Input
+            placeholder="Search professionals by name, email or specialty..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="w-full pl-11 h-12 bg-white"
           />
           <HiOutlineSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400 w-5 h-5" />
         </div>
-        
+
         <div className="flex items-center gap-3 w-full md:w-auto">
           <div className="relative w-full md:w-48">
-            <select 
+            <select
               value={categoryFilter}
               onChange={(e) => setCategoryFilter(e.target.value)}
               className="w-full h-12 pl-4 pr-10 rounded-xl border border-zinc-300 bg-white text-sm text-zinc-700 outline-none focus:ring-2 focus:ring-blue-500/10 focus:border-blue-500 transition-all appearance-none cursor-pointer"
@@ -158,7 +158,7 @@ export default function ProfessionalsPage() {
           </div>
 
           <div className="relative w-full md:w-40">
-            <select 
+            <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
               className="w-full h-12 pl-4 pr-10 rounded-xl border border-zinc-300 bg-white text-sm text-zinc-700 outline-none focus:ring-2 focus:ring-blue-500/10 focus:border-blue-500 transition-all appearance-none cursor-pointer"
@@ -187,8 +187,8 @@ export default function ProfessionalsPage() {
             </thead>
             <tbody className="divide-y divide-zinc-200">
               {professionals.length > 0 ? professionals.map((pro: any) => (
-                <tr 
-                  key={pro.id || pro._id} 
+                <tr
+                  key={pro.id || pro._id}
                   className="hover:bg-zinc-50/50 transition-colors cursor-pointer group"
                 >
                   <td className="px-6 py-5">
@@ -214,7 +214,7 @@ export default function ProfessionalsPage() {
                       <span className="text-sm text-zinc-600 font-medium">{pro.category || pro.primarySpecialty || pro.specialty || 'General'}</span>
                     </Link>
                   </td>
-                   <td className="px-6 py-5">
+                  <td className="px-6 py-5">
                     <Link href={`/professionals/${pro.id || pro._id}`} className="block">
                       <div className="flex items-center gap-2.5 px-3 py-1 bg-orange-50 border border-orange-200 rounded-full w-fit">
                         <HiOutlineStar className="w-4 h-4 text-amber-600" />
@@ -229,17 +229,21 @@ export default function ProfessionalsPage() {
                   </td>
                   <td className="px-6 py-5">
                     <Link href={`/professionals/${pro.id || pro._id}`} className="flex items-center gap-2">
-
-                      <div className={cn(
-                        "w-2.5 h-2.5 rounded-full",
-                        pro.isBanned ? "bg-rose-400" : "bg-green-700"
-                      )} />
-                      <span className={cn(
-                        "text-sm font-medium",
-                        pro.isBanned ? "text-rose-400" : "text-green-700"
-                      )}>
-                        {pro.isBanned ? 'Suspended' : 'Active'}
-                      </span>
+                      {(() => {
+                        const status = pro.isBanned
+                          ? { dot: 'bg-rose-400', text: 'text-rose-400', label: 'Suspended' }
+                          : (pro.verificationStatus === 'approved' || pro.isVerified || pro.approvedAt)
+                            ? { dot: 'bg-green-700', text: 'text-green-700', label: 'Active' }
+                            : pro.verificationStatus === 'rejected'
+                              ? { dot: 'bg-red-400', text: 'text-red-400', label: 'Rejected' }
+                              : { dot: 'bg-amber-400', text: 'text-amber-600', label: 'Pending' }
+                        return (
+                          <>
+                            <div className={cn("w-2.5 h-2.5 rounded-full", status.dot)} />
+                            <span className={cn("text-sm font-medium", status.text)}>{status.label}</span>
+                          </>
+                        )
+                      })()}
                     </Link>
                   </td>
                 </tr>
