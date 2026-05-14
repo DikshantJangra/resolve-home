@@ -8,7 +8,6 @@ import { useUserChats } from '@/hooks/api-hooks'
 import { useChatStore } from '@/store/use-chat-store'
 import { cn } from "@resolve/ui"
 import { useUserProfile } from '@/hooks/api-hooks'
-import { ProfessionalSetupWizard } from '@/features/professional-setup/components/professional-setup-wizard'
 
 export default function MessagesPage() {
   const [mounted, setMounted] = React.useState(false)
@@ -22,7 +21,12 @@ export default function MessagesPage() {
   }, [])
 
   const isWorker = userProfile?.user?.role === 'worker'
-  const isVerified = (userProfile?.user as any)?.isVerified || (userProfile?.user as any)?.status === 'verified'
+  const isVerified = !!(
+    (userProfile?.user as any)?.isVerified ||
+    (userProfile?.user as any)?.status === 'verified' ||
+    userProfile?.engineerProfile?.isVerified ||
+    userProfile?.engineerProfile?.verificationStatus === 'approved'
+  )
   const status = (userProfile?.user as any)?.status
 
   if (!mounted || isLoading || isUserLoading) {
@@ -31,14 +35,6 @@ export default function MessagesPage() {
         <div className="text-zinc-500 animate-pulse text-sm">Loading messages...</div>
       </div>
     )
-  }
-
-  // If worker and not verified - Auto-open wizard
-  if (isWorker && !isVerified) {
-    if (status === 'pending') {
-      return <ProfessionalSetupWizard onComplete={() => setIsSetupOpen(false)} initialStep={4} />
-    }
-    return <ProfessionalSetupWizard onComplete={() => setIsSetupOpen(false)} />
   }
 
   const hasConversations = chats && chats.length > 0

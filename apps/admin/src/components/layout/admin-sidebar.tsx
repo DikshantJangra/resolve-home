@@ -3,14 +3,14 @@
 import React from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { 
-  HiOutlineViewGrid, 
-  HiOutlineClipboardList, 
-  HiOutlineUsers, 
-  HiOutlineUserGroup, 
-  HiOutlineExclamationCircle, 
-  HiOutlineBadgeCheck, 
-  HiOutlineCreditCard, 
+import {
+  HiOutlineViewGrid,
+  HiOutlineClipboardList,
+  HiOutlineUsers,
+  HiOutlineUserGroup,
+  HiOutlineExclamationCircle,
+  HiOutlineBadgeCheck,
+  HiOutlineCreditCard,
   HiOutlineCog,
   HiOutlineX
 } from 'react-icons/hi'
@@ -41,8 +41,8 @@ export const AdminSidebar = ({ isOpen, onClose }: AdminSidebarProps) => {
     <>
       {/* Mobile Overlay */}
       {isOpen && (
-        <div 
-          className="fixed inset-0 bg-black/50 z-40 lg:hidden transition-opacity" 
+        <div
+          className="fixed inset-0 bg-black/50 z-40 lg:hidden transition-opacity"
           onClick={onClose}
         />
       )}
@@ -54,13 +54,13 @@ export const AdminSidebar = ({ isOpen, onClose }: AdminSidebarProps) => {
         {/* Header / Logo Section */}
         <div className="h-16 px-6 border-b border-zinc-300 flex items-center justify-between bg-white shrink-0">
           <Link href="/dashboard" onClick={onClose}>
-            <img 
-              src="/logo.svg" 
-              alt="ResolvHome" 
-              className="w-32 h-12 object-contain" 
+            <img
+              src="/logo.svg"
+              alt="ResolvHome"
+              className="w-32 h-12 object-contain"
             />
           </Link>
-          <button 
+          <button
             onClick={onClose}
             className="p-2 lg:hidden text-zinc-500 hover:text-zinc-700 transition-colors"
           >
@@ -82,8 +82,8 @@ export const AdminSidebar = ({ isOpen, onClose }: AdminSidebarProps) => {
                   onClick={onClose}
                   className={cn(
                     "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors group relative",
-                    isActive 
-                      ? "bg-slate-50 border-r-2 border-blue-700" 
+                    isActive
+                      ? "bg-slate-50 border-r-2 border-blue-700"
                       : "hover:bg-slate-50"
                   )}
                 >
@@ -93,8 +93,8 @@ export const AdminSidebar = ({ isOpen, onClose }: AdminSidebarProps) => {
                   )} />
                   <span className={cn(
                     "text-sm font-inter leading-5 flex-1",
-                    isActive 
-                      ? "text-blue-700 font-medium" 
+                    isActive
+                      ? "text-blue-700 font-medium"
                       : "text-zinc-600 font-normal group-hover:text-blue-600"
                   )}>
                     {item.label}

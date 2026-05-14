@@ -5,7 +5,6 @@ import { HiOutlineCurrencyDollar, HiOutlineClipboardCheck, HiOutlineChatAlt, HiO
 import { StatCard } from '@/features/dashboard/components/stat-card'
 import { RecentRequests } from '@/features/dashboard/components/recent-requests'
 import { useAuthSession, useUserProfile, useUserBookings } from '@/hooks/api-hooks'
-import { ProfessionalSetupWizard } from '@/features/professional-setup/components/professional-setup-wizard'
 import { cn, FileUpload } from "@resolve/ui"
 import { createPortal } from 'react-dom'
 import { useProfessionalSetupStore } from '@/store/professional-setup-store'
@@ -73,10 +72,7 @@ export default function DashboardPage() {
 
   return (
     <div className="relative min-h-screen">
-      <div className={cn(
-        "transition-all duration-300",
-        showVerificationOverlay ? "blur-sm pointer-events-none grayscale-[0.5] opacity-80" : ""
-      )}>
+      <div className="transition-all duration-300">
         {/* Dashboard Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
           <div>
@@ -118,24 +114,6 @@ export default function DashboardPage() {
           <RecentRequests />
         </div>
       </div>
-
-      {/* Verification Overlay */}
-      {showVerificationOverlay && (
-        <div className="fixed inset-0 z-[100] flex items-start justify-center sm:pt-10 sm:pb-20 overflow-y-auto bg-white/10 backdrop-blur-md">
-          <div className="w-full max-w-2xl px-4 animate-in fade-in slide-in-from-bottom-8 duration-500">
-            {status === 'pending' ? (
-              <ProfessionalSetupWizard
-                onComplete={() => { }}
-                initialStep={4}
-              />
-            ) : (
-              <ProfessionalSetupWizard
-                onComplete={() => { }}
-              />
-            )}
-          </div>
-        </div>
-      )}
 
       {/* Global Uploader for this page */}
       <FileUpload

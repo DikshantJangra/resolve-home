@@ -104,9 +104,9 @@ export default function CategoriesPage() {
   if (categoriesLoading || engineersLoading) {
     return <div className="p-4 sm:p-8 flex flex-col gap-8 animate-pulse">
       <Skeleton className="h-10 w-48" />
-      <div className="grid grid-cols-3 gap-8 h-[600px]">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 h-[600px]">
         <Skeleton className="col-span-1 rounded-2xl" />
-        <Skeleton className="col-span-2 rounded-2xl" />
+        <Skeleton className="col-span-1 md:col-span-2 rounded-2xl" />
       </div>
     </div>
   }
@@ -132,7 +132,7 @@ export default function CategoriesPage() {
   return (
     <div className="h-full flex flex-col bg-white">
       {/* Header Bar */}
-      <div className="px-8 py-6 border-b border-zinc-100 flex justify-between items-center shrink-0">
+      <div className="px-4 md:px-8 py-4 md:py-6 border-b border-zinc-100 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 shrink-0">
         <div className="space-y-0.5">
           <h1 className="text-xl font-bold text-zinc-900">Service Domains</h1>
           <p className="text-xs text-zinc-500 font-medium uppercase tracking-tight">Configure the platform service hierarchy</p>
@@ -158,9 +158,12 @@ export default function CategoriesPage() {
       </div>
 
       {/* Main Content: Split View */}
-      <div className="flex-1 flex overflow-hidden">
+      <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
         {/* Left Pane: Categories List */}
-        <div className="w-72 border-r border-zinc-100 bg-zinc-50/30 flex flex-col overflow-hidden">
+        <div className={cn(
+          "md:w-72 md:border-r border-zinc-100 bg-zinc-50/30 flex flex-col overflow-hidden",
+          activeCategoryId ? "hidden md:flex" : "flex"
+        )}>
           <div className="flex-1 overflow-y-auto p-4 space-y-1 no-scrollbar">
             {categoriesLoading ? (
               Array(5).fill(0).map((_, i) => <Skeleton key={i} className="h-14 rounded-lg mb-2" />)
@@ -196,11 +199,20 @@ export default function CategoriesPage() {
         </div>
 
         {/* Right Pane: Sub-services Hub */}
-        <div className="flex-1 bg-white flex flex-col overflow-hidden">
+        <div className={cn(
+          "flex-1 bg-white flex flex-col overflow-hidden",
+          activeCategoryId ? "flex" : "hidden md:flex"
+        )}>
           {activeCategory ? (
             <>
               {/* Category Sub-header */}
-              <div className="px-8 py-10 border-b border-zinc-50 flex justify-between items-start shrink-0">
+              <div className="px-4 md:px-8 py-6 md:py-10 border-b border-zinc-50 flex flex-col md:flex-row md:justify-between md:items-start gap-4 shrink-0">
+                <button
+                  onClick={() => setActiveCategoryId(null)}
+                  className="md:hidden flex items-center gap-2 text-blue-700 text-sm font-medium mb-2"
+                >
+                  <HiOutlineChevronRight className="rotate-180 w-4 h-4" /> Back to Categories
+                </button>
                 <div className="space-y-2 max-w-xl">
                   <div className="flex items-center gap-3">
                     <h2 className="text-2xl font-black text-zinc-900 tracking-tight">{activeCategory.name}</h2>

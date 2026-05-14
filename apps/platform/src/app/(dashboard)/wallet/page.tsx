@@ -18,7 +18,6 @@ import { format } from 'date-fns'
 import { FundWalletModal } from '@/features/wallet/components/fund-wallet-modal'
 import { AddBankModal } from '@/features/wallet/components/add-bank-modal'
 import { WithdrawModal } from '@/features/wallet/components/withdraw-modal'
-import { ProfessionalSetupWizard } from '@/features/professional-setup/components/professional-setup-wizard'
 import { useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 
@@ -26,7 +25,6 @@ export default function WalletPage() {
   const [isFundingModalOpen, setIsFundingModalOpen] = React.useState(false)
   const [isBankModalOpen, setIsBankModalOpen] = React.useState(false)
   const [isWithdrawModalOpen, setIsWithdrawModalOpen] = React.useState(false)
-  const [isSetupOpen, setIsSetupOpen] = React.useState(false)
   const [selectedBank, setSelectedBank] = React.useState<any>(null)
 
   const { data: session, isPending: sessionPending } = useAuthSession()
@@ -83,16 +81,13 @@ export default function WalletPage() {
 
   const user = session?.user
   const isWorker = userProfile?.user?.role === 'worker'
-  const isVerified = (userProfile?.user as any)?.isVerified || (userProfile?.user as any)?.status === 'verified'
+  const isVerified = !!(
+    (userProfile?.user as any)?.isVerified ||
+    (userProfile?.user as any)?.status === 'verified' ||
+    userProfile?.engineerProfile?.isVerified ||
+    userProfile?.engineerProfile?.verificationStatus === 'approved'
+  )
   const profileStatus = (userProfile?.user as any)?.status
-
-  // If worker and not verified - Auto-open wizard
-  if (isWorker && !isVerified) {
-    if (profileStatus === 'pending') {
-      return <ProfessionalSetupWizard onComplete={() => setIsSetupOpen(false)} initialStep={4} />
-    }
-    return <ProfessionalSetupWizard onComplete={() => setIsSetupOpen(false)} />
-  }
 
   // Map API transactions to UI format
   const mappedTransactions = transactions?.map((t: any) => {

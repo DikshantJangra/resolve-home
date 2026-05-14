@@ -21,7 +21,7 @@ const StatCard = ({ title, value, trend, icon: Icon }: {
   trend?: string,
   icon: React.ElementType
 }) => (
-  <div className="flex-1 min-w-[240px] p-4 rounded-xl border border-zinc-300 flex flex-col gap-3 bg-white shadow-sm hover:shadow-md transition-all">
+  <div className="flex-1 p-4 rounded-xl border border-zinc-300 flex flex-col gap-3 bg-white shadow-sm hover:shadow-md transition-all">
     <div className="flex justify-between items-start">
       <div className="flex flex-col gap-1">
         <span className="text-neutral-700 text-sm font-normal font-inter leading-5">{title}</span>

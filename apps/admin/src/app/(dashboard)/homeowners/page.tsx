@@ -37,7 +37,7 @@ export default function HomeownersPage() {
     return (
       <div className="p-4 sm:p-8 flex flex-col gap-8 max-w-[1240px]">
         <Skeleton className="h-10 w-48" />
-        <div className="grid grid-cols-4 gap-5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
           {[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-32 rounded-xl" />)}
         </div>
         <Skeleton className="h-[400px] w-full rounded-xl" />
@@ -48,7 +48,7 @@ export default function HomeownersPage() {
   return (
     <div className="p-4 sm:p-8 flex flex-col gap-8">
       {/* Header */}
-      <div className="flex justify-between items-start">
+      <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-4">
         <div className="flex flex-col gap-1">
           <h1 className="text-neutral-700 text-xl font-semibold font-plus-jakarta leading-8">Homeowners</h1>
           <p className="text-zinc-600 text-base font-normal font-inter leading-6">

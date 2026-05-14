@@ -59,7 +59,7 @@ export default function ComplaintDetailPage() {
       </div>
 
       {/* Chat Container */}
-      <div className="w-[829px] h-[680px] bg-stone-50 rounded-[20px] border border-zinc-300 flex flex-col overflow-hidden relative">
+      <div className="w-full h-[calc(100vh-8rem)] md:h-[680px] bg-stone-50 rounded-[20px] border border-zinc-300 flex flex-col overflow-hidden relative">
         
         {/* Chat Header */}
         <div className="h-20 p-5 bg-stone-50 border-b border-zinc-300 flex justify-between items-center">

@@ -36,7 +36,7 @@ export default function HomeownerDetailPage() {
       <div className="p-4 sm:p-8 flex flex-col gap-8">
         <Skeleton className="h-10 w-48" />
         <Skeleton className="h-[200px] w-full rounded-xl" />
-        <div className="grid grid-cols-4 gap-5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
           {[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-32 rounded-xl" />)}
         </div>
         <Skeleton className="h-[400px] w-full rounded-xl" />

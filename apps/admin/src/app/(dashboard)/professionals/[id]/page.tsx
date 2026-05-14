@@ -64,7 +64,7 @@ export default function ProfessionalDetailsPage() {
       <div className="p-4 sm:p-8 flex flex-col gap-8 max-w-[1240px] mx-auto animate-pulse">
         <Skeleton className="h-10 w-48" />
         <Skeleton className="h-40 w-full rounded-xl" />
-        <div className="grid grid-cols-4 gap-5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
           {[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-28 rounded-xl" />)}
         </div>
       </div>
@@ -155,7 +155,7 @@ export default function ProfessionalDetailsPage() {
           <div className="flex justify-between items-center">
             <h2 className="text-neutral-700 text-sm font-semibold font-inter">Professional Info</h2>
           </div>
-          <div className="flex justify-between items-center">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
             <div className="flex items-center gap-4">
               <div className="w-14 h-14 rounded-full border border-zinc-200 overflow-hidden bg-zinc-100 flex items-center justify-center">
                 {pro.profileImage ? (

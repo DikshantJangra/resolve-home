@@ -21,7 +21,7 @@ export default function WalletPage() {
   return (
     <div className="p-4 sm:p-8 flex flex-col gap-8">
       {/* Header */}
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
         <div className="space-y-1">
           <h1 className="text-neutral-700 text-xl font-semibold font-plus-jakarta leading-8">Wallet</h1>
           <p className="text-zinc-600 text-base font-normal font-inter leading-6">

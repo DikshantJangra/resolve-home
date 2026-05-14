@@ -7,7 +7,6 @@ import { cn } from "@resolve/ui"
 import { BookingRequestCard } from '@/features/dashboard/components/booking-request-card'
 import { useUserBookings, useUserProfile } from '@/hooks/api-hooks'
 import { Skeleton } from "@resolve/ui"
-import { ProfessionalSetupWizard } from '@/features/professional-setup/components/professional-setup-wizard'
 
 const tabs: { label: string; value: string }[] = [
   { label: 'All', value: 'All' },
@@ -20,12 +19,16 @@ const tabs: { label: string; value: string }[] = [
 export default function BookingsPage() {
   const [activeTab, setActiveTab] = useState<string>('All')
   const [searchQuery, setSearchQuery] = useState('')
-  const [isSetupOpen, setIsSetupOpen] = useState(false)
   const { data: bookings, isPending: isBookingsPending } = useUserBookings()
   const { data: userProfile, isPending: isUserPending } = useUserProfile()
 
   const isWorker = userProfile?.user?.role === 'worker'
-  const isVerified = (userProfile?.user as any)?.isVerified || (userProfile?.user as any)?.status === 'verified'
+  const isVerified = !!(
+    (userProfile?.user as any)?.isVerified ||
+    (userProfile?.user as any)?.status === 'verified' ||
+    userProfile?.engineerProfile?.isVerified ||
+    userProfile?.engineerProfile?.verificationStatus === 'approved'
+  )
   const status = (userProfile?.user as any)?.status
 
   if (isBookingsPending || isUserPending) {
@@ -39,14 +42,6 @@ export default function BookingsPage() {
         </div>
       </div>
     )
-  }
-
-  // If worker and not verified - Auto-open wizard
-  if (isWorker && !isVerified) {
-    if (status === 'pending') {
-      return <ProfessionalSetupWizard onComplete={() => setIsSetupOpen(false)} initialStep={4} />
-    }
-    return <ProfessionalSetupWizard onComplete={() => setIsSetupOpen(false)} />
   }
 
   const filteredBookings = bookings?.filter((booking: any) => {
