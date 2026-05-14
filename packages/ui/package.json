@@ -6,16 +6,21 @@
   "types": "./src/index.ts",
   "dependencies": {
     "@base-ui/react": "^1.0.1",
+    "@uppy/core": "^5.2.0",
+    "@uppy/dashboard": "^5.1.1",
+    "@uppy/image-editor": "^4.2.0",
+    "@uppy/react": "^5.2.0",
+    "@uppy/xhr-upload": "^5.2.0",
+    "class-variance-authority": "^0.7.0",
+    "clsx": "^2.1.1",
     "lucide-react": "^0.454.0",
     "next-themes": "^0.3.0",
-    "clsx": "^2.1.1",
-    "tailwind-merge": "^2.5.4",
-    "class-variance-authority": "^0.7.0"
+    "tailwind-merge": "^2.5.4"
   },
   "devDependencies": {
-    "typescript": "^5",
     "react": "^19",
-    "react-dom": "^19"
+    "react-dom": "^19",
+    "typescript": "^5"
   },
   "peerDependencies": {
     "react": "^19",
