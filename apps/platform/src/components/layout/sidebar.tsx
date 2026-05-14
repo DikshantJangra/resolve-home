@@ -4,14 +4,14 @@ import React from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import Image from 'next/image'
-import { 
-  HiOutlineHome, 
-  HiOutlineChatAlt, 
-  HiOutlineUser, 
-  HiOutlineCreditCard, 
-  HiOutlineCog, 
-  HiOutlineLockClosed, 
-  HiOutlineClipboardCheck, 
+import {
+  HiOutlineHome,
+  HiOutlineChatAlt,
+  HiOutlineUser,
+  HiOutlineCreditCard,
+  HiOutlineCog,
+  HiOutlineLockClosed,
+  HiOutlineClipboardCheck,
   HiOutlineX,
   HiOutlinePlusCircle
 } from 'react-icons/hi'
@@ -52,10 +52,11 @@ export const Sidebar = ({ onClose, items = defaultSidebarItems }: SidebarProps) 
 
   const isEngineer = userProfile?.user?.role === 'worker'
   const isVerified = !!(
-    (userProfile?.user as any)?.isVerified || 
-    (userProfile?.user as any)?.status === 'verified' || 
+    (userProfile?.user as any)?.isVerified ||
+    (userProfile?.user as any)?.status === 'verified' ||
     userProfile?.engineerProfile?.verificationStatus === 'approved' ||
-    userProfile?.engineerProfile?.isVerified
+    userProfile?.engineerProfile?.isVerified ||
+    userProfile?.engineerProfile?.approvedAt
   )
 
   React.useEffect(() => {
@@ -69,7 +70,7 @@ export const Sidebar = ({ onClose, items = defaultSidebarItems }: SidebarProps) 
   return (
     <aside className="w-48 h-full min-h-screen bg-white border-r border-zinc-300 flex flex-col relative">
       {/* Mobile Close Button */}
-      <button 
+      <button
         onClick={onClose}
         className="lg:hidden absolute top-4 right-[-40px] w-8 h-8 bg-white border border-zinc-300 rounded-full flex items-center justify-center text-zinc-600 shadow-sm"
       >
@@ -78,13 +79,13 @@ export const Sidebar = ({ onClose, items = defaultSidebarItems }: SidebarProps) 
       {/* Logo Section */}
       <div className="h-16 px-6 border-b border-zinc-300 flex items-center">
         <Link href="/">
-          <Image 
-            src="/logo.svg" 
-            alt="ResolvHome" 
-            width={128} 
-            height={48} 
+          <Image
+            src="/logo.svg"
+            alt="ResolvHome"
+            width={128}
+            height={48}
             priority
-            className="w-32 h-12 object-contain" 
+            className="w-32 h-12 object-contain"
           />
         </Link>
       </div>
@@ -101,8 +102,8 @@ export const Sidebar = ({ onClose, items = defaultSidebarItems }: SidebarProps) 
               <div
                 className={cn(
                   "flex items-center gap-3 px-3 py-2 rounded-lg transition-colors group relative",
-                  isActive 
-                    ? "bg-slate-50 border-r-2 border-blue-700" 
+                  isActive
+                    ? "bg-slate-50 border-r-2 border-blue-700"
                     : "hover:bg-slate-50",
                   isLocked && "opacity-50 cursor-not-allowed grayscale"
                 )}
@@ -137,7 +138,7 @@ export const Sidebar = ({ onClose, items = defaultSidebarItems }: SidebarProps) 
               </Link>
             )
           })}
-          
+
           {/* Book a service Button - Hide for workers entirely, and only show when loaded and verified */}
           {!isLoadingUser && userProfile && !isEngineer && (
             <button

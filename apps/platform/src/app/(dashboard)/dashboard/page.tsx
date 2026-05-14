@@ -14,10 +14,14 @@ export default function DashboardPage() {
   const [mounted, setMounted] = React.useState(false)
   const { data: session, isPending: sessionPending } = useAuthSession()
   const { data: userProfile, isPending: profilePending } = useUserProfile()
-  
+
   const user = userProfile?.user || session?.user
   const isEngineer = user?.role === 'worker'
-  const isVerified = (user as any)?.isVerified || (user as any)?.status === 'verified'
+  const isVerified = !!(
+    userProfile?.engineerProfile?.isVerified ||
+    userProfile?.engineerProfile?.verificationStatus === 'approved' ||
+    userProfile?.engineerProfile?.approvedAt
+  )
   const showVerificationOverlay = isEngineer && !isVerified
 
   const { data: bookings, isPending: bookingsPending } = useUserBookings({ enabled: !showVerificationOverlay })
@@ -46,7 +50,7 @@ export default function DashboardPage() {
       document.body.style.overflow = 'unset'
     }
   }, [showVerificationOverlay])
-  
+
   const avgRating = isEngineer ? "4.8" : "5.0"
 
   // Derive some stats from bookings
@@ -83,29 +87,29 @@ export default function DashboardPage() {
 
         {/* Stats Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6 mb-10">
-          <StatCard 
-            label="Total Bookings" 
-            value={bookings?.length || 0} 
-            change="+12%" 
-            icon={HiOutlineClipboardCheck} 
+          <StatCard
+            label="Total Bookings"
+            value={bookings?.length || 0}
+            change="+12%"
+            icon={HiOutlineClipboardCheck}
           />
-          <StatCard 
-            label="Messages" 
-            value="4" 
-            change="New" 
-            icon={HiOutlineChatAlt} 
+          <StatCard
+            label="Messages"
+            value="4"
+            change="New"
+            icon={HiOutlineChatAlt}
           />
-          <StatCard 
-            label="Earnings" 
-            value="₦0.00" 
-            change="+0%" 
-            icon={HiOutlineCurrencyDollar} 
+          <StatCard
+            label="Earnings"
+            value="₦0.00"
+            change="+0%"
+            icon={HiOutlineCurrencyDollar}
           />
-          <StatCard 
-            label="Rating" 
-            value="4.8" 
-            change="Top" 
-            icon={HiOutlineStar} 
+          <StatCard
+            label="Rating"
+            value="4.8"
+            change="Top"
+            icon={HiOutlineStar}
           />
         </div>
 
@@ -120,13 +124,13 @@ export default function DashboardPage() {
         <div className="fixed inset-0 z-[100] flex items-start justify-center sm:pt-10 sm:pb-20 overflow-y-auto bg-white/10 backdrop-blur-md">
           <div className="w-full max-w-2xl px-4 animate-in fade-in slide-in-from-bottom-8 duration-500">
             {status === 'pending' ? (
-              <ProfessionalSetupWizard 
-                onComplete={() => {}} 
-                initialStep={4} 
+              <ProfessionalSetupWizard
+                onComplete={() => { }}
+                initialStep={4}
               />
             ) : (
-              <ProfessionalSetupWizard 
-                onComplete={() => {}} 
+              <ProfessionalSetupWizard
+                onComplete={() => { }}
               />
             )}
           </div>
@@ -134,7 +138,7 @@ export default function DashboardPage() {
       )}
 
       {/* Global Uploader for this page */}
-      <FileUpload 
+      <FileUpload
         isOpen={isUploaderOpen && showVerificationOverlay}
         onRequestClose={() => setIsUploaderOpen(false)}
         onSuccess={(files) => {
