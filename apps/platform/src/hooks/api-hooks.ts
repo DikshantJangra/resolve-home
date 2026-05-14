@@ -228,6 +228,29 @@ export function useUpdateEngineerProfile() {
   })
 }
 
+export function useResendGuarantorVerification() {
+  return useMutation({
+    mutationFn: async () => {
+      const response = await apiClient.post(ENDPOINTS.ENGINEER.RESEND_GUARANTOR_VERIFICATION)
+      return response.data
+    }
+  })
+}
+
+export function useUpdateGuarantor() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (data: { guarantorEmail: string }) => {
+      const response = await apiClient.put(ENDPOINTS.ENGINEER.UPDATE_GUARANTOR, data)
+      return response.data
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['user-profile'] })
+      queryClient.invalidateQueries({ queryKey: ['auth-session'] })
+    }
+  })
+}
+
 // --- Engineer Bookings ---
 
 export function useEngineerBookings(options: { enabled?: boolean } = {}) {

@@ -2,7 +2,7 @@
 
 import React from 'react'
 import { useParams, useRouter } from 'next/navigation'
-import { 
+import {
   HiOutlineArrowLeft,
   HiOutlineCheckCircle,
   HiOutlineXCircle,
@@ -11,20 +11,55 @@ import {
   HiOutlinePhone,
   HiOutlineBriefcase,
   HiOutlineLocationMarker,
-  HiOutlineIdentification
+  HiOutlineIdentification,
+  HiOutlineClock,
+  HiOutlineShieldCheck,
+  HiOutlineDocumentText,
+  HiOutlineExternalLink
 } from 'react-icons/hi'
-import { cn, Button, Skeleton } from "@resolve/ui"
-import { useAdminEngineer, useAdminVerifyEngineer } from '@/hooks/api-hooks'
+import { cn, Button, Skeleton, formatImageUrl } from "@resolve/ui"
+import { useAdminEngineer, useAdminApproveEngineer, useAdminRejectEngineer, useCategories } from '@/hooks/api-hooks'
 import { toast } from 'sonner'
 
 export default function VerificationDetailPage() {
   const { id } = useParams()
   const router = useRouter()
   const { data: engineer, isLoading, error } = useAdminEngineer(id as string)
-  const { mutate: verifyEngineer, isPending: isVerifying } = useAdminVerifyEngineer()
+  const { data: categories } = useCategories()
+
+  React.useEffect(() => {
+    if (engineer) {
+      console.log('[VerificationDetail] Full Engineer Object:', engineer);
+      const gKeys = Object.keys(engineer).filter(k => k.toLowerCase().includes('guar'));
+      console.log('[VerificationDetail] All "Guar" related keys found:', gKeys);
+      gKeys.forEach(k => console.log(`[VerificationDetail] Value of ${k}:`, (engineer as any)[k]));
+    }
+  }, [engineer]);
+
+
+
+  const { mutate: approveEngineer, isPending: isApproving } = useAdminApproveEngineer()
+  const { mutate: rejectEngineer, isPending: isRejecting } = useAdminRejectEngineer()
+
+  const isVerifying = isApproving || isRejecting
+
+
+  // Helper to find category name from ID
+  const getCategoryName = (categoryId: string) => {
+    if (!categories || !Array.isArray(categories)) return categoryId
+    const category = categories.find((c: any) => 
+      c.id === categoryId || 
+      c._id === categoryId || 
+      String(c.id) === String(categoryId) || 
+      String(c._id) === String(categoryId)
+    )
+    return category?.name || categoryId
+  }
 
   const handleAction = (status: 'approved' | 'rejected') => {
-    verifyEngineer({ id: id as string, status }, {
+    const action = status === 'approved' ? approveEngineer : rejectEngineer
+
+    action({ id: id as string }, {
       onSuccess: () => {
         toast.success(`Engineer ${status === 'approved' ? 'approved' : 'rejected'} successfully`)
         router.push('/verification')
@@ -58,10 +93,42 @@ export default function VerificationDetailPage() {
     )
   }
 
+  // Robust data extraction
+  const profile = engineer.engineerProfile || engineer.profile || {};
+  const guarantor = engineer.guarantor || profile.guarantor || {};
+  const location = engineer.location || profile.location || {};
+  
+  const displayData = {
+    name: engineer.fullName || engineer.name || profile.name || 'N/A',
+    email: engineer.email || profile.email || 'N/A',
+    phone: engineer.phoneNumber || engineer.phone || profile.phone || 'N/A',
+    category: engineer.primarySpecialty || getCategoryName(engineer.category || profile.category) || 'N/A',
+    experience: engineer.yearsOfExperience || engineer.experience || profile.yearsOfExperience || 'N/A',
+    address: engineer.address || location.streetAddress || 'N/A',
+    city: engineer.city || location.city || 'N/A',
+    state: engineer.state || location.state || 'N/A',
+    bvn: engineer.idNumber || engineer.bvn || profile.idNumber || 'N/A',
+    idType: engineer.idType || profile.idType || 'BVN',
+    documentUrl: engineer.idDocument || profile.idDocument || engineer.documentUrl,
+    guarantorName: guarantor.name || guarantor.fullName || engineer.guarantorName || engineer.guarantor_name || (Array.isArray(engineer.guarantors) ? engineer.guarantors[0]?.name : 'N/A'),
+    guarantorPhone: guarantor.phone || guarantor.phoneNumber || engineer.guarantorPhone || engineer.guarantor_phone || (Array.isArray(engineer.guarantors) ? engineer.guarantors[0]?.phone : 'N/A'),
+    guarantorEmail: guarantor.email || engineer.guarantorEmail || engineer.guarantor_email || (Array.isArray(engineer.guarantors) ? engineer.guarantors[0]?.email : 'N/A'),
+    guarantorRelationship: guarantor.relationship || engineer.guarantorRelationship || engineer.guarantor_relationship || (Array.isArray(engineer.guarantors) ? engineer.guarantors[0]?.relationship : 'N/A'),
+    guarantorWorkPlace: guarantor.workPlace || guarantor.placeOfWork || engineer.guarantorWorkPlace || engineer.guarantor_work_place || (Array.isArray(engineer.guarantors) ? engineer.guarantors[0]?.workPlace : 'N/A'),
+
+    isGuarantorVerified: !!(engineer.isGuarantorVerified || profile.isGuarantorVerified || engineer.guarantorVerified)
+  };
+  
+  console.log('[VerificationDetail] Computed Display Data:', displayData);
+
+  const documentUrl = displayData.documentUrl;
+
+  const canApprove = displayData.isGuarantorVerified && !isVerifying;
+
   return (
     <div className="p-4 sm:p-8 flex flex-col gap-8 max-w-[1400px] mx-auto">
       {/* Back Button */}
-      <button 
+      <button
         onClick={() => router.back()}
         className="flex items-center gap-2 text-zinc-600 hover:text-zinc-900 transition-colors group"
       >
@@ -73,27 +140,27 @@ export default function VerificationDetailPage() {
       <div className="bg-stone-50 rounded-2xl border border-zinc-300 p-5 flex flex-col md:flex-row justify-between items-center gap-6 shadow-sm overflow-hidden relative">
         <div className="flex items-center gap-4">
           <div className="w-14 h-14 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-bold text-xl border-2 border-blue-700">
-            {engineer.fullName?.charAt(0) || engineer.name?.charAt(0) || 'U'}
+            {displayData.name.charAt(0)}
           </div>
           <div className="flex flex-col">
             <div className="flex items-center gap-2">
-              <h2 className="text-neutral-700 text-lg font-semibold font-plus-jakarta">{engineer.fullName || engineer.name}</h2>
+              <h2 className="text-neutral-700 text-lg font-semibold font-plus-jakarta">{displayData.name}</h2>
               {engineer.status === 'approved' && <HiOutlineCheckCircle className="text-blue-700 w-4 h-4" />}
             </div>
-            <p className="text-zinc-500 text-sm font-normal font-inter">{engineer.email}</p>
+            <p className="text-zinc-500 text-sm font-normal font-inter">{displayData.email}</p>
           </div>
         </div>
 
         <div className="flex items-center gap-5">
-          <button 
-            disabled={isVerifying}
+          <button
+            disabled={!canApprove}
             onClick={() => handleAction('approved')}
-            className="w-10 h-10 flex items-center justify-center rounded-xl border border-green-200 bg-green-50 text-green-700 hover:bg-green-100 transition-colors disabled:opacity-50"
-            title="Approve"
+            className="w-10 h-10 flex items-center justify-center rounded-xl border border-green-200 bg-green-50 text-green-700 hover:bg-green-100 transition-colors disabled:opacity-30 disabled:cursor-not-allowed disabled:grayscale"
+            title={displayData.isGuarantorVerified ? "Approve" : "Guarantor verification pending"}
           >
             <HiOutlineCheckCircle className="w-6 h-6" />
           </button>
-          <button 
+          <button
             disabled={isVerifying}
             onClick={() => handleAction('rejected')}
             className="w-10 h-10 flex items-center justify-center rounded-xl border border-red-200 bg-red-50 text-red-500 hover:bg-red-100 transition-colors disabled:opacity-50"
@@ -101,7 +168,7 @@ export default function VerificationDetailPage() {
           >
             <HiOutlineXCircle className="w-6 h-6" />
           </button>
-          <button 
+          <button
             className="w-10 h-10 flex items-center justify-center rounded-xl border border-amber-200 bg-amber-50 text-amber-600 hover:bg-amber-100 transition-colors"
             title="Flag"
           >
@@ -110,42 +177,123 @@ export default function VerificationDetailPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Information Details */}
-        <div className="bg-white rounded-2xl border border-zinc-300 p-6 flex flex-col gap-6 shadow-sm">
-          <h3 className="text-neutral-700 text-lg font-semibold font-inter">Information Details</h3>
-          
+        <div className="lg:col-span-1 bg-white rounded-2xl border border-zinc-300 p-6 flex flex-col gap-6 shadow-sm">
+          <h3 className="text-neutral-700 text-lg font-semibold font-inter flex items-center gap-2">
+            <HiOutlineIdentification className="text-blue-700" />
+            Information Details
+          </h3>
+
           <div className="flex flex-col gap-5">
-            <InfoRow label="Full Name" value={engineer.fullName || engineer.name} icon={<HiOutlineIdentification />} />
-            <InfoRow label="Category" value={engineer.category || engineer.primarySpecialty || 'N/A'} icon={<HiOutlineBriefcase />} />
-            <InfoRow label="Phone Number" value={engineer.phoneNumber || engineer.phone || 'N/A'} icon={<HiOutlinePhone />} />
-            <InfoRow label="Email Address" value={engineer.email} icon={<HiOutlineMail />} />
-            <InfoRow label="Experience" value={engineer.experience || engineer.yearsOfExperience || 'N/A'} />
-            <InfoRow 
-              label="Home Address" 
-              value={engineer.address || (engineer.location ? `${engineer.location.streetAddress}, ${engineer.location.city}` : 'N/A')} 
-              icon={<HiOutlineLocationMarker />} 
+            <InfoRow label="Full Name" value={displayData.name} icon={<HiOutlineIdentification />} />
+            <InfoRow
+              label="Category"
+              value={displayData.category}
+              icon={<HiOutlineBriefcase />}
             />
-            <InfoRow label="NIN" value={engineer.nin || engineer.idNumber || 'N/A'} />
+            <InfoRow label="Phone Number" value={displayData.phone} icon={<HiOutlinePhone />} />
+            <InfoRow label="Email Address" value={displayData.email} icon={<HiOutlineMail />} />
+            <InfoRow label="Experience" value={displayData.experience} icon={<HiOutlineClock />} />
+            <InfoRow
+              label="Home Address"
+              value={`${displayData.address}, ${displayData.city}`}
+              icon={<HiOutlineLocationMarker />}
+            />
+            <InfoRow label="BVN" value={displayData.bvn} icon={<HiOutlineShieldCheck />} />
           </div>
         </div>
 
         {/* Guarantor Information */}
-        <div className="bg-white rounded-2xl border border-zinc-300 p-6 flex flex-col gap-6 shadow-sm">
-          <h3 className="text-neutral-700 text-lg font-semibold font-inter">Guarantor Information</h3>
-          
+        <div className="lg:col-span-1 bg-white rounded-2xl border border-zinc-300 p-6 flex flex-col gap-6 shadow-sm">
+          <h3 className="text-neutral-700 text-lg font-semibold font-inter flex items-center gap-2">
+            <HiOutlineShieldCheck className="text-blue-700" />
+            Guarantor Information
+          </h3>
+
           <div className="flex flex-col gap-5">
-            <InfoRow label="Guarantor Name" value={engineer.guarantorName || 'N/A'} />
-            <InfoRow label="Phone Number" value={engineer.guarantorPhone || 'N/A'} />
-            <InfoRow label="Email Address" value={engineer.guarantorEmail || 'N/A'} />
-            <InfoRow label="Relationship" value={engineer.guarantorRelationship || 'N/A'} />
-            <InfoRow label="Place of Work" value={engineer.guarantorWorkPlace || 'N/A'} />
-            
-            <div className="mt-4 p-4 bg-rose-50 rounded-xl border border-rose-100 flex items-start gap-3">
-              <HiOutlineExclamationCircle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
-              <p className="text-red-600 text-sm font-medium font-inter leading-relaxed">
-                The guarantor has been contacted but yet to be verified via automated email.
-              </p>
+            <InfoRow label="Guarantor Name" value={displayData.guarantorName} />
+            <InfoRow label="Phone Number" value={displayData.guarantorPhone} />
+            <InfoRow label="Email Address" value={displayData.guarantorEmail} />
+            <InfoRow label="Relationship" value={displayData.guarantorRelationship} />
+            <InfoRow label="Place of Work" value={displayData.guarantorWorkPlace} />
+
+            {!displayData.isGuarantorVerified ? (
+              <div className="mt-4 p-4 bg-rose-50 rounded-xl border border-rose-100 flex items-start gap-3">
+                <HiOutlineExclamationCircle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
+                <p className="text-red-600 text-sm font-medium font-inter leading-relaxed">
+                  The guarantor has been contacted but yet to be verified via automated email.
+                </p>
+              </div>
+            ) : (
+              <div className="mt-4 p-4 bg-green-50 rounded-xl border border-green-100 flex items-start gap-3">
+                <HiOutlineCheckCircle className="w-5 h-5 text-green-600 shrink-0 mt-0.5" />
+                <p className="text-green-700 text-sm font-medium font-inter leading-relaxed">
+                  The guarantor has been successfully verified.
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Verification Documents */}
+        <div className="lg:col-span-1 bg-white rounded-2xl border border-zinc-300 p-6 flex flex-col gap-6 shadow-sm">
+          <h3 className="text-neutral-700 text-lg font-semibold font-inter flex items-center gap-2">
+            <HiOutlineDocumentText className="text-blue-700" />
+            Verification Documents
+          </h3>
+
+          <div className="flex flex-col gap-4">
+            <p className="text-sm text-zinc-500 font-inter">Identity Document ({displayData.idType})</p>
+
+            {documentUrl ? (
+              <div className="relative group rounded-xl border border-zinc-200 overflow-hidden bg-zinc-50 aspect-video flex items-center justify-center">
+                {documentUrl.match(/\.(jpeg|jpg|gif|png|webp)$/i) ? (
+                  <img
+                    src={formatImageUrl(documentUrl)}
+                    alt="ID Document"
+                    className="w-full h-full object-cover transition-transform group-hover:scale-105"
+                  />
+                ) : (
+                  <HiOutlineDocumentText className="w-16 h-16 text-zinc-300" />
+                )}
+
+                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
+                  <a
+                    href={formatImageUrl(documentUrl)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="p-2 bg-white rounded-full text-zinc-900 hover:bg-blue-600 hover:text-white transition-colors"
+                  >
+                    <HiOutlineExternalLink className="w-5 h-5" />
+                  </a>
+                </div>
+              </div>
+            ) : (
+              <div className="rounded-xl border border-zinc-200 border-dashed p-8 flex flex-col items-center justify-center gap-2 text-zinc-400">
+                <HiOutlineDocumentText className="w-10 h-10" />
+                <span className="text-sm font-medium">No document uploaded</span>
+              </div>
+            )}
+
+            <div className="mt-4 space-y-3">
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-zinc-500">ID Type</span>
+                <span className="text-neutral-700 font-medium">{displayData.idType}</span>
+              </div>
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-zinc-500">ID Number</span>
+                <span className="text-neutral-700 font-medium">{displayData.bvn}</span>
+              </div>
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-zinc-500">BVN Verified</span>
+                <span className={cn(
+                  "font-medium",
+                  engineer.idVerification?.status === 'verified' ? "text-green-600" : "text-amber-600"
+                )}>
+                  {engineer.idVerification?.status === 'verified' ? 'Yes' : 'Pending'}
+                </span>
+              </div>
             </div>
           </div>
         </div>
@@ -161,7 +309,8 @@ function InfoRow({ label, value, icon }: { label: string, value: string, icon?: 
         {icon && <span className="text-zinc-400 group-hover:text-blue-600 transition-colors">{icon}</span>}
         <span className="text-neutral-700 text-sm font-normal font-inter">{label}</span>
       </div>
-      <span className="text-neutral-700 text-sm font-medium font-inter text-right">{value}</span>
+      <span className="text-neutral-700 text-sm font-medium font-inter text-right truncate max-w-[180px]">{value}</span>
     </div>
   )
 }
+

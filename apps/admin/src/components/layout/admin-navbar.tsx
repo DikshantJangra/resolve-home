@@ -1,9 +1,9 @@
 'use client'
 
 import React from 'react'
-import { HiOutlineSearch, HiOutlineMenuAlt2 } from 'react-icons/hi'
-import { Input, formatImageUrl } from "@resolve/ui"
-import { useUserProfile } from '@/hooks/api-hooks'
+import { HiOutlineSearch, HiOutlineMenuAlt2, HiOutlineStatusOnline } from 'react-icons/hi'
+import { Input, formatImageUrl, cn } from "@resolve/ui"
+import { useUserProfile, useHealthCheck } from '@/hooks/api-hooks'
 import Link from 'next/link'
 
 interface AdminNavbarProps {
@@ -12,9 +12,12 @@ interface AdminNavbarProps {
 
 export const AdminNavbar = ({ onMenuClick }: AdminNavbarProps) => {
   const { data: user } = useUserProfile()
+  const { data: health, isLoading: healthLoading } = useHealthCheck()
+
+  const isHealthy = health?.success || health?.message === 'API is running' || !!health
 
   return (
-    <header className="h-16 px-4 lg:px-8 bg-white border-b border-zinc-300 flex justify-between items-center sticky top-0 z-20">
+    <header className="h-16 px-4 lg:px-8 bg-white border-b border-zinc-300 flex justify-between items-center sticky top-0 z-20 shrink-0">
       <div className="flex items-center gap-2 sm:gap-4 lg:gap-20 flex-1">
         <button 
           type="button"
@@ -39,6 +42,20 @@ export const AdminNavbar = ({ onMenuClick }: AdminNavbarProps) => {
             className="h-10 pl-4 pr-10 border-zinc-300 rounded-lg text-sm placeholder:text-zinc-300"
           />
           <HiOutlineSearch className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-600" />
+        </div>
+
+        {/* System Health Status */}
+        <div className={cn(
+          "hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full border text-[10px] font-medium tracking-wider uppercase transition-all duration-300",
+          healthLoading ? "bg-zinc-50 text-zinc-400 border-zinc-200" :
+          isHealthy ? "bg-emerald-50 text-emerald-600 border-emerald-100" : "bg-rose-50 text-rose-600 border-rose-100"
+        )}>
+          <div className={cn(
+            "w-1.5 h-1.5 rounded-full animate-pulse",
+            healthLoading ? "bg-zinc-300" : isHealthy ? "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" : "bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.5)]"
+          )} />
+          <span className="hidden lg:inline">{healthLoading ? "Checking..." : isHealthy ? "System Online" : "System Issues"}</span>
+          <span className="lg:hidden">{healthLoading ? "..." : isHealthy ? "Online" : "Issue"}</span>
         </div>
       </div>
 

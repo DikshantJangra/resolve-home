@@ -47,7 +47,7 @@ export const AdminSidebar = ({ isOpen, onClose }: AdminSidebarProps) => {
       )}
 
       <aside className={cn(
-        "fixed inset-y-0 left-0 w-64 bg-white border-r border-zinc-300 flex flex-col z-50 transition-transform duration-300 lg:sticky lg:top-0 lg:w-48 lg:translate-x-0 lg:z-0",
+        "fixed inset-y-0 left-0 w-64 bg-white border-r border-zinc-300 flex flex-col z-50 transition-transform duration-300 lg:sticky lg:top-0 lg:h-screen lg:w-48 lg:translate-x-0 lg:z-0 shrink-0",
         isOpen ? "translate-x-0" : "-translate-x-full"
       )}>
         {/* Header / Logo Section */}

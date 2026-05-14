@@ -1,8 +1,8 @@
 /**
  * Centralized API endpoint registry for Resolve Home.
  *
- * Source of truth: openapi.json (live: https://resolve.onrender.com/openapi.json)
- * Backend: https://resolve.onrender.com
+ * Source of truth: openapi.json (live: https://resolvhome.onrender.com/openapi.json)
+ * Backend: https://resolvhome.onrender.com
  */
 
 export const ENDPOINTS = {
@@ -65,6 +65,8 @@ export const ENDPOINTS = {
     BOOKINGS:         '/api/engineer/bookings',
     MY_BOOKINGS:      '/api/bookings/engineer/my-bookings',
     BOOKING_BY_ID:    (id: string) => `/api/engineer/bookings/${id}`,
+    RESEND_GUARANTOR_VERIFICATION: '/api/engineer/resend-guarantor-verification',
+    UPDATE_GUARANTOR: '/api/engineer/update-guarantor',
   },
 
   // ─── Wallet ───────────────────────────────────────────────────────────────
@@ -138,6 +140,8 @@ export const ENDPOINTS = {
   ADMIN_ENGINEER_VERIFICATIONS: {
     PENDING: '/api/admin/engineer-verifications/pending',
     VERIFY:  (id: string) => `/api/admin/engineer-verifications/${id}/verify`,
+    APPROVE: (id: string) => `/api/admin/engineer-verifications/${id}/approve`,
+    REJECT:  (id: string) => `/api/admin/engineer-verifications/${id}/reject`,
   },
 
   // ─── Admin — Bookings ─────────────────────────────────────────────────────

@@ -14,19 +14,30 @@ import {
 } from 'react-icons/hi'
 import { cn, Button, Skeleton } from "@resolve/ui"
 import { useAdminVerificationRequests, useAdminVerifyEngineer, useAdminEngineers } from '@/hooks/api-hooks'
+import { ENDPOINTS } from "@resolve/api"
 import Link from 'next/link'
 import { toast } from 'sonner'
 
 export default function VerificationPage() {
   const [search, setSearch] = useState('')
-  const { data: verifications, isLoading: verifLoading, error: verifError } = useAdminVerificationRequests()
+  const [page, setPage] = useState(1)
+  const { data: verifData, isLoading: verifLoading, error: verifError } = useAdminVerificationRequests(page)
   const { data: engineers, isLoading: engLoading } = useAdminEngineers()
   const { mutate: verifyEngineer } = useAdminVerifyEngineer()
+
+  React.useEffect(() => {
+    if (verifData) {
+      console.log('[VerificationList] Loaded Requests:', verifData);
+    }
+  }, [verifData]);
+
+  const verifications = verifData?.verifications || []
+  const pagination = verifData?.pagination
 
   const isLoading = verifLoading || engLoading
 
   const stats = useMemo(() => {
-    const pending = verifications?.length || 0
+    const pending = verifications.length || 0
     const total = engineers?.length || 0
     const approved = engineers?.filter((e: any) => e.status === 'approved').length || 0
     const rejected = engineers?.filter((e: any) => e.status === 'rejected').length || 0
@@ -44,10 +55,14 @@ export default function VerificationPage() {
   const filteredVerifications = useMemo(() => {
     // Merge verifications from the specific endpoint with pending engineers from the general list
     // This provides a fallback if the verifications endpoint structure is different
-    const pendingFromEngineers = engineers?.filter((e: any) => e.status === 'pending') || []
+    const pendingFromEngineers = engineers?.filter((e: any) => 
+      e.status?.toLowerCase() === 'pending' || 
+      e.verificationStatus?.toLowerCase() === 'pending' ||
+      e.engineerProfile?.verificationStatus?.toLowerCase() === 'pending'
+    ) || []
     
     // Combine and deduplicate by ID
-    const combined = [...(verifications || [])]
+    const combined = [...verifications]
     
     pendingFromEngineers.forEach((pe: any) => {
       if (!combined.find(v => v.id === pe.id)) {
@@ -86,6 +101,18 @@ export default function VerificationPage() {
           {[1, 2, 3].map(i => <Skeleton key={i} className="h-32 rounded-xl" />)}
         </div>
         <Skeleton className="h-[500px] w-full rounded-xl" />
+      </div>
+    )
+  }
+
+  if (verifError || verifData === null) {
+    return (
+      <div className="p-8 text-center flex flex-col items-center gap-4">
+        <HiOutlineExclamationCircle className="w-12 h-12 text-red-500" />
+        <h2 className="text-xl font-semibold text-neutral-700">Verification Fetching Error</h2>
+        <p className="text-zinc-600">{(verifError as any)?.message || "Failed to fetch verification requests from the server."}</p>
+        <p className="text-xs text-zinc-400">Endpoint: {ENDPOINTS.ADMIN_ENGINEER_VERIFICATIONS.PENDING}</p>
+        <Button variant="outline" onClick={() => window.location.reload()}>Retry</Button>
       </div>
     )
   }
@@ -150,7 +177,7 @@ export default function VerificationPage() {
             </thead>
             <tbody className="divide-y divide-zinc-200">
               {filteredVerifications.length > 0 ? filteredVerifications.map((v: any) => (
-                <tr key={v.id} className="hover:bg-zinc-50 transition-colors group">
+                <tr key={v.id || v._id} className="hover:bg-zinc-50 transition-colors group">
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-bold text-sm">
@@ -183,22 +210,31 @@ export default function VerificationPage() {
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-4">
+                      {(() => {
+                        const isGuarantorVerified = !!(v.isGuarantorVerified || v.guarantorVerified || v.engineerProfile?.isGuarantorVerified);
+                        return (
+                          <button 
+                            disabled={!isGuarantorVerified}
+                            onClick={() => handleAction(v.id || v._id, 'approved')}
+                            className={cn(
+                              "transition-colors",
+                              isGuarantorVerified ? "text-green-600 hover:text-green-700" : "text-zinc-300 cursor-not-allowed grayscale"
+                            )}
+                            title={isGuarantorVerified ? "Approve" : "Guarantor verification pending"}
+                          >
+                            <HiOutlineCheckCircle className="w-6 h-6" />
+                          </button>
+                        );
+                      })()}
                       <button 
-                        onClick={() => handleAction(v.id, 'approved')}
-                        className="text-green-600 hover:text-green-700 transition-colors"
-                        title="Approve"
-                      >
-                        <HiOutlineCheckCircle className="w-6 h-6" />
-                      </button>
-                      <button 
-                        onClick={() => handleAction(v.id, 'rejected')}
+                        onClick={() => handleAction(v.id || v._id, 'rejected')}
                         className="text-red-400 hover:text-red-500 transition-colors"
                         title="Reject"
                       >
                         <HiOutlineXCircle className="w-6 h-6" />
                       </button>
                       <Link 
-                        href={`/verification/${v.id}`}
+                        href={`/verification/${v.id || v._id}`}
                         className="text-amber-600 hover:text-amber-700 transition-colors"
                         title="View Details"
                       >
@@ -207,6 +243,7 @@ export default function VerificationPage() {
                     </div>
                   </td>
                 </tr>
+
               )) : (
                 <tr>
                   <td colSpan={4} className="px-6 py-24 text-center">
@@ -220,6 +257,33 @@ export default function VerificationPage() {
             </tbody>
           </table>
         </div>
+        
+        {/* Pagination */}
+        {pagination && pagination.totalPages > 1 && (
+          <div className="px-6 py-4 border-t border-zinc-200 flex items-center justify-between bg-white">
+            <div className="text-sm text-zinc-500">
+              Showing <span className="font-medium">{((page - 1) * 10) + 1}</span> to <span className="font-medium">{Math.min(page * 10, pagination.total)}</span> of <span className="font-medium">{pagination.total}</span> results
+            </div>
+            <div className="flex gap-2">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => setPage(p => Math.max(1, p - 1))}
+                disabled={page === 1}
+              >
+                Previous
+              </Button>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => setPage(p => Math.min(pagination.totalPages, p + 1))}
+                disabled={page === pagination.totalPages}
+              >
+                Next
+              </Button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )

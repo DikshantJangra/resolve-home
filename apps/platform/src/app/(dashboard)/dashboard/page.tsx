@@ -35,6 +35,17 @@ export default function DashboardPage() {
       console.log('Dashboard Debug - Is Verified:', isVerified);
     }
   }, [user, isEngineer, isVerified]);
+
+  React.useEffect(() => {
+    if (showVerificationOverlay) {
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = 'unset'
+    }
+    return () => {
+      document.body.style.overflow = 'unset'
+    }
+  }, [showVerificationOverlay])
   
   const avgRating = isEngineer ? "4.8" : "5.0"
 

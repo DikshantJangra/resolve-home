@@ -24,6 +24,9 @@ interface ProfessionalSetupState {
   // Step 3: Guarantor & Bank
   guarantorName: string
   guarantorEmail: string
+  guarantorPhone: string
+  guarantorRelationship: string
+  guarantorWorkPlace: string
   accountName: string
   bankName: string
   bankCode: string
@@ -46,7 +49,7 @@ export const useProfessionalSetupStore = create<ProfessionalSetupState>()(
       specialty: '',
       categoryId: '',
       experience: '',
-      idType: '',
+      idType: 'BVN',
       idNumber: '',
       idPhoto: null,
       
@@ -60,6 +63,9 @@ export const useProfessionalSetupStore = create<ProfessionalSetupState>()(
       
       guarantorName: '',
       guarantorEmail: '',
+      guarantorPhone: '',
+      guarantorRelationship: '',
+      guarantorWorkPlace: '',
       accountName: '',
       bankName: '',
       bankCode: '',
@@ -75,7 +81,7 @@ export const useProfessionalSetupStore = create<ProfessionalSetupState>()(
         specialty: '',
         categoryId: '',
         experience: '',
-        idType: '',
+        idType: 'BVN',
         idNumber: '',
         idPhoto: null,
         country: 'Nigeria',
@@ -87,6 +93,9 @@ export const useProfessionalSetupStore = create<ProfessionalSetupState>()(
         landmark: '',
         guarantorName: '',
         guarantorEmail: '',
+        guarantorPhone: '',
+        guarantorRelationship: '',
+        guarantorWorkPlace: '',
         accountName: '',
         bankName: '',
         bankCode: '',

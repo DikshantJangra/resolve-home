@@ -209,7 +209,7 @@ export function useAdminUser(id: string) {
     queryFn: async () => {
       const response = await apiClient.get(ENDPOINTS.ADMIN_USERS.BY_ID(id))
       const data = response.data.data || response.data
-      return data?.user || data
+      return data?.user || data?.item || data?.data || data
     },
     enabled: !!id
   })
@@ -251,7 +251,8 @@ export function useAdminEngineer(id: string) {
     queryKey: ['admin-engineer', id],
     queryFn: async () => {
       const response = await apiClient.get(ENDPOINTS.ADMIN_ENGINEERS.BY_ID(id))
-      return response.data.data?.engineer || response.data.data
+      const data = response.data.data || response.data
+      return data?.engineer || data?.item || data?.data || data
     },
     enabled: !!id
   })
@@ -382,30 +383,55 @@ export function useAdminWalletTransactions() {
 }
 // --- Admin Engineer Verifications ---
 
-export function useAdminVerificationRequests() {
+export function useAdminVerificationRequests(page = 1, limit = 10) {
   return useQuery({
-    queryKey: ['admin-verification-requests'],
+    queryKey: ['admin-verification-requests', page, limit],
     queryFn: async () => {
-      const response = await apiClient.get(ENDPOINTS.ADMIN_ENGINEER_VERIFICATIONS.PENDING)
+      const response = await apiClient.get(ENDPOINTS.ADMIN_ENGINEER_VERIFICATIONS.PENDING, {
+        params: { page, limit }
+      })
       console.log('[API] Verification Requests Response:', response.data)
       const data = response.data.data || response.data
       
-      // Handle different possible structures
-      if (Array.isArray(data)) return data
-      if (data && typeof data === 'object') {
-        return data.verifications || data.items || data.engineers || []
+      // Handle both { data: [...] } and { data: { verifications: [...], pagination: {...} } }
+      if (Array.isArray(data)) return { verifications: data, pagination: null }
+      
+      return {
+        verifications: data.verifications || data.items || data.engineers || (Array.isArray(data) ? data : []),
+        pagination: response.data.pagination || data.pagination || null
       }
-      return []
     }
   })
 }
 
-export function useAdminVerifyEngineer() {
+export function useAdminApproveEngineer() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: async ({ id, status, notes }: { id: string, status: 'approved' | 'rejected', notes?: string }) => {
-      const response = await apiClient.post(ENDPOINTS.ADMIN_ENGINEER_VERIFICATIONS.VERIFY(id), {
-        status,
+    mutationFn: async ({ id, assignedServices }: { id: string, assignedServices?: string[] }) => {
+      // Use the unified verify endpoint as per openapi.json
+      const response = await apiClient.put(ENDPOINTS.ADMIN_ENGINEER_VERIFICATIONS.VERIFY(id), {
+        verificationStatus: 'approved',
+        isVerified: true,
+        assignedServices
+      })
+      return response.data
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-verification-requests'] })
+      queryClient.invalidateQueries({ queryKey: ['admin-engineers'] })
+      queryClient.invalidateQueries({ queryKey: ['admin-engineer'] })
+    }
+  })
+}
+
+export function useAdminRejectEngineer() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ id, notes }: { id: string, notes?: string }) => {
+      // Use the unified verify endpoint as per openapi.json
+      const response = await apiClient.put(ENDPOINTS.ADMIN_ENGINEER_VERIFICATIONS.VERIFY(id), {
+        verificationStatus: 'rejected',
+        isVerified: false,
         notes
       })
       return response.data
@@ -413,7 +439,43 @@ export function useAdminVerifyEngineer() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-verification-requests'] })
       queryClient.invalidateQueries({ queryKey: ['admin-engineers'] })
+      queryClient.invalidateQueries({ queryKey: ['admin-engineer'] })
     }
+  })
+}
+
+export function useAdminVerifyEngineer() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ id, status, notes, assignedServices }: { id: string, status: 'approved' | 'rejected', notes?: string, assignedServices?: string[] }) => {
+      // If the specific approve/reject endpoints are preferred by the developer
+      const endpoint = status === 'approved' 
+        ? ENDPOINTS.ADMIN_ENGINEER_VERIFICATIONS.APPROVE(id)
+        : ENDPOINTS.ADMIN_ENGINEER_VERIFICATIONS.REJECT(id)
+      
+      const response = await apiClient.put(endpoint, {
+        notes,
+        assignedServices,
+        verificationStatus: status, // Fallback if the endpoint handles both
+        isVerified: status === 'approved'
+      })
+      return response.data
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-verification-requests'] })
+      queryClient.invalidateQueries({ queryKey: ['admin-engineers'] })
+    }
+  })
+}
+
+export function useHealthCheck() {
+  return useQuery({
+    queryKey: ['health-check'],
+    queryFn: async () => {
+      const response = await apiClient.get('/')
+      return response.data
+    },
+    refetchInterval: 30000 // Check every 30 seconds
   })
 }
 

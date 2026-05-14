@@ -12,12 +12,18 @@ export function proxy(request: NextRequest) {
   const isProtectedRoute = pathname.startsWith("/dashboard") || 
                           pathname.startsWith("/bookings") || 
                           pathname.startsWith("/wallet") ||
+                          pathname.startsWith("/profile") ||
+                          pathname.startsWith("/settings") ||
+                          pathname.startsWith("/messages") ||
+                          pathname.startsWith("/book-service") ||
+                          pathname.startsWith("/engineer") ||
                           pathname.startsWith("/admin");
   
   const isAuthRoute = pathname === "/login" || pathname === "/register";
 
   // Check for session and role cookies
   const sessionToken = request.cookies.get("better-auth.session-token")?.value || 
+                       request.cookies.get("better-auth.session_token")?.value || 
                        request.cookies.get("auth_token")?.value;
   const userRole = request.cookies.get("user_role")?.value;
   const isAdminRoute = pathname.startsWith("/admin");
@@ -63,6 +69,11 @@ export const config = {
     "/dashboard/:path*",
     "/bookings/:path*",
     "/wallet/:path*",
+    "/profile/:path*",
+    "/settings/:path*",
+    "/messages/:path*",
+    "/book-service/:path*",
+    "/engineer/:path*",
     "/admin/:path*",
     "/login",
     "/register",

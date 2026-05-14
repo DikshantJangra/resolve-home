@@ -71,11 +71,13 @@ export default function DashboardLayout({
   }
 
   return (
-    <div className="flex h-screen bg-white overflow-hidden">
+    <div className="flex h-screen overflow-hidden bg-white">
+      {/* Sidebar - desktop sticky, mobile fixed */}
       <AdminSidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
-      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+      
+      <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden">
         <AdminNavbar onMenuClick={() => setSidebarOpen(true)} />
-        <main className="flex-1 overflow-y-auto">
+        <main className="flex-1 overflow-y-auto bg-stone-50/30">
           {children}
         </main>
       </div>

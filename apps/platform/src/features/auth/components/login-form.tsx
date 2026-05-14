@@ -89,12 +89,7 @@ export function LoginForm() {
       }
 
       toast.success("Welcome back!")
-
-      if (role === 'worker') {
-        router.push('/engineer')
-      } else {
-        router.push(callbackUrl)
-      }
+      router.push(callbackUrl)
     } catch (error: any) {
       const status = error?.response?.status
       const message = error?.response?.data?.error || error?.response?.data?.message

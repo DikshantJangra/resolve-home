@@ -7,6 +7,19 @@ import { useBookingStore } from '@/store/booking-store'
 
 export function BookingWizardModal() {
   const { isOpen, setIsOpen, resetBooking } = useBookingStore()
+  
+  React.useEffect(() => {
+    if (isOpen) {
+      const originalBodyOverflow = document.body.style.overflow
+      const originalHtmlOverflow = document.documentElement.style.overflow
+      document.body.style.overflow = 'hidden'
+      document.documentElement.style.overflow = 'hidden'
+      return () => {
+        document.body.style.overflow = originalBodyOverflow
+        document.documentElement.style.overflow = originalHtmlOverflow
+      }
+    }
+  }, [isOpen])
 
   if (!isOpen) return null
 

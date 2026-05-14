@@ -3,8 +3,24 @@
 import React from 'react'
 import { useProfessionalSetupStore } from '@/store/professional-setup-store'
 import { Button, Input, Label } from "@resolve/ui"
-import { HiOutlineChevronLeft, HiOutlineCheckCircle, HiOutlinePlus, HiOutlineTrash, HiOutlineDocumentText } from 'react-icons/hi'
-import { useCategories, useUpdateEngineerProfile, useNigerianBanks } from '@/hooks/api-hooks'
+import { 
+  HiOutlineChevronLeft, 
+  HiOutlineCheckCircle, 
+  HiOutlinePlus, 
+  HiOutlineTrash, 
+  HiOutlineDocumentText,
+  HiOutlineMail,
+  HiOutlinePencilAlt,
+  HiOutlineRefresh,
+  HiOutlineClock
+} from 'react-icons/hi'
+import { 
+  useCategories, 
+  useUpdateEngineerProfile, 
+  useNigerianBanks,
+  useResendGuarantorVerification,
+  useUpdateGuarantor
+} from '@/hooks/api-hooks'
 import { toast } from 'sonner'
 import { cn } from "@resolve/ui"
 import { apiClient, ENDPOINTS } from "@resolve/api"
@@ -19,6 +35,40 @@ export const ProfessionalSetupWizard = ({ onComplete, initialStep }: { onComplet
   const fileInputRef = React.useRef<HTMLInputElement>(null)
   const [isUploading, setIsUploading] = React.useState(false)
   const [isLocating, setIsLocating] = React.useState(false)
+  const [isEditingEmail, setIsEditingEmail] = React.useState(false)
+  const [tempEmail, setTempEmail] = React.useState('')
+
+  const { mutate: resendVerification, isPending: isResending } = useResendGuarantorVerification()
+  const { mutate: updateGuarantor, isPending: isUpdatingGuarantor } = useUpdateGuarantor()
+
+  const handleResendVerification = () => {
+    resendVerification(undefined, {
+      onSuccess: () => {
+        toast.success('Verification email resent successfully')
+      },
+      onError: (err: any) => {
+        toast.error(err?.response?.data?.message || 'Failed to resend verification email')
+      }
+    })
+  }
+
+  const handleUpdateGuarantorEmail = () => {
+    if (!tempEmail || !tempEmail.includes('@')) {
+      toast.error('Please enter a valid email address')
+      return
+    }
+
+    updateGuarantor({ guarantorEmail: tempEmail }, {
+      onSuccess: () => {
+        store.updateField('guarantorEmail', tempEmail)
+        setIsEditingEmail(false)
+        toast.success('Guarantor email updated successfully')
+      },
+      onError: (err: any) => {
+        toast.error(err?.response?.data?.message || 'Failed to update guarantor email')
+      }
+    })
+  }
 
   const handleUseGPS = () => {
     if (!navigator.geolocation) {
@@ -100,20 +150,13 @@ export const ProfessionalSetupWizard = ({ onComplete, initialStep }: { onComplet
   }, [initialStep])
 
   React.useEffect(() => {
-    // Prevent scrolling when the setup wizard is active
-    const originalBodyOverflow = window.getComputedStyle(document.body).overflow
-    const originalHtmlOverflow = window.getComputedStyle(document.documentElement).overflow
-
+    const originalBodyOverflow = document.body.style.overflow
+    const originalHtmlOverflow = document.documentElement.style.overflow
     document.body.style.overflow = 'hidden'
     document.documentElement.style.overflow = 'hidden'
-    document.body.style.position = 'fixed'
-    document.body.style.width = '100%'
-
     return () => {
       document.body.style.overflow = originalBodyOverflow
       document.documentElement.style.overflow = originalHtmlOverflow
-      document.body.style.position = ''
-      document.body.style.width = ''
     }
   }, [])
 
@@ -203,9 +246,19 @@ export const ProfessionalSetupWizard = ({ onComplete, initialStep }: { onComplet
         streetAddress: store.address,
         nearestLandmark: store.landmark,
       },
+      // Flattened guarantor fields (backend preferred)
+      guarantorName: store.guarantorName,
+      guarantorEmail: store.guarantorEmail,
+      guarantorPhone: store.guarantorPhone,
+      guarantorRelationship: store.guarantorRelationship,
+      guarantorWorkPlace: store.guarantorWorkPlace,
+      // Keep nested structure as fallback
       guarantor: {
         name: store.guarantorName,
         email: store.guarantorEmail,
+        phone: store.guarantorPhone,
+        relationship: store.guarantorRelationship,
+        workPlace: store.guarantorWorkPlace,
       }
     }
 
@@ -279,19 +332,18 @@ export const ProfessionalSetupWizard = ({ onComplete, initialStep }: { onComplet
                   value={store.idType}
                   onChange={(e) => store.updateField('idType', e.target.value)}
                 >
-                  <option value="">Select ID type (NIN, BVN, Passport)</option>
-                  <option value="NIN">NIN</option>
+                  <option value="">Select ID type</option>
                   <option value="BVN">BVN</option>
-                  <option value="Passport">Passport</option>
                 </select>
               </div>
 
               <div className="space-y-1.5">
                 <Label>ID Number <span className="text-red-500">*</span></Label>
                 <Input
-                  placeholder="000 000 000 000"
+                  placeholder="00000000000"
+                  maxLength={11}
                   value={store.idNumber}
-                  onChange={(e) => store.updateField('idNumber', e.target.value)}
+                  onChange={(e) => store.updateField('idNumber', e.target.value.replace(/\D/g, ''))}
                 />
               </div>
 
@@ -486,6 +538,30 @@ export const ProfessionalSetupWizard = ({ onComplete, initialStep }: { onComplet
                     onChange={(e) => store.updateField('guarantorEmail', e.target.value)}
                   />
                 </div>
+                <div className="space-y-1.5">
+                  <Label>Phone Number <span className="text-red-500">*</span></Label>
+                  <Input
+                    placeholder="Enter guarantor's phone number"
+                    value={store.guarantorPhone}
+                    onChange={(e) => store.updateField('guarantorPhone', e.target.value.replace(/\D/g, ''))}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label>Relationship <span className="text-red-500">*</span></Label>
+                  <Input
+                    placeholder="e.g. Employer, Family Friend"
+                    value={store.guarantorRelationship}
+                    onChange={(e) => store.updateField('guarantorRelationship', e.target.value)}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label>Place of Work <span className="text-red-500">*</span></Label>
+                  <Input
+                    placeholder="Enter guarantor's workplace"
+                    value={store.guarantorWorkPlace}
+                    onChange={(e) => store.updateField('guarantorWorkPlace', e.target.value)}
+                  />
+                </div>
               </div>
             </div>
 
@@ -537,27 +613,99 @@ export const ProfessionalSetupWizard = ({ onComplete, initialStep }: { onComplet
         )
       case 4:
         return (
-          <div className="flex flex-col items-center justify-center text-center py-10 space-y-12">
-            <div className="space-y-8 flex flex-col items-center">
-              <div className="w-14 h-14 bg-white border-2 border-zinc-200 rounded-xl flex items-center justify-center relative">
-                <div className="w-12 h-12 border-2 border-zinc-600 rounded-lg flex items-center justify-center">
-                  <div className="w-4 h-3 border-2 border-zinc-600" />
+          <div className="flex flex-col items-center justify-center text-center py-6 space-y-8">
+            <div className="space-y-6 flex flex-col items-center">
+              <div className="w-16 h-16 bg-blue-50 border-2 border-blue-100 rounded-2xl flex items-center justify-center relative shadow-sm">
+                <div className="w-10 h-10 border-2 border-blue-700 rounded-lg flex items-center justify-center">
+                  <div className="w-4 h-3 border-2 border-blue-700" />
                 </div>
-                <HiOutlineCheckCircle className="absolute -right-2 -bottom-2 w-6 h-6 text-blue-700 bg-white rounded-full" />
+                <HiOutlineCheckCircle className="absolute -right-2 -bottom-2 w-7 h-7 text-blue-700 bg-white rounded-full shadow-sm" />
               </div>
 
-              <div className="space-y-3">
-                <h2 className="text-3xl font-bold text-neutral-700 leading-tight">
+              <div className="space-y-2">
+                <h2 className="text-2xl font-bold text-neutral-700 leading-tight">
                   Verification in progress
                 </h2>
-                <p className="text-zinc-600 text-base max-w-sm">
+                <p className="text-zinc-500 text-sm max-w-sm">
                   Your account is currently under review. Once verified, you'll be visible on the marketplace to start receiving jobs.
                 </p>
               </div>
             </div>
 
-            <div className="w-full py-4 px-6 bg-blue-50 rounded-xl border border-blue-100 flex items-center justify-center">
-              <p className="text-blue-700 font-medium text-sm">
+            {/* Guarantor Management Section */}
+            <div className="w-full max-w-md bg-white border border-zinc-200 rounded-2xl p-6 space-y-6 shadow-sm">
+              <div className="flex items-center justify-between border-b border-zinc-100 pb-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-zinc-100 rounded-xl flex items-center justify-center text-zinc-500">
+                    <HiOutlineMail className="w-5 h-5" />
+                  </div>
+                  <div className="text-left">
+                    <p className="text-[10px] uppercase tracking-wider font-bold text-zinc-400">Guarantor Email</p>
+                    {isEditingEmail ? (
+                      <div className="flex items-center gap-2 mt-1">
+                        <input
+                          type="email"
+                          className="text-sm font-medium text-zinc-700 border-b border-blue-600 outline-none w-full bg-transparent"
+                          value={tempEmail}
+                          onChange={(e) => setTempEmail(e.target.value)}
+                          autoFocus
+                        />
+                      </div>
+                    ) : (
+                      <p className="text-sm font-semibold text-zinc-700 mt-0.5">{store.guarantorEmail || 'No email provided'}</p>
+                    )}
+                  </div>
+                </div>
+                
+                {isEditingEmail ? (
+                  <div className="flex items-center gap-2">
+                    <button 
+                      onClick={() => setIsEditingEmail(false)}
+                      className="text-xs font-medium text-zinc-400 hover:text-zinc-600"
+                    >
+                      Cancel
+                    </button>
+                    <Button 
+                      size="sm" 
+                      className="h-8 px-3 text-xs"
+                      onClick={handleUpdateGuarantorEmail}
+                      disabled={isUpdatingGuarantor}
+                    >
+                      {isUpdatingGuarantor ? 'Saving...' : 'Save'}
+                    </Button>
+                  </div>
+                ) : (
+                  <button 
+                    onClick={() => {
+                      setTempEmail(store.guarantorEmail)
+                      setIsEditingEmail(true)
+                    }}
+                    className="p-2 hover:bg-zinc-50 rounded-lg text-zinc-400 hover:text-blue-600 transition-colors"
+                  >
+                    <HiOutlinePencilAlt className="w-4 h-4" />
+                  </button>
+                )}
+              </div>
+
+              <div className="flex flex-col gap-3">
+                <p className="text-xs text-zinc-400 text-left leading-relaxed">
+                  The guarantor has been contacted but yet to be verified. You can resend the verification email if they haven't received it.
+                </p>
+                <Button 
+                  variant="outline" 
+                  className="w-full h-11 border-zinc-200 hover:border-blue-700 hover:text-blue-700 text-zinc-600 flex items-center justify-center gap-2 font-semibold"
+                  onClick={handleResendVerification}
+                  disabled={isResending}
+                >
+                  <HiOutlineRefresh className={cn("w-4 h-4", isResending && "animate-spin")} />
+                  {isResending ? 'Resending...' : 'Resend Verification Email'}
+                </Button>
+              </div>
+            </div>
+
+            <div className="w-full py-3.5 px-6 bg-blue-50/50 rounded-xl border border-blue-100 flex items-center justify-center">
+              <p className="text-blue-700 font-semibold text-xs flex items-center gap-2">
+                <HiOutlineClock className="w-4 h-4" />
                 Please check back within 24 hours
               </p>
             </div>
@@ -571,7 +719,7 @@ export const ProfessionalSetupWizard = ({ onComplete, initialStep }: { onComplet
   const isStepValid = () => {
     const step1Valid = store.specialty && store.categoryId && store.experience && store.idType && store.idNumber && store.idPhoto
     const step2Valid = store.state && store.city && store.address && store.landmark
-    const step3Valid = store.guarantorName && store.guarantorEmail && store.accountName && store.bankName && store.bankCode && store.accountNumber
+    const step3Valid = store.guarantorName && store.guarantorEmail && store.guarantorPhone && store.guarantorRelationship && store.guarantorWorkPlace && store.accountName && store.bankName && store.bankCode && store.accountNumber
 
     if (store.currentStep === 1) return step1Valid
     if (store.currentStep === 2) return step1Valid && step2Valid
@@ -588,7 +736,7 @@ export const ProfessionalSetupWizard = ({ onComplete, initialStep }: { onComplet
   }
 
   return (
-    <div className="w-full max-w-2xl mx-auto bg-white flex flex-col min-h-screen sm:min-h-[600px] rounded-none sm:rounded-2xl overflow-hidden shadow-sm border-0 sm:border border-zinc-200 mt-0 sm:mt-10">
+    <div className="w-full max-w-2xl mx-auto bg-white flex flex-col h-screen sm:h-auto sm:max-h-[90vh] rounded-none sm:rounded-2xl overflow-hidden shadow-sm border-0 sm:border border-zinc-200 mt-0 sm:mt-10">
       {/* Header */}
       <div className="p-4 sm:p-6 border-b border-zinc-100">
         <div className="flex justify-between items-center mb-6">
@@ -628,7 +776,7 @@ export const ProfessionalSetupWizard = ({ onComplete, initialStep }: { onComplet
       </div>
 
       {/* Form Content */}
-      <div className="flex-1 p-4 sm:p-6 overflow-y-auto no-scrollbar">
+      <div className="flex-1 p-4 sm:p-6 overflow-y-auto scrollbar-thin scrollbar-thumb-zinc-200 overscroll-contain touch-pan-y">
         {renderStep()}
       </div>
 

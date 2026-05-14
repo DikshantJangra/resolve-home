@@ -14,10 +14,12 @@ import {
   HiOutlineBadgeCheck,
   HiOutlineLocationMarker,
   HiOutlineCalendar,
-  HiOutlineMail
+  HiOutlineMail,
+  HiOutlineXCircle,
+  HiOutlineExclamationCircle
 } from 'react-icons/hi'
 import { cn, Button, Skeleton } from "@resolve/ui"
-import { useAdminEngineer } from '@/hooks/api-hooks'
+import { useAdminEngineer, useAdminUser, useAdminUsers, useAdminBookings } from '@/hooks/api-hooks'
 import { BookingCard } from '@/components/bookings/booking-card'
 
 export default function ProfessionalDetailsPage() {
@@ -25,7 +27,24 @@ export default function ProfessionalDetailsPage() {
   const router = useRouter()
   const [activeTab, setActiveTab] = useState<'overview' | 'personal'>('overview')
   
-  const { data: pro, isLoading, error } = useAdminEngineer(id as string)
+  const { data: engineerData, isLoading: isEngineerLoading } = useAdminEngineer(id as string)
+  const { data: userData, isLoading: isUserLoading } = useAdminUser(id as string)
+  const { data: allUsers, isLoading: isAllUsersLoading } = useAdminUsers()
+  const { data: allBookings, isLoading: isBookingsLoading } = useAdminBookings()
+
+  const isLoading = isEngineerLoading || isUserLoading || isAllUsersLoading || isBookingsLoading
+  
+  // Try to find the professional in individual fetches, then fallback to the full users list
+  const proFromList = allUsers?.find((u: any) => (u.id || u._id) === id)
+  const pro = engineerData || userData || proFromList
+
+  // Get real booking history for this professional
+  const proBookings = allBookings?.filter((b: any) => 
+    (b.engineerId === id) || 
+    (b.engineer?._id === id) || 
+    (b.engineer?.id === id) ||
+    (b.assignedEngineerId === id)
+  ) || []
 
   if (isLoading) {
     return (
@@ -39,56 +58,29 @@ export default function ProfessionalDetailsPage() {
     )
   }
 
-  if (error || !pro) {
+  // SILENCE ERROR: If we can't find an engineer record, we still want to check for a user record
+  // So we only show error if both are done loading and both failed
+  const showNotFoundError = !isEngineerLoading && !isUserLoading && !isAllUsersLoading && !pro
+
+  if (showNotFoundError) {
     return (
-      <div className="p-4 sm:p-8 text-center">
-        <h2 className="text-xl font-bold text-rose-600">Failed to load professional details</h2>
-        <Button onClick={() => router.back()} className="mt-4">Go Back</Button>
+      <div className="p-4 sm:p-8 text-center flex flex-col items-center gap-4">
+        <HiOutlineExclamationCircle className="w-12 h-12 text-red-500" />
+        <h2 className="text-xl font-semibold text-neutral-700">Professional Not Found</h2>
+        <p className="text-zinc-600">We couldn't find a professional record with ID: {id}</p>
+        <Button variant="outline" onClick={() => router.back()}>Go Back</Button>
       </div>
     )
   }
 
   const stats = [
-    { title: "Total Earnings", value: `₦${(pro.earnings || 142500).toLocaleString()}`, trend: "+12.5%", icon: HiOutlineCurrencyDollar },
-    { title: "Jobs Done", value: pro.totalJobs || 245, trend: "+12.5%", icon: HiOutlineBriefcase },
-    { title: "Success Rate", value: `${pro.successRate || 99.2}%`, trend: "+12.5%", icon: HiOutlineBadgeCheck },
-    { title: "Avg. Rating", value: pro.rating || 4.7, trend: "+12.5%", icon: HiOutlineStar },
+    { title: "Total Earnings", value: `₦${(pro.earnings || 0).toLocaleString()}`, trend: pro.earningsTrend || "0%", icon: HiOutlineCurrencyDollar },
+    { title: "Jobs Done", value: pro.totalJobs || proBookings.length || 0, trend: pro.jobsTrend || "0%", icon: HiOutlineBriefcase },
+    { title: "Success Rate", value: `${pro.successRate || 100}%`, trend: pro.successTrend || "0%", icon: HiOutlineBadgeCheck },
+    { title: "Avg. Rating", value: pro.rating || "N/A", trend: pro.ratingTrend || "0%", icon: HiOutlineStar },
   ]
 
-  // Mock booking history as it might not be directly in the pro object
-  const bookingHistory = [
-    {
-      id: "RH-7842-019",
-      category: "Plumbing",
-      description: "Burst pipe, kitchen sink",
-      status: "Upcoming" as const,
-      homeowner: { name: "James Adewale", rating: "4.9", avatar: "https://placehold.co/34x34" },
-      price: "₦45,000",
-      time: "Today · 2:00 PM – 4:00 PM",
-      location: "14 Allen Avenue, Ikeja, Lagos"
-    },
-    {
-      id: "RH-7820-055",
-      category: "Plumbing",
-      description: "Burst pipe, kitchen sink",
-      status: "Completed" as const,
-      homeowner: { name: "James Adewale", rating: "4.9", avatar: "https://placehold.co/34x34" },
-      price: "₦45,000",
-      time: "Apr 28, 2026 · Completed 3:45 PM",
-      location: "7 Bourdillon Road, Ikoyi, Lagos"
-    },
-    {
-      id: "RH-7835-004",
-      category: "Emergency",
-      description: "Gas leak",
-      status: "Active" as const,
-      homeowner: { name: "Chidi Bello", rating: "4.9", avatar: "https://placehold.co/34x34" },
-      price: "₦45,000",
-      time: "Today · In progress",
-      location: "7 Bourdillon Road, Ikoyi, Lagos",
-      isEmergency: true
-    }
-  ]
+  // Removed dummy booking history logic
 
   return (
     <div className="p-4 sm:p-8 flex flex-col gap-6 max-w-[1240px] mx-auto bg-stone-50 min-h-screen">
@@ -120,13 +112,13 @@ export default function ProfessionalDetailsPage() {
               </div>
               <div className="flex flex-col">
                 <div className="flex items-center gap-2">
-                  <span className="text-zinc-700 text-base font-semibold font-inter">{pro.name || 'Opeyemi Samuel'}</span>
+                  <span className="text-zinc-700 text-base font-semibold font-inter">{pro.name || pro.fullName || 'Opeyemi Samuel'}</span>
                   {pro.isVerified && <HiOutlineBadgeCheck className="text-blue-700 w-4 h-4" />}
                 </div>
                 <div className="flex items-center gap-2 text-zinc-500 text-sm">
-                  <span>{pro.category || pro.specialty || 'Electrical'}</span>
+                  <span>{pro.category || pro.specialty || pro.primarySpecialty || 'Electrical'}</span>
                   <div className="w-1.5 h-1.5 bg-zinc-300 rounded-full" />
-                  <span>{pro.location || 'Lagos'}</span>
+                  <span>{pro.location || pro.address?.city || 'Lagos'}</span>
                 </div>
               </div>
             </div>
@@ -194,9 +186,13 @@ export default function ProfessionalDetailsPage() {
                 <p className="text-zinc-600 text-sm font-normal font-inter">View professional’s booking from sign up till date</p>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {bookingHistory.map((booking) => (
-                  <BookingCard key={booking.id} booking={booking as any} />
-                ))}
+                {proBookings.length > 0 ? proBookings.map((booking: any) => (
+                  <BookingCard key={booking.id || booking._id} booking={booking} />
+                )) : (
+                  <div className="col-span-full py-12 text-center text-zinc-500 bg-stone-50 rounded-xl border border-dashed border-zinc-300">
+                    No booking history found for this professional.
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -206,8 +202,8 @@ export default function ProfessionalDetailsPage() {
             <div className="p-6 bg-white rounded-xl border border-zinc-300 flex flex-col gap-6 shadow-sm">
               <h3 className="text-neutral-700 text-base font-semibold font-inter">Professional Info</h3>
               <div className="space-y-6">
-                <InfoRow label="Full Name" value={pro.name || 'Opeyemi Samuel'} />
-                <InfoRow label="Category" value={pro.category || pro.specialty || 'Electrical'} />
+                <InfoRow label="Full Name" value={pro.name || pro.fullName || 'Opeyemi Samuel'} />
+                <InfoRow label="Category" value={pro.category || pro.specialty || pro.primarySpecialty || 'Electrical'} />
                 <InfoRow label="Phone Number" value={pro.phone || pro.phoneNumber || '+234 901 234 5678'} />
                 <InfoRow label="Email Address" value={pro.email || 'pro.work@example.com'} />
                 <InfoRow label="Experience" value={pro.experience || '5+ Years'} />
@@ -219,9 +215,9 @@ export default function ProfessionalDetailsPage() {
             <div className="p-6 bg-white rounded-xl border border-zinc-300 flex flex-col gap-6 shadow-sm h-fit">
               <h3 className="text-neutral-700 text-base font-semibold font-inter">Verification & Identity</h3>
               <div className="space-y-6">
-                <InfoRow label="NIN (Verified)" value={pro.nin || '9876 5432 1098'} />
-                <InfoRow label="Work Address" value={pro.location || 'Lagos'} />
-                <InfoRow label="Account Name" value={pro.name || 'Opeyemi Samuel'} />
+                <InfoRow label="BVN (Verified)" value={pro.bvn || pro.idNumber || '9876 5432 1098'} />
+                <InfoRow label="Work Address" value={pro.location || pro.address?.street || 'Lagos'} />
+                <InfoRow label="Account Name" value={pro.name || pro.fullName || 'Opeyemi Samuel'} />
                 <InfoRow label="Bank Name" value={pro.bankName || 'Zenith Bank'} />
                 <InfoRow label="Account Number" value={pro.accountNumber || '2109847251'} />
               </div>
