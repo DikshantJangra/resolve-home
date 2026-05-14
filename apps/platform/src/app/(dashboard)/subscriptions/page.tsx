@@ -187,7 +187,7 @@ function SubscriptionsContent() {
       {/* Billing History */}
       <div className="flex flex-col gap-4">
         <h3 className="text-neutral-700 text-lg font-bold font-plus-jakarta">Billing History</h3>
-        <div className="bg-white rounded-2xl border border-zinc-100 shadow-sm overflow-hidden">
+        <div className="bg-white rounded-2xl border border-zinc-100 shadow-sm overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-stone-50/50 border-b border-zinc-100">
