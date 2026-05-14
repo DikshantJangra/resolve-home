@@ -134,6 +134,7 @@ export const ENDPOINTS = {
     BY_ID:   (id: string) => `/api/admin/engineers/${id}`,
     APPROVE: (id: string) => `/api/admin/engineers/${id}/approve`,
     REJECT:  (id: string) => `/api/admin/engineers/${id}/reject`,
+    VERIFY_GUARANTOR: (id: string) => `/api/admin/engineers/${id}/verify-guarantor`,
   },
 
   // ─── Admin — Engineer Verification ─────────────────────────────────────────

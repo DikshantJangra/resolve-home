@@ -26,9 +26,6 @@ export default function SubscriptionsPage() {
             window.location.href = data.authorizationUrl
           }
         },
-        onError: (err: any) => {
-          toast.error(err?.response?.data?.message || 'Failed to initialize subscription')
-        }
       })
     }
   }, [subscription, subLoading])

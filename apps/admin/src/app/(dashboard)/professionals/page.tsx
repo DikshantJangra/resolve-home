@@ -85,8 +85,7 @@ export default function ProfessionalsPage() {
     const action = isBanned ? 'unban' : 'ban'
     if (confirm(`Are you sure you want to ${action} this professional?`)) {
       banUser(userId, {
-        onSuccess: () => toast.success(`Professional ${action}ned successfully`),
-        onError: (err: any) => toast.error(err.message || `Failed to ${action} professional`)
+        onSuccess: () => toast.success(`Professional ${action}ned successfully`)
       })
     }
   }

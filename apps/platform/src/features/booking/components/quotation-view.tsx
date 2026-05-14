@@ -25,8 +25,7 @@ export const QuotationView = ({ quotation }: QuotationViewProps) => {
   const handleApprove = () => {
     if (confirm('Are you sure you want to approve this quotation? The amount will be deducted from your wallet.')) {
       approve(quotation.id, {
-        onSuccess: () => toast.success('Quotation approved successfully'),
-        onError: (err: any) => toast.error(err.message || 'Failed to approve quotation')
+        onSuccess: () => toast.success('Quotation approved successfully')
       })
     }
   }
@@ -35,8 +34,7 @@ export const QuotationView = ({ quotation }: QuotationViewProps) => {
     const reason = prompt('Please provide a reason for rejection (optional):')
     if (reason !== null) {
       reject({ quotationId: quotation.id, reason }, {
-        onSuccess: () => toast.success('Quotation rejected'),
-        onError: (err: any) => toast.error(err.message || 'Failed to reject quotation')
+        onSuccess: () => toast.success('Quotation rejected')
       })
     }
   }

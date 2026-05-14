@@ -83,7 +83,11 @@ export default function OverviewPage() {
   const { data: categories, isLoading: categoriesLoading } = useCategories()
   const { data: engineers, isLoading: engineersLoading } = useAdminEngineers()
 
-  const recentBookings = bookings?.slice(0, 4) || []
+  const recentBookings = React.useMemo(() => {
+    return [...(bookings || [])]
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+      .slice(0, 5)
+  }, [bookings])
 
   const calculatedDistribution = React.useMemo(() => {
     if (!bookings || bookings.length === 0) return []

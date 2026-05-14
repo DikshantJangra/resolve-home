@@ -47,8 +47,6 @@ export default function ForgotPasswordPage() {
       toast.success('Password reset link sent to your email')
     } catch (err: unknown) {
       console.error('Forgot password error:', err)
-      const message = err instanceof Error ? err.message : 'An unexpected error occurred'
-      toast.error(message)
     } finally {
       setIsLoading(false)
     }

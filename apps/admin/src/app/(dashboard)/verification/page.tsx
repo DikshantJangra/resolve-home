@@ -75,9 +75,6 @@ export default function VerificationPage() {
         setRejectionNote('')
         setActiveRequestId(null)
       },
-      onError: (err: any) => {
-        toast.error(err?.response?.data?.message || `Failed to ${status} engineer`)
-      }
     })
   }
 
@@ -266,7 +263,7 @@ export default function VerificationPage() {
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-4">
                       {(() => {
-                        const isGuarantorVerified = !!(v.isGuarantorVerified || v.guarantorVerified || v.engineerProfile?.isGuarantorVerified);
+                        const isGuarantorVerified = !!(v.engineerProfile?.guarantorVerification?.verified || v.isGuarantorVerified || v.guarantorVerified || v.engineerProfile?.isGuarantorVerified);
                         return (
                           <button
                             disabled={!isGuarantorVerified}

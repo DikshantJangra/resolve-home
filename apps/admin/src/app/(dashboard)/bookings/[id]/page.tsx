@@ -26,7 +26,6 @@ export default function BookingDetailsPage({ params }: { params: { id: string } 
       await updateStatus.mutateAsync({ bookingId: params.id, status })
       toast.success(`Booking marked as ${status}`)
     } catch (err) {
-      toast.error('Failed to update booking status')
     }
   }
 

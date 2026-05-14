@@ -39,7 +39,6 @@ function NewComplaintForm() {
       toast.success('Complaint submitted successfully')
       router.push('/complaints')
     } catch (err) {
-      toast.error('Failed to submit complaint')
     }
   }
 

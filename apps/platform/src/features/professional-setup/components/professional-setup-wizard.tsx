@@ -45,9 +45,6 @@ export const ProfessionalSetupWizard = ({ onComplete, initialStep }: { onComplet
     resendVerification(undefined, {
       onSuccess: () => {
         toast.success('Verification email resent successfully')
-      },
-      onError: (err: any) => {
-        toast.error(err?.response?.data?.message || 'Failed to resend verification email')
       }
     })
   }
@@ -63,9 +60,6 @@ export const ProfessionalSetupWizard = ({ onComplete, initialStep }: { onComplet
         store.updateField('guarantorEmail', tempEmail)
         setIsEditingEmail(false)
         toast.success('Guarantor email updated successfully')
-      },
-      onError: (err: any) => {
-        toast.error(err?.response?.data?.message || 'Failed to update guarantor email')
       }
     })
   }
@@ -208,7 +202,6 @@ export const ProfessionalSetupWizard = ({ onComplete, initialStep }: { onComplet
       store.updateField('idPhoto', url)
       toast.success('Document uploaded')
     } catch {
-      toast.error('Upload failed, please try again')
     } finally {
       setIsUploading(false)
       if (fileInputRef.current) fileInputRef.current.value = ''

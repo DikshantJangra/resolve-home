@@ -71,9 +71,6 @@ export default function JobDetailsPage() {
       onSuccess: () => {
         toast.success('Job accepted successfully!')
       },
-      onError: (err: any) => {
-        toast.error(err.message || 'Failed to accept job')
-      }
     })
   }
 
@@ -84,9 +81,6 @@ export default function JobDetailsPage() {
           toast.success('Job declined')
           router.push('/engineer')
         },
-        onError: (err: any) => {
-          toast.error(err.message || 'Failed to decline job')
-        }
       })
     }
   }
@@ -94,8 +88,7 @@ export default function JobDetailsPage() {
   const handleComplete = () => {
     if (confirm('Are you sure you want to mark this job as complete?')) {
       completeJob(job.id, {
-        onSuccess: () => toast.success('Job marked as complete'),
-        onError: (err: any) => toast.error(err.message || 'Failed to complete job')
+        onSuccess: () => toast.success('Job marked as complete')
       })
     }
   }

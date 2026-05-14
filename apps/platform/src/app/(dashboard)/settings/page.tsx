@@ -136,7 +136,6 @@ function AccountSection({ user }: { user: any }) {
       })
       toast.success('Account settings updated successfully!')
     } catch (error: any) {
-      toast.error(error.response?.data?.error || 'Failed to update account settings')
     }
   }
 
@@ -212,7 +211,6 @@ function SecuritySection() {
       toast.success('Password updated successfully!')
       reset()
     } catch (error: any) {
-      toast.error(error.response?.data?.error || 'Failed to update password')
     }
   }
 

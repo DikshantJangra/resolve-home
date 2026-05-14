@@ -88,7 +88,6 @@ export default function CategoriesPage() {
       }
       setIsCatModalOpen(false)
     } catch (err) {
-      toast.error('Failed to save category')
     }
   }
 
@@ -99,7 +98,6 @@ export default function CategoriesPage() {
       await deleteService.mutateAsync({ id, categoryId: activeCategoryId })
       toast.success('Service removed')
     } catch (err) {
-      toast.error('Failed to remove service')
     }
   }
 
@@ -128,7 +126,6 @@ export default function CategoriesPage() {
       setNewService({ name: '', price: '' })
       toast.success('Service added')
     } catch (err) {
-      toast.error('Failed to add service')
     }
   }
 

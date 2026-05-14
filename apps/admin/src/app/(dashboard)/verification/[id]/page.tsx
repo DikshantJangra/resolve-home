@@ -18,7 +18,7 @@ import {
   HiOutlineExternalLink
 } from 'react-icons/hi'
 import { cn, Button, Skeleton, formatImageUrl } from "@resolve/ui"
-import { useAdminPendingEngineerById, useAdminApproveEngineer, useAdminRejectEngineer, useCategories } from '@/hooks/api-hooks'
+import { useAdminPendingEngineerById, useAdminApproveEngineer, useAdminRejectEngineer, useCategories, useAdminVerifyGuarantor } from '@/hooks/api-hooks'
 import { toast } from 'sonner'
 
 export default function VerificationDetailPage() {
@@ -40,7 +40,8 @@ export default function VerificationDetailPage() {
 
   const { mutate: approveEngineer, isPending: isApproving } = useAdminApproveEngineer()
   const { mutate: rejectEngineer, isPending: isRejecting } = useAdminRejectEngineer()
-  const isVerifying = isApproving || isRejecting
+  const { mutate: verifyGuarantor, isPending: isVerifyingGuarantor } = useAdminVerifyGuarantor()
+  const isVerifying = isApproving || isRejecting || isVerifyingGuarantor
 
   // Helper to find category name from ID
   const getCategoryName = (categoryId: string) => {
@@ -64,7 +65,6 @@ export default function VerificationDetailPage() {
     }
 
     // Try to find the most specific ID (engineer profile ID)
-    const targetId = engineer.engineerProfile?.id || engineer.profile?.id || engineer.id || id
     const action = status === 'approved' ? approveEngineer : rejectEngineer
     const payload = status === 'approved' ? { id: targetId as string } : { id: targetId as string, note: rejectionNote }
 
@@ -77,9 +77,6 @@ export default function VerificationDetailPage() {
         setRejectionNote('')
         router.push('/verification')
       },
-      onError: (err: any) => {
-        toast.error(err?.response?.data?.message || `Failed to ${status} engineer`)
-      }
     })
   }
 
@@ -125,23 +122,42 @@ export default function VerificationDetailPage() {
     state: engineer.state || location.state || profile.state || 'N/A',
     bvn: engineer.idNumber || engineer.bvn || profile.idNumber || profile.bvn || idVerification.bvn || 'N/A',
     idType: engineer.idType || profile.idType || idVerification.type || 'BVN',
-    documentUrl: engineer.idDocument || profile.idDocument || engineer.documentUrl || idVerification.documentUrl || profile.documentUrl,
+    documentUrl: profile.idDocument || profile.documentUrl || idVerification.documentUrl || idVerification.document || profile.idVerification?.documentUrl || engineer.idDocument || engineer.documentUrl || null,
     guarantorName: guarantor.name || guarantor.fullName || profile.guarantorName || engineer.guarantorName || (Array.isArray(engineer.guarantors) ? engineer.guarantors[0]?.name : 'N/A'),
     guarantorPhone: guarantor.phone || guarantor.phoneNumber || profile.guarantorPhone || engineer.guarantorPhone || (Array.isArray(engineer.guarantors) ? engineer.guarantors[0]?.phone : 'N/A'),
     guarantorEmail: guarantor.email || profile.guarantorEmail || engineer.guarantorEmail || (Array.isArray(engineer.guarantors) ? engineer.guarantors[0]?.email : 'N/A'),
     guarantorRelationship: guarantor.relationship || profile.relationship || engineer.guarantorRelationship || (Array.isArray(engineer.guarantors) ? engineer.guarantors[0]?.relationship : 'N/A'),
     guarantorWorkPlace: guarantor.workPlace || guarantor.placeOfWork || profile.placeOfWork || engineer.guarantorWorkPlace || (Array.isArray(engineer.guarantors) ? engineer.guarantors[0]?.workPlace : 'N/A'),
 
-    isGuarantorVerified: !!(engineer.isGuarantorVerified || profile.isGuarantorVerified || engineer.guarantorVerified || user.isGuarantorVerified)
+    isGuarantorVerified: !!(profile.guarantorVerification?.verified || profile.isGuarantorVerified || engineer.isGuarantorVerified || profile.guarantorVerified || engineer.guarantorVerified || user.isGuarantorVerified)
   };
+
+  // Enhanced Debugging
+  React.useEffect(() => {
+    if (engineer) {
+      console.log('[VerificationDetail] >>> FULL ENGINEER OBJECT:', engineer);
+      console.log('[VerificationDetail] >>> EXTRACTED PROFILE:', profile);
+      console.log('[VerificationDetail] >>> DOCUMENT URL ATTEMPT:', displayData.documentUrl);
+      
+      // Specifically check for any document-like keys in profile
+      const docKeys = Object.keys(profile).filter(k => k.toLowerCase().includes('doc') || k.toLowerCase().includes('id'));
+      console.log('[VerificationDetail] Potential Doc/ID keys in profile:', docKeys);
+      docKeys.forEach(k => console.log(`[VerificationDetail] profile[${k}] =`, (profile as any)[k]));
+    }
+  }, [engineer, profile, displayData.documentUrl]);
+
+
 
   console.log('[VerificationDetail] Computed Display Data:', displayData);
 
-  const documentUrl = displayData.documentUrl;
+    const rawDocUrl = displayData.documentUrl;
+    const documentUrl = (rawDocUrl && rawDocUrl !== 'null' && rawDocUrl !== 'undefined') ? rawDocUrl : null;
 
-  const canApprove = displayData.isGuarantorVerified && !isVerifying;
+    const targetId = (engineer?.engineerProfile?.id || engineer?.profile?.id || engineer?.id || id) as string
 
-  return (
+    const canApprove = displayData.isGuarantorVerified && !isVerifying;
+
+    return (
     <div className="p-4 sm:p-8 flex flex-col gap-8 max-w-[1400px] mx-auto">
       {/* Back Button */}
       <button
@@ -237,15 +253,29 @@ export default function VerificationDetailPage() {
             {!displayData.isGuarantorVerified ? (
               <div className="mt-4 p-4 bg-rose-50 rounded-xl border border-rose-100 flex items-start gap-3">
                 <HiOutlineExclamationCircle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
-                <p className="text-red-600 text-sm font-medium font-inter leading-relaxed">
+                <p className="text-red-600 text-sm font-medium font-inter leading-relaxed flex-1">
                   The guarantor has been contacted but yet to be verified via automated email.
                 </p>
+                <button
+                  onClick={() => verifyGuarantor(targetId, {
+                    onSuccess: () => toast.success('Guarantor verified successfully')
+                  })}
+                  disabled={isVerifyingGuarantor}
+                  className="px-3 py-1.5 bg-red-600 text-white rounded-lg text-xs font-semibold hover:bg-red-700 transition-colors disabled:opacity-50 flex items-center gap-1.5 shrink-0"
+                >
+                  {isVerifyingGuarantor ? 'Verifying...' : (
+                    <>
+                      <HiOutlineCheckCircle className="w-4 h-4" />
+                      Verify Now
+                    </>
+                  )}
+                </button>
               </div>
             ) : (
               <div className="mt-4 p-4 bg-green-50 rounded-xl border border-green-100 flex items-start gap-3">
                 <HiOutlineCheckCircle className="w-5 h-5 text-green-600 shrink-0 mt-0.5" />
-                <p className="text-green-700 text-sm font-medium font-inter leading-relaxed">
-                  The guarantor has been successfully verified.
+            <p className="text-green-700 text-sm font-medium font-inter leading-relaxed">
+                  The guarantor has been contacted.
                 </p>
               </div>
             )}
@@ -271,19 +301,33 @@ export default function VerificationDetailPage() {
                     className="w-full h-full object-cover transition-transform group-hover:scale-105"
                   />
                 ) : (
-                  <HiOutlineDocumentText className="w-16 h-16 text-zinc-300" />
+                  <div className="flex flex-col items-center gap-3">
+                    <HiOutlineDocumentText className="w-16 h-16 text-zinc-300" />
+                    <span className="text-sm font-medium text-zinc-500">Document (PDF/Other)</span>
+                    <a 
+                      href={formatImageUrl(documentUrl)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="px-4 py-2 bg-blue-600 text-white rounded-lg text-xs font-semibold hover:bg-blue-700 transition-colors flex items-center gap-2"
+                    >
+                      <HiOutlineExternalLink className="w-4 h-4" />
+                      View Document
+                    </a>
+                  </div>
                 )}
 
-                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
-                  <a
-                    href={formatImageUrl(documentUrl)}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="p-2 bg-white rounded-full text-zinc-900 hover:bg-blue-600 hover:text-white transition-colors"
-                  >
-                    <HiOutlineExternalLink className="w-5 h-5" />
-                  </a>
-                </div>
+                {documentUrl.match(/\.(jpeg|jpg|gif|png|webp)$/i) && (
+                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
+                    <a
+                      href={formatImageUrl(documentUrl)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="p-2 bg-white rounded-full text-zinc-900 hover:bg-blue-600 hover:text-white transition-colors"
+                    >
+                      <HiOutlineExternalLink className="w-5 h-5" />
+                    </a>
+                  </div>
+                )}
               </div>
             ) : (
               <div className="rounded-xl border border-zinc-200 border-dashed p-8 flex flex-col items-center justify-center gap-2 text-zinc-400">

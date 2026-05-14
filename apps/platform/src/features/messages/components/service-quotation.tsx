@@ -25,8 +25,7 @@ export const ServiceQuotation = ({ quotation, isMe }: ServiceQuotationProps) => 
 
   const handleAccept = () => {
     approve(quotation.id, {
-      onSuccess: () => toast.success("Quotation accepted and funded!"),
-      onError: (err: any) => toast.error(err.message || "Failed to accept quotation")
+      onSuccess: () => toast.success("Quotation accepted and funded!")
     })
   }
 

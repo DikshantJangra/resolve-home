@@ -451,6 +451,21 @@ export function useAdminRejectEngineer() {
   })
 }
 
+export function useAdminVerifyGuarantor() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const response = await apiClient.put(ENDPOINTS.ADMIN_ENGINEERS.VERIFY_GUARANTOR(id))
+      return response.data
+    },
+    onSuccess: (_, id) => {
+      queryClient.invalidateQueries({ queryKey: ['admin-verification-requests'] })
+      queryClient.invalidateQueries({ queryKey: ['admin-engineer', id] })
+      queryClient.invalidateQueries({ queryKey: ['admin-pending-engineer', id] })
+    }
+  })
+}
+
 export function useHealthCheck() {
   return useQuery({
     queryKey: ['health-check'],

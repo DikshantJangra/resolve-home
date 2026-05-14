@@ -82,8 +82,7 @@ export const Membership = () => {
       } else {
         toast.error('Failed to initialize payment')
       }
-    } catch (err: any) {
-      toast.error(err?.response?.data?.message || 'Subscription failed')
+    } catch {
     }
   }
 

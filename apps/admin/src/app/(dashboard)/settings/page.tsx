@@ -79,7 +79,6 @@ export default function SettingsPage() {
       toast.success('Profile updated successfully')
       setIsEditing(false)
     } catch (err: any) {
-      toast.error(err.response?.data?.message || 'Failed to update profile')
     }
   }
 
@@ -97,7 +96,6 @@ export default function SettingsPage() {
       toast.success('Password updated successfully')
       setPasswordData({ oldPassword: '', newPassword: '', confirmPassword: '' })
     } catch (err: any) {
-      toast.error(err.response?.data?.message || 'Failed to update password')
     }
   }
 
@@ -111,7 +109,6 @@ export default function SettingsPage() {
       setProfileData(prev => ({ ...prev, avatar: url }))
       toast.success('Avatar uploaded')
     } catch (err) {
-      toast.error('Failed to upload avatar')
     }
   }
 

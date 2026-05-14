@@ -70,9 +70,6 @@ export const QuotationModal = ({ isOpen, onClose, bookingId }: QuotationModalPro
       onSuccess: () => {
         toast.success('Quotation submitted successfully')
         onClose()
-      },
-      onError: (err: any) => {
-        toast.error(err.message || 'Failed to submit quotation')
       }
     })
   }
