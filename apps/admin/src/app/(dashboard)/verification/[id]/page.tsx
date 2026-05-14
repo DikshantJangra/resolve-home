@@ -1,6 +1,6 @@
 'use client'
 
-import React from 'react'
+import React, { useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import {
   HiOutlineArrowLeft,
@@ -40,9 +40,7 @@ export default function VerificationDetailPage() {
 
   const { mutate: approveEngineer, isPending: isApproving } = useAdminApproveEngineer()
   const { mutate: rejectEngineer, isPending: isRejecting } = useAdminRejectEngineer()
-
   const isVerifying = isApproving || isRejecting
-
 
   // Helper to find category name from ID
   const getCategoryName = (categoryId: string) => {
@@ -56,12 +54,23 @@ export default function VerificationDetailPage() {
     return category?.name || categoryId
   }
 
-  const handleAction = (status: 'approved' | 'rejected') => {
-    const action = status === 'approved' ? approveEngineer : rejectEngineer
+  const [isRejectModalOpen, setIsRejectModalOpen] = useState(false)
+  const [rejectionNote, setRejectionNote] = useState('')
 
-    action({ id: id as string }, {
+  const handleAction = (status: 'approved' | 'rejected') => {
+    if (status === 'rejected' && !isRejectModalOpen) {
+      setIsRejectModalOpen(true)
+      return
+    }
+
+    const action = status === 'approved' ? approveEngineer : rejectEngineer
+    const payload = status === 'approved' ? { id: id as string } : { id: id as string, note: rejectionNote }
+
+    action(payload as any, {
       onSuccess: () => {
         toast.success(`Engineer ${status === 'approved' ? 'approved' : 'rejected'} successfully`)
+        setIsRejectModalOpen(false)
+        setRejectionNote('')
         router.push('/verification')
       },
       onError: (err: any) => {
@@ -301,6 +310,50 @@ export default function VerificationDetailPage() {
           </div>
         </div>
       </div>
+
+      {/* Reject Modal */}
+      {isRejectModalOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white rounded-3xl w-full max-w-md overflow-hidden shadow-2xl animate-in zoom-in-95 duration-200">
+            <div className="px-6 py-5 border-b border-zinc-100 flex justify-between items-center bg-stone-50">
+              <h3 className="text-xl font-bold text-neutral-700">Reject Professional</h3>
+              <button 
+                onClick={() => setIsRejectModalOpen(false)} 
+                className="p-2 hover:bg-zinc-200 rounded-full transition-colors"
+              >
+                <HiOutlineXCircle className="w-5 h-5 text-zinc-500" />
+              </button>
+            </div>
+            <div className="p-8 flex flex-col gap-6">
+              <div className="flex flex-col gap-2">
+                <label className="text-sm font-semibold text-neutral-700">Rejection Note</label>
+                <textarea 
+                  value={rejectionNote}
+                  onChange={(e) => setRejectionNote(e.target.value)}
+                  placeholder="Explain why this professional is being rejected..."
+                  className="w-full h-32 p-4 rounded-xl border border-zinc-300 focus:ring-2 focus:ring-red-500/20 focus:border-red-500 outline-none transition-all text-sm font-inter resize-none"
+                />
+              </div>
+              <div className="flex flex-col gap-3">
+                <Button 
+                  onClick={() => handleAction('rejected')}
+                  disabled={!rejectionNote.trim() || isRejecting}
+                  className="w-full h-12 bg-red-500 hover:bg-red-600 text-white rounded-xl font-semibold shadow-lg shadow-red-500/10"
+                >
+                  {isRejecting ? 'Rejecting...' : 'Confirm Rejection'}
+                </Button>
+                <Button 
+                  variant="outline" 
+                  onClick={() => setIsRejectModalOpen(false)}
+                  className="w-full h-12 rounded-xl"
+                >
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
