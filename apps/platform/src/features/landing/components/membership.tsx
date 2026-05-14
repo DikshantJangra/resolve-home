@@ -7,7 +7,7 @@ import { HiOutlineUser, HiOutlineShieldCheck, HiOutlineSupport, HiOutlineCheckCi
 import { HiStar } from 'react-icons/hi2'
 import { FigmaImage } from "@resolve/ui"
 import { cn } from "@resolve/ui"
-import { useAuthSession } from '@/hooks/api-hooks'
+import { useAuthSession, useSubscribe } from '@/hooks/api-hooks'
 import { toast } from 'sonner'
 import { useRouter } from 'next/navigation'
 

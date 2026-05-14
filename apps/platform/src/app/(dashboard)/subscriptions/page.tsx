@@ -1,6 +1,6 @@
 'use client'
 
-import React from 'react'
+import React, { Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { useMySubscription, useSubscriptionHistory, useVerifySubscription, useCancelSubscription, useSubscribe } from '@/hooks/api-hooks'
 import { cn, Button, Skeleton } from "@resolve/ui"
@@ -9,7 +9,7 @@ import { format } from 'date-fns'
 import { toast } from 'sonner'
 import { useQueryClient } from '@tanstack/react-query'
 
-export default function SubscriptionsPage() {
+function SubscriptionsContent() {
   const searchParams = useSearchParams()
   const reference = searchParams.get('reference') || ''
 
@@ -238,5 +238,25 @@ export default function SubscriptionsPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function SubscriptionsPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex flex-col gap-8 max-w-4xl mx-auto p-6">
+        <div className="flex flex-col gap-2">
+          <Skeleton className="h-8 w-48 rounded-lg" />
+          <Skeleton className="h-5 w-72 rounded-lg" />
+        </div>
+        <Skeleton className="h-64 w-full rounded-2xl" />
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {[1, 2, 3].map(i => <Skeleton key={i} className="h-36 rounded-2xl" />)}
+        </div>
+        <Skeleton className="h-64 w-full rounded-2xl" />
+      </div>
+    }>
+      <SubscriptionsContent />
+    </Suspense>
   )
 }

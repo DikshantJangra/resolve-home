@@ -26,26 +26,20 @@ export function BookingWizardModal() {
   return (
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-[150] flex items-center justify-center overflow-y-auto bg-black/60 backdrop-blur-sm p-4 md:p-6">
+        <div className="fixed inset-0 z-[150] flex md:items-center md:justify-center md:bg-black/60 md:backdrop-blur-sm md:p-6">
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            onClick={() => {
-              // Only close if we are at step 1 or 8 (Success)
-              // Actually, better to let the wizard handle its own close logic via the header
-              // but we need a way to close the modal if clicked outside
-              // For now, let's just make the backdrop clickable to close
-              resetBooking()
-            }}
-            className="absolute inset-0"
+            onClick={() => resetBooking()}
+            className="absolute inset-0 hidden md:block"
           />
 
           <motion.div
-            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+            initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.9, y: 20 }}
-            className="relative w-full max-w-[669px] pointer-events-auto"
+            exit={{ opacity: 0, scale: 0.95, y: 20 }}
+            className="relative w-full h-full md:h-auto md:max-w-[669px] pointer-events-auto"
           >
             <BookingWizard />
           </motion.div>

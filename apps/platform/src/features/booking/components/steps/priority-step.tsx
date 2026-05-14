@@ -34,7 +34,7 @@ export const PriorityStep = () => {
   return (
     <div className="flex flex-col h-full bg-white min-h-0">
       <div className="flex-1 px-5 pt-10 overflow-y-auto scrollbar-thin">
-        <div className="flex gap-5">
+        <div className="flex flex-col gap-5">
           {options.map((option) => {
             const Icon = option.icon
             const isSelected = priority === option.id
@@ -43,7 +43,7 @@ export const PriorityStep = () => {
               <button
                 key={option.id}
                 onClick={() => handleSelect(option.id)}
-                className={`flex-1 h-64 p-5 rounded-xl transition-all flex flex-col justify-center items-center gap-5 overflow-hidden ${
+                className={`w-full h-48 p-5 rounded-xl transition-all flex flex-col justify-center items-center gap-5 overflow-hidden ${
                   isSelected
                     ? 'bg-slate-50 outline outline-[1.50px] outline-offset-[-1.50px] outline-blue-700'
                     : 'bg-white outline outline-1 outline-offset-[-1px] outline-zinc-300'

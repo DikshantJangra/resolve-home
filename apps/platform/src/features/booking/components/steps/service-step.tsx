@@ -47,7 +47,7 @@ export const ServiceStep = () => {
   return (
     <div className="flex flex-col h-full bg-white min-h-0">
       <div className="flex-1 px-5 pt-10 overflow-y-auto">
-        <div className="flex flex-wrap gap-5">
+        <div className="flex flex-wrap gap-5 justify-center">
           {categories?.map((cat: any) => {
             const config = categoryConfigs[cat.name] || categoryConfigs['Plumbing']
             const isSelected = categoryId === cat.id

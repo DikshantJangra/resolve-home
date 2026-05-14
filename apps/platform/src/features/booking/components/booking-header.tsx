@@ -45,23 +45,25 @@ export const BookingHeader = ({
         <h1 className="text-2xl font-semibold text-neutral-700 font-['Plus_Jakarta_Sans'] leading-8">
           {title}
         </h1>
-        <button 
-          onClick={() => {
-            if (currentStep > 1) {
-              setStep(currentStep - 1)
-            } else {
-              resetBooking()
-            }
-          }}
-          className="flex items-center gap-2 text-blue-700 hover:text-blue-800 transition-colors"
-        >
-          <div className="w-6 h-6 relative flex items-center justify-center">
-             <div className="w-2 h-4 border-l-[1.5px] border-b-[1.5px] border-blue-700 rotate-45 translate-x-1" />
-          </div>
-          <span className="text-base font-normal font-['Inter'] leading-6">
-            {currentStep > 1 ? 'Go Back' : 'Close'}
-          </span>
-        </button>
+        {currentStep > 1 ? (
+          <button
+            onClick={() => setStep(currentStep - 1)}
+            className="flex items-center gap-2 text-blue-700 hover:text-blue-800 transition-colors"
+          >
+            <div className="w-6 h-6 relative flex items-center justify-center">
+              <div className="w-2 h-4 border-l-[1.5px] border-b-[1.5px] border-blue-700 rotate-45 translate-x-1" />
+            </div>
+            <span className="text-base font-normal font-['Inter'] leading-6">Go Back</span>
+          </button>
+        ) : (
+          <button
+            onClick={() => resetBooking()}
+            className="flex items-center justify-center w-8 h-8 rounded-full hover:bg-zinc-100 transition-colors text-neutral-600 hover:text-neutral-900"
+            aria-label="Close"
+          >
+            <IoCloseOutline size={22} />
+          </button>
+        )}
       </div>
 
       <div className="space-y-2.5">
