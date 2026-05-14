@@ -1,10 +1,12 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Sidebar } from "@/components/layout/sidebar"
 import { Navbar } from "@/components/layout/navbar"
 import { cn } from "@resolve/ui"
 import { BookingWizardModal } from '@/features/booking/components/booking-wizard-modal'
+import { useUserProfile } from '@/hooks/api-hooks'
+import { useRouter } from 'next/navigation'
 
 export default function DashboardLayout({
   children,
@@ -12,6 +14,16 @@ export default function DashboardLayout({
   children: React.ReactNode
 }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
+  const { data: user, isPending } = useUserProfile()
+  const router = useRouter()
+
+  useEffect(() => {
+    if (!isPending && user?.user && !user.user.emailVerified) {
+      router.push('/auth/verify-email')
+    }
+  }, [user, isPending, router])
+
+  if (isPending) return null // Or a loading spinner
 
   return (
     <div className="flex min-h-screen bg-slate-50">
