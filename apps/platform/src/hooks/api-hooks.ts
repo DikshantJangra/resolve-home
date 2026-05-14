@@ -365,8 +365,8 @@ export function useWalletTransactions() {
 
 export function useInitializeDeposit() {
   return useMutation({
-    mutationFn: async (amount: number) => {
-      const response = await apiClient.post(ENDPOINTS.WALLET.DEPOSIT_INITIALIZE, { amount })
+    mutationFn: async ({ amount, callbackURL }: { amount: number, callbackURL?: string }) => {
+      const response = await apiClient.post(ENDPOINTS.WALLET.DEPOSIT_INITIALIZE, { amount, callbackURL })
       return response.data.data
     }
   })
@@ -732,8 +732,8 @@ export function useMySubscription() {
 
 export function useSubscribe() {
   return useMutation({
-    mutationFn: async (planId: 'basic' | 'standard' | 'premium') => {
-      const response = await apiClient.post(ENDPOINTS.SUBSCRIPTIONS.SUBSCRIBE, { planId })
+    mutationFn: async ({ planId, callbackURL }: { planId: 'basic' | 'standard' | 'premium', callbackURL?: string }) => {
+      const response = await apiClient.post(ENDPOINTS.SUBSCRIPTIONS.SUBSCRIBE, { planId, callbackURL })
       return response.data.data
     }
   })
