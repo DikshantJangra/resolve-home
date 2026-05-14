@@ -9,12 +9,12 @@ export function useAuthSession() {
       const response = await apiClient.get(ENDPOINTS.AUTH.GET_SESSION)
       // Handle both { data: { user, session } } and { user, session }
       const data = response.data.data || response.data
-      
+
       // If the response is success: true, data: ...
       if (data && typeof data === 'object' && 'user' in data) {
         return data
       }
-      
+
       // If we only have the inner data
       if (response.data && typeof response.data === 'object' && 'user' in response.data) {
         return response.data
@@ -131,7 +131,7 @@ export function useAdminStats() {
       const totalEngineers = engineers.length
       const totalRevenue = bookings.reduce((sum: number, b: any) => sum + (b.price || b.totalAmount || 0), 0)
       const completedJobs = bookings.filter((b: any) => b.status === 'completed').length
-      
+
       return {
         totalRevenue,
         totalHomeowners,
@@ -158,11 +158,11 @@ export function useAdminBookingStats() {
     queryKey: ['admin-booking-stats', bookings?.length],
     queryFn: async () => {
       if (!bookings) return {}
-      
+
       const totalBookings = bookings.length
       const inProgress = bookings.filter((b: any) => b.status === 'in-progress').length
       const emergency = bookings.filter((b: any) => b.isEmergency || b.serviceCategory?.toLowerCase() === 'emergency').length
-      
+
       return {
         totalBookings,
         inProgress,
@@ -187,11 +187,11 @@ export function useAdminComplaintStats() {
     queryKey: ['admin-complaint-stats', complaints?.length],
     queryFn: async () => {
       if (!complaints) return {}
-      
+
       const totalComplaints = complaints.length
       const resolvedCases = complaints.filter((c: any) => c.status === 'resolved' || c.status === 'closed').length
       const pendingDisputes = complaints.filter((c: any) => c.status === 'open' || c.status === 'pending').length
-      
+
       return {
         totalComplaints,
         resolvedCases,
@@ -215,7 +215,7 @@ export function useAdminUsers() {
     queryFn: async () => {
       const response = await apiClient.get(ENDPOINTS.ADMIN_USERS.BASE)
       const data = response.data.data || response.data
-      
+
       if (Array.isArray(data)) return data
       if (data && typeof data === 'object') {
         return data.users || data.items || data.data || []
@@ -303,7 +303,7 @@ export function useAdminBookings() {
     queryFn: async () => {
       const response = await apiClient.get(ENDPOINTS.ADMIN_BOOKINGS.BASE)
       const data = response.data.data || response.data
-      
+
       if (Array.isArray(data)) return data
       if (data && typeof data === 'object') {
         return data.bookings || data.items || data.data || []
@@ -361,7 +361,7 @@ export function useAdminComplaints() {
     queryFn: async () => {
       const response = await apiClient.get(ENDPOINTS.ADMIN_COMPLAINTS.BASE)
       const data = response.data.data || response.data
-      
+
       if (Array.isArray(data)) return data
       if (data && typeof data === 'object') {
         return data.complaints || data.items || data.data || []
@@ -462,6 +462,20 @@ export function useAdminVerifyGuarantor() {
       queryClient.invalidateQueries({ queryKey: ['admin-verification-requests'] })
       queryClient.invalidateQueries({ queryKey: ['admin-engineer', id] })
       queryClient.invalidateQueries({ queryKey: ['admin-pending-engineer', id] })
+    }
+  })
+}
+
+export function useDeleteEngineer() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const response = await apiClient.delete(ENDPOINTS.ADMIN_ENGINEERS.DELETE(id))
+      return response.data
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-engineers'] })
+      queryClient.invalidateQueries({ queryKey: ['admin-users'] })
     }
   })
 }
@@ -641,7 +655,7 @@ export function useSubscriptionHistory(page = 1, limit = 10) {
 export function useSubscribe() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: async (data: { plan: string; [key: string]: any }) => {
+    mutationFn: async (data: { plan: string;[key: string]: any }) => {
       const response = await apiClient.post(ENDPOINTS.SUBSCRIPTIONS.SUBSCRIBE, data)
       return response.data
     },
@@ -668,7 +682,7 @@ export function useVerifySubscription() {
 export function useChangePlan() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: async (data: { plan: string; [key: string]: any }) => {
+    mutationFn: async (data: { plan: string;[key: string]: any }) => {
       const response = await apiClient.put(ENDPOINTS.SUBSCRIPTIONS.CHANGE_PLAN, data)
       return response.data
     },

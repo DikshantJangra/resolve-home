@@ -2,10 +2,10 @@
 
 import React, { useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
-import { 
-  HiOutlineArrowLeft, 
-  HiOutlinePhone, 
-  HiOutlineChatAlt, 
+import {
+  HiOutlineArrowLeft,
+  HiOutlinePhone,
+  HiOutlineChatAlt,
   HiOutlineVideoCamera,
   HiOutlineTrendingUp,
   HiOutlineBriefcase,
@@ -16,28 +16,45 @@ import {
   HiOutlineCalendar,
   HiOutlineMail,
   HiOutlineXCircle,
-  HiOutlineExclamationCircle
+  HiOutlineExclamationCircle,
+  HiOutlineTrash
 } from 'react-icons/hi'
 import { cn, Button, Skeleton } from "@resolve/ui"
-import { useAdminUser, useAdminBookings } from '@/hooks/api-hooks'
+import { useAdminUser, useAdminBookings, useDeleteEngineer } from '@/hooks/api-hooks'
 import { BookingCard } from '@/components/bookings/booking-card'
+import { toast } from 'sonner'
 
 export default function ProfessionalDetailsPage() {
   const { id } = useParams()
   const router = useRouter()
   const [activeTab, setActiveTab] = useState<'overview' | 'personal'>('overview')
-  
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+
   const { data: userData, isLoading: isUserLoading } = useAdminUser(id as string)
   const { data: allBookings, isLoading: isBookingsLoading } = useAdminBookings()
+  const { mutate: deleteEngineer, isPending: isDeleting } = useDeleteEngineer()
+
+  const handleDelete = () => {
+    deleteEngineer(id as string, {
+      onSuccess: () => {
+        toast.success('Professional deleted successfully')
+        router.push('/professionals')
+      },
+      onError: () => {
+        toast.error('Failed to delete professional')
+        setShowDeleteConfirm(false)
+      }
+    })
+  }
 
   const isLoading = isUserLoading || isBookingsLoading
 
   const pro = userData
 
   // Get real booking history for this professional
-  const proBookings = allBookings?.filter((b: any) => 
-    (b.engineerId === id) || 
-    (b.engineer?._id === id) || 
+  const proBookings = allBookings?.filter((b: any) =>
+    (b.engineerId === id) ||
+    (b.engineer?._id === id) ||
     (b.engineer?.id === id) ||
     (b.assignedEngineerId === id)
   ) || []
@@ -79,15 +96,58 @@ export default function ProfessionalDetailsPage() {
   return (
     <div className="p-4 sm:p-8 flex flex-col gap-6 max-w-[1240px] mx-auto bg-stone-50 min-h-screen">
       {/* Header */}
-      <div className="flex items-center gap-4">
-        <button 
-          onClick={() => router.back()}
-          className="p-2 hover:bg-zinc-200 rounded-full transition-colors"
+      <div className="flex items-center justify-between gap-4">
+        <div className="flex items-center gap-4">
+          <button
+            onClick={() => router.back()}
+            className="p-2 hover:bg-zinc-200 rounded-full transition-colors"
+          >
+            <HiOutlineArrowLeft size={20} className="text-zinc-600" />
+          </button>
+          <h1 className="text-neutral-700 text-sm font-medium font-inter">Professional details</h1>
+        </div>
+        <button
+          onClick={() => setShowDeleteConfirm(true)}
+          className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-rose-600 border border-rose-200 rounded-lg hover:bg-rose-50 transition-colors"
         >
-          <HiOutlineArrowLeft size={20} className="text-zinc-600" />
+          <HiOutlineTrash className="w-4 h-4" />
+          Delete
         </button>
-        <h1 className="text-neutral-700 text-sm font-medium font-inter">Professional details</h1>
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl p-6 max-w-sm w-full shadow-xl">
+            <div className="flex flex-col items-center text-center gap-4">
+              <div className="w-14 h-14 bg-rose-50 rounded-full flex items-center justify-center">
+                <HiOutlineTrash className="w-7 h-7 text-rose-600" />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-neutral-700">Delete Professional?</h3>
+                <p className="text-sm text-zinc-500 mt-1">
+                  This will soft-delete <strong>{pro?.name || 'this professional'}</strong>. They will no longer be visible or active on the platform.
+                </p>
+              </div>
+              <div className="flex gap-3 w-full">
+                <button
+                  onClick={() => setShowDeleteConfirm(false)}
+                  className="flex-1 py-2.5 border border-zinc-200 rounded-xl text-sm font-medium text-zinc-600 hover:bg-zinc-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleDelete}
+                  disabled={isDeleting}
+                  className="flex-1 py-2.5 bg-rose-600 rounded-xl text-sm font-medium text-white hover:bg-rose-700 disabled:opacity-60"
+                >
+                  {isDeleting ? 'Deleting...' : 'Yes, Delete'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="flex flex-col gap-6">
         {/* Profile Info Card */}
@@ -116,7 +176,7 @@ export default function ProfessionalDetailsPage() {
                 </div>
               </div>
             </div>
-            
+
             <div className="flex gap-3">
               {[HiOutlinePhone, HiOutlineChatAlt, HiOutlineVideoCamera].map((Icon, idx) => (
                 <button key={idx} className="p-3 bg-stone-50 rounded-lg border border-zinc-200 text-zinc-600 hover:bg-zinc-100 transition-colors">
@@ -129,7 +189,7 @@ export default function ProfessionalDetailsPage() {
 
         {/* Tabs */}
         <div className="border-b border-zinc-200 flex gap-8">
-          <button 
+          <button
             onClick={() => setActiveTab('overview')}
             className={cn(
               "px-4 py-2 text-sm font-medium transition-all relative",
@@ -139,7 +199,7 @@ export default function ProfessionalDetailsPage() {
             Overview
             {activeTab === 'overview' && <div className="absolute bottom-0 left-0 w-full h-0.5 bg-blue-700" />}
           </button>
-          <button 
+          <button
             onClick={() => setActiveTab('personal')}
             className={cn(
               "px-4 py-2 text-sm font-medium transition-all relative",
