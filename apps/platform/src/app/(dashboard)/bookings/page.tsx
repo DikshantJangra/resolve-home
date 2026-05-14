@@ -1,7 +1,8 @@
 'use client'
 
 import React, { useState } from 'react'
-import { HiOutlineSearch } from 'react-icons/hi'
+import Link from 'next/link'
+import { HiOutlineSearch, HiOutlinePlus } from 'react-icons/hi'
 import { Input } from "@resolve/ui"
 import { cn } from "@resolve/ui"
 import { BookingRequestCard } from '@/features/dashboard/components/booking-request-card'
@@ -15,6 +16,22 @@ const tabs: { label: string; value: string }[] = [
   { label: 'Completed', value: 'COMPLETED' },
   { label: 'Cancelled', value: 'CANCELLED' },
 ]
+
+function BookNewCard() {
+  return (
+    <Link href="/?book=true" className="block group">
+      <div className="h-full min-h-50 p-3 bg-white rounded-2xl border-2 border-dashed border-zinc-200 flex flex-col items-center justify-center gap-3 transition-all hover:border-blue-300 hover:bg-blue-50/30 cursor-pointer">
+        <div className="w-12 h-12 rounded-2xl bg-blue-50 flex items-center justify-center group-hover:bg-blue-100 transition-colors">
+          <HiOutlinePlus className="w-6 h-6 text-blue-700" />
+        </div>
+        <div className="flex flex-col items-center gap-1 text-center">
+          <span className="text-neutral-700 text-sm font-semibold font-inter">Book a Service</span>
+          <span className="text-zinc-400 text-xs font-normal font-inter">Find and hire a verified professional</span>
+        </div>
+      </div>
+    </Link>
+  )
+}
 
 export default function BookingsPage() {
   const [activeTab, setActiveTab] = useState<string>('All')
@@ -120,22 +137,25 @@ export default function BookingsPage() {
         </div>
 
         {/* List of Cards */}
-        <div className="flex flex-wrap justify-center gap-5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
+          {/* Book New Service Card — always first */}
+          <BookNewCard />
+
           {filteredBookings.length > 0 ? (
             filteredBookings.map((booking: any) => (
-              <BookingRequestCard 
-                key={booking.id} 
-                booking={booking} 
+              <BookingRequestCard
+                key={booking.id}
+                booking={booking}
                 isWorker={isWorker}
               />
             ))
           ) : (
-            <div className="w-full py-16 md:py-20 flex flex-col items-center justify-center text-zinc-500 gap-4 bg-white rounded-2xl border border-dashed border-zinc-200">
-              <div className="w-12 h-12 md:w-16 md:h-16 bg-zinc-100 rounded-full flex items-center justify-center">
-                <HiOutlineSearch className="w-6 h-6 md:w-8 md:h-8" />
+            <div className="sm:col-span-2 xl:col-span-2 py-16 flex flex-col items-center justify-center text-zinc-500 gap-3 bg-white rounded-2xl border border-dashed border-zinc-200">
+              <div className="w-12 h-12 bg-zinc-100 rounded-full flex items-center justify-center">
+                <HiOutlineSearch className="w-6 h-6" />
               </div>
-              <p className="text-base md:text-lg font-medium">No bookings found</p>
-              <p className="text-xs md:text-sm">Try adjusting your search or filters</p>
+              <p className="text-sm font-medium">No bookings found</p>
+              <p className="text-xs text-zinc-400">Try adjusting your search or filters</p>
             </div>
           )}
         </div>

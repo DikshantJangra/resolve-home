@@ -1,13 +1,12 @@
 'use client'
 
 import React from 'react'
-import Link from 'next/link'
 import { motion } from 'framer-motion'
-import { HiOutlineUser, HiOutlineShieldCheck, HiOutlineSupport, HiOutlineCheckCircle, HiOutlineClock } from 'react-icons/hi'
 import { HiStar } from 'react-icons/hi2'
+import { HiOutlineBadgeCheck, HiOutlineShieldCheck, HiOutlineRefresh } from 'react-icons/hi'
 import { FigmaImage } from "@resolve/ui"
 import { cn } from "@resolve/ui"
-import { useAuthSession, useSubscribe } from '@/hooks/api-hooks'
+import { useAuthSession, useSubscribe, useUserProfile } from '@/hooks/api-hooks'
 import { toast } from 'sonner'
 import { useRouter } from 'next/navigation'
 
@@ -16,10 +15,7 @@ const plans = [
     id: 'basic',
     name: 'Basic',
     subtitle: 'For light, occasional usage best for: individuals or small households',
-    price: '₦7,500',
-    button: 'Subscribe to Basic',
-    icon: HiOutlineUser,
-    dark: false,
+    price: 7500,
     features: [
       'Access to verified professionals',
       'Standard booking priority',
@@ -32,11 +28,9 @@ const plans = [
     id: 'standard',
     name: 'Standard',
     subtitle: 'For consistent home maintenance, best for: active homes and busy professionals',
-    price: '₦15,000',
-    button: 'Subscribe to Standard',
-    icon: HiOutlineShieldCheck,
+    price: 15000,
+    popular: true,
     dark: true,
-    isPopular: true,
     features: [
       'Everything on basic',
       'Faster booking priority',
@@ -49,10 +43,7 @@ const plans = [
     id: 'premium',
     name: 'Premium',
     subtitle: 'For full-service convenience, best for: landlords, large homes, and high-frequency users',
-    price: '₦50,000',
-    button: 'Subscribe to Premium',
-    icon: HiOutlineSupport,
-    dark: false,
+    price: 50000,
     features: [
       'Everything on Standard',
       'Parts & labour included',
@@ -64,12 +55,35 @@ const plans = [
 ]
 
 export const Membership = () => {
-  const { data: session } = useAuthSession()
+  const { data: session, isPending: sessionLoading } = useAuthSession()
+  const { data: userProfile, isPending: profileLoading } = useUserProfile()
   const subscribe = useSubscribe()
   const router = useRouter()
+  const scrollRef = React.useRef<HTMLDivElement>(null)
+
+  const user = session?.user || userProfile?.user || userProfile
+  const isLoggedIn = !!user
+  const isLoading = sessionLoading || profileLoading
+
+  React.useEffect(() => {
+    const timer = setTimeout(() => {
+      if (window.innerWidth < 768 && scrollRef.current) {
+        const container = scrollRef.current
+        const cards = container.querySelectorAll('.pricing-card')
+        const middleCard = cards[1] as HTMLElement
+        if (middleCard) {
+          const scrollPos = middleCard.offsetLeft - (container.offsetWidth / 2) + (middleCard.offsetWidth / 2)
+          container.scrollTo({ left: scrollPos, behavior: 'smooth' })
+        }
+      }
+    }, 500)
+    return () => clearTimeout(timer)
+  }, [])
 
   const handleSubscribe = async (planId: string) => {
-    if (!session) {
+    if (isLoading) return
+
+    if (!isLoggedIn) {
       toast.info('Please login to subscribe')
       router.push(`/login?callbackUrl=/subscriptions&plan=${planId}`)
       return
@@ -134,6 +148,7 @@ export const Membership = () => {
 
         {/* Pricing Cards */}
         <motion.div
+          ref={scrollRef}
           initial="hidden"
           whileInView="show"
           viewport={{ once: true, margin: "-100px" }}
@@ -146,7 +161,7 @@ export const Membership = () => {
               }
             }
           }}
-          className="mt-14 grid grid-cols-1 md:grid-cols-3 gap-5"
+          className="mt-14 flex overflow-x-auto pb-6 -mx-4 px-4 gap-5 snap-x snap-mandatory no-scrollbar md:grid md:grid-cols-3 md:overflow-visible md:pb-0 md:mx-0 md:px-0"
         >
           {plans.map((plan) => (
             <motion.div
@@ -156,13 +171,13 @@ export const Membership = () => {
                 show: { opacity: 1, y: 0 }
               }}
               className={cn(
-                "relative flex flex-col p-8 rounded-xl border transition-all duration-300 hover:shadow-xl",
+                "pricing-card relative flex flex-col min-w-[300px] md:min-w-0 p-8 rounded-xl border transition-all duration-300 hover:shadow-xl snap-center",
                 plan.dark
                   ? "bg-[radial-gradient(ellipse_115.97%_115.97%_at_82.00%_18.00%,_#4A2208_0%,_#1E1220_45%,_#111318_100%)] border-transparent"
                   : "bg-stone-50 border-zinc-300"
               )}
             >
-              {plan.isPopular && (
+              {plan.popular && (
                 <div className="absolute left-1/2 -top-px -translate-x-1/2 bg-orange-600 px-6 py-1 rounded-b-[10px] z-10">
                   <span className="text-white text-[10px] font-extrabold uppercase tracking-wide">Most Popular</span>
                 </div>
@@ -174,7 +189,7 @@ export const Membership = () => {
                     "w-11 h-11 rounded-xl flex items-center justify-center border shrink-0",
                     plan.dark ? "bg-slate-100 border-transparent" : "bg-white border-indigo-200"
                   )}>
-                    <plan.icon className={cn("w-6 h-6", plan.dark ? "text-neutral-700" : "text-blue-700")} />
+                    <HiOutlineBadgeCheck className={cn("w-6 h-6", plan.dark ? "text-neutral-700" : "text-blue-700")} />
                   </div>
                   <div className="space-y-1">
                     <h3 className={cn("text-2xl font-semibold font-plus-jakarta leading-8", plan.dark ? "text-neutral-50" : "text-neutral-700")}>
@@ -188,7 +203,7 @@ export const Membership = () => {
 
                 <div className="flex items-end">
                   <span className={cn("text-4xl font-bold font-plus-jakarta leading-10", plan.dark ? "text-neutral-50" : "text-slate-900")}>
-                    {plan.price}
+                    ₦{plan.price.toLocaleString()}
                   </span>
                   <span className={cn("text-xs font-semibold ml-1 mb-1", plan.dark ? "text-neutral-50/60" : "text-neutral-700")}>/mo</span>
                 </div>
@@ -197,15 +212,14 @@ export const Membership = () => {
               <div className="w-full mb-8">
                 <button
                   onClick={() => handleSubscribe(plan.id)}
-                  disabled={subscribe.isPending}
                   className={cn(
-                    "w-full py-3 px-6 rounded-xl text-sm font-medium transition-colors disabled:opacity-50",
+                    "w-full py-3 px-6 rounded-xl text-sm font-semibold transition-colors",
                     plan.dark
                       ? "bg-slate-50 text-blue-700 hover:bg-white"
                       : "bg-transparent border border-blue-700 text-blue-700 hover:bg-blue-50"
                   )}
                 >
-                  {subscribe.isPending ? 'Processing...' : plan.button}
+                  Get Started
                 </button>
               </div>
 
@@ -222,7 +236,7 @@ export const Membership = () => {
                       "w-4 h-4 rounded-sm flex items-center justify-center shrink-0 border",
                       plan.dark ? "border-orange-600" : "border-emerald-800"
                     )}>
-                      <HiOutlineCheckCircle className={cn("w-3 h-3", plan.dark ? "text-orange-600" : "text-emerald-800")} />
+                      <HiOutlineBadgeCheck className={cn("w-3 h-3", plan.dark ? "text-orange-600" : "text-emerald-800")} />
                     </div>
                     <span className={cn("text-sm font-normal leading-5", plan.dark ? "text-neutral-50" : "text-neutral-700")}>
                       {feature}

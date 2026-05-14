@@ -719,9 +719,12 @@ export function useMySubscription() {
   return useQuery({
     queryKey: ['my-subscription'],
     queryFn: async () => {
-      const response = await apiClient.get(ENDPOINTS.SUBSCRIPTIONS.MY)
-      const data = response.data.data || response.data
-      return data?.subscription ?? null
+      try {
+        const response = await apiClient.get(ENDPOINTS.SUBSCRIPTIONS.MY)
+        return response.data.data?.subscription ?? null
+      } catch (error) {
+        return null
+      }
     },
     enabled: typeof window !== 'undefined' && !!localStorage.getItem('auth_token')
   })
@@ -770,5 +773,44 @@ export function useCancelSubscription() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['my-subscription'] })
     }
+  })
+}
+
+export function useChangePlan() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (planId: 'basic' | 'standard' | 'premium') => {
+      const response = await apiClient.put(ENDPOINTS.SUBSCRIPTIONS.CHANGE_PLAN, { planId })
+      return response.data.data
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['my-subscription'] })
+    }
+  })
+}
+
+export function useToggleAutoRenew() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (autoRenew: boolean) => {
+      const response = await apiClient.put(ENDPOINTS.SUBSCRIPTIONS.AUTO_RENEW, { autoRenew })
+      return response.data
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['my-subscription'] })
+    }
+  })
+}
+
+export function useAdminSubscriptions(page = 1, limit = 10) {
+  return useQuery({
+    queryKey: ['admin-subscriptions', page, limit],
+    queryFn: async () => {
+      const response = await apiClient.get(ENDPOINTS.SUBSCRIPTIONS.ADMIN, {
+        params: { page, limit }
+      })
+      return response.data.data || response.data
+    },
+    enabled: typeof window !== 'undefined' && !!localStorage.getItem('auth_token')
   })
 }

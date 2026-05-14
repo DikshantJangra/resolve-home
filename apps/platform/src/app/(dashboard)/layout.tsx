@@ -25,8 +25,8 @@ export default function DashboardLayout({
 
       {/* Sidebar - Hidden on mobile by default, shown as drawer */}
       <div className={cn(
-        "fixed inset-y-0 left-0 z-[100] transform transition-transform duration-300 ease-in-out lg:sticky lg:top-0 lg:h-screen lg:translate-x-0 lg:z-[100]",
-        isSidebarOpen ? "translate-x-0" : "-translate-x-full"
+        "fixed inset-y-0 left-0 z-[100] transform transition-transform duration-300 ease-in-out lg:sticky lg:top-0 lg:h-screen lg:translate-x-0 lg:z-[100] lg:pointer-events-auto",
+        isSidebarOpen ? "translate-x-0 pointer-events-auto" : "-translate-x-full pointer-events-none"
       )}>
         <Sidebar onClose={() => setIsSidebarOpen(false)} />
       </div>
