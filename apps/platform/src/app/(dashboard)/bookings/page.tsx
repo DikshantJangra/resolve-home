@@ -139,8 +139,8 @@ export default function BookingsPage() {
 
         {/* List of Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
-          {/* Book New Service Card — always first */}
-          <BookNewCard />
+          {/* Book New Service Card — only for customers */}
+          {!isWorker && <BookNewCard />}
 
           {filteredBookings.length > 0 ? (
             filteredBookings.map((booking: any) => (

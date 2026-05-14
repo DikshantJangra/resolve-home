@@ -9,15 +9,17 @@ export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // Define protected and auth routes
-  const isProtectedRoute = pathname.startsWith("/dashboard") || 
-                          pathname.startsWith("/bookings") || 
+  const isProtectedRoute = pathname.startsWith("/dashboard") ||
+                          pathname.startsWith("/bookings") ||
                           pathname.startsWith("/wallet") ||
                           pathname.startsWith("/profile") ||
                           pathname.startsWith("/settings") ||
                           pathname.startsWith("/messages") ||
                           pathname.startsWith("/book-service") ||
                           pathname.startsWith("/engineer") ||
-                          pathname.startsWith("/admin");
+                          pathname.startsWith("/admin") ||
+                          pathname.startsWith("/subscriptions") ||
+                          pathname.startsWith("/complaints");
   
   const isAuthRoute = pathname === "/login" || pathname === "/register";
 
@@ -70,11 +72,16 @@ export const config = {
     "/bookings/:path*",
     "/wallet/:path*",
     "/profile/:path*",
+    "/profile",
     "/settings/:path*",
     "/messages/:path*",
     "/book-service/:path*",
     "/engineer/:path*",
     "/admin/:path*",
+    "/subscriptions/:path*",
+    "/subscriptions",
+    "/complaints/:path*",
+    "/complaints",
     "/login",
     "/register",
   ],
