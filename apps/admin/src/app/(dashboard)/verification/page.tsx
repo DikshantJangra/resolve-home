@@ -57,7 +57,7 @@ export default function VerificationPage() {
   const handleAction = (id: string, status: 'approved' | 'rejected') => {
     // Find the original verification object to see if it has an engineerProfile ID
     const request = verifications.find((v: any) => (v.id || v._id) === id)
-    const targetId = request?.engineerProfile?.id || request?.profile?.id || id
+    const targetId = request?.engineerProfile?.id || request?.profile?.id || request?.id || request?.engineerProfile?._id || request?.profile?._id || request?._id || id
 
     if (status === 'rejected' && !isRejectModalOpen) {
       setActiveRequestId(targetId)
@@ -67,6 +67,9 @@ export default function VerificationPage() {
 
     const action = status === 'approved' ? approveEngineer : rejectEngineer
     const payload = status === 'approved' ? { id: targetId } : { id: targetId, note: rejectionNote }
+
+    console.log(`[VerificationList] Performing ${status} action on targetId:`, targetId);
+    console.log('[VerificationList] Original request object:', request);
 
     action(payload as any, {
       onSuccess: () => {
@@ -263,7 +266,13 @@ export default function VerificationPage() {
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-4">
                       {(() => {
-                        const isGuarantorVerified = !!(v.engineerProfile?.guarantorVerification?.verified || v.isGuarantorVerified || v.guarantorVerified || v.engineerProfile?.isGuarantorVerified);
+                        const isGuarantorVerified = !!(
+                          v.guarantorVerification?.verified || 
+                          v.engineerProfile?.guarantorVerification?.verified || 
+                          v.isGuarantorVerified || 
+                          v.guarantorVerified || 
+                          v.engineerProfile?.isGuarantorVerified
+                        );
                         return (
                           <button
                             disabled={!isGuarantorVerified}

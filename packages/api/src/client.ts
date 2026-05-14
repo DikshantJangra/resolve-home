@@ -24,7 +24,8 @@ apiClient.interceptors.request.use(
       const token = localStorage.getItem('auth_token')
       
       // Attach token to all /api/ requests if it exists
-      const isApiPath = config.url?.startsWith('/api/')
+      // Check if it's an API path (either relative /api/ or absolute ending with /api/...)
+      const isApiPath = config.url?.includes('/api/')
       
       if (token && isApiPath) {
         config.headers.Authorization = `Bearer ${token}`
