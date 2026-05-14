@@ -53,7 +53,7 @@ export function RegisterForm() {
     })
   }
 
-  const roleTitle = role === 'worker' ? "Professional" : "Customer"
+  const roleTitle = role === 'worker' ? "Pro Partner" : "Homeowner"
   const roleDescription = role === 'worker'
     ? "Join our network of experts and start earning today."
     : "Book any home service in under 60 seconds. Fill in your correct details below to get started."
