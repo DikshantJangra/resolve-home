@@ -27,26 +27,22 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Install Vercel CLI and pnpm
-        run: npm install -g vercel@latest pnpm
+      - name: Install Vercel CLI
+        run: npm install -g vercel@latest
 
-      - name: Pull Vercel config
-        working-directory: apps/platform
-        run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
+      - name: Pull Vercel environment
+        run: cd apps/platform && vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
         env:
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_PLATFORM }}
 
       - name: Build
-        working-directory: apps/platform
-        run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
+        run: cd apps/platform && npm run build
         env:
-          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_PLATFORM }}
+          VERCEL: "1"
 
       - name: Deploy
-        working-directory: apps/platform
-        run: vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
+        run: cd apps/platform && vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
         env:
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_PLATFORM }}
@@ -75,23 +71,19 @@ jobs:
       - name: Install Vercel CLI
         run: npm install -g vercel@latest
 
-      - name: Pull Vercel config
-        working-directory: apps/admin
-        run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
+      - name: Pull Vercel environment
+        run: cd apps/admin && vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
         env:
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_ADMIN }}
 
       - name: Build
-        working-directory: apps/admin
-        run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
+        run: cd apps/admin && npm run build
         env:
-          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_ADMIN }}
+          VERCEL: "1"
 
       - name: Deploy
-        working-directory: apps/admin
-        run: vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
+        run: cd apps/admin && vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
         env:
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_ADMIN }}
