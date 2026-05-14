@@ -24,6 +24,7 @@ const sidebarItems = [
   { label: 'Professionals', icon: HiOutlineUserGroup, href: '/professionals' },
   { label: 'Complaints', icon: HiOutlineExclamationCircle, href: '/complaints' },
   { label: 'Verification', icon: HiOutlineBadgeCheck, href: '/verification' },
+  { label: 'Subscriptions', icon: HiOutlineClipboardList, href: '/subscriptions' },
   { label: 'Wallet', icon: HiOutlineCreditCard, href: '/wallet' },
   { label: 'Settings', icon: HiOutlineCog, href: '/settings' },
 ]

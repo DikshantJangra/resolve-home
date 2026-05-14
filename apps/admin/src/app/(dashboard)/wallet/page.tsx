@@ -38,22 +38,22 @@ export default function WalletPage() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
         <StatCard 
           label="Total Earnings (YTD)" 
-          value={(stats as any)?.totalDeposits || 142090000} 
-          trend="+12.5%" 
+          value={(stats as any)?.totalDeposits || 0} 
+          trend="0%" 
           icon={<HiOutlineDatabase className="w-5 h-5 text-zinc-600" />}
           loading={statsLoading}
         />
         <StatCard 
           label="Escrow Balance" 
-          value={(stats as any)?.balance || 12450200} 
-          trend="+12.5%" 
+          value={(stats as any)?.balance || 0} 
+          trend="0%" 
           icon={<HiOutlineCreditCard className="w-5 h-5 text-zinc-600" />}
           loading={statsLoading}
         />
         <StatCard 
           label="Platform Revenue" 
-          value={(stats as any)?.totalSpent || 1867530} 
-          trend="+12.5%" 
+          value={(stats as any)?.totalSpent || 0} 
+          trend="0%" 
           icon={<HiOutlineChartBar className="w-5 h-5 text-zinc-600" />}
           loading={statsLoading}
         />
@@ -104,8 +104,11 @@ export default function WalletPage() {
                   </tr>
                 ))
               ) : (
-                // Mock data as per design if no live data is returned
-                <MockDataRows />
+                <tr>
+                  <td colSpan={5} className="px-6 py-12 text-center text-zinc-500 text-sm">
+                    No transactions found.
+                  </td>
+                </tr>
               )}
             </tbody>
           </table>

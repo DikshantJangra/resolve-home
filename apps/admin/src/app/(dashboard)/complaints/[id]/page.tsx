@@ -73,14 +73,16 @@ export default function ComplaintDetailPage() {
             </div>
             <div className="flex flex-col">
               <div className="flex items-center gap-2">
-                <span className="text-neutral-800 text-sm font-medium font-inter">{complaint.userName || 'Jamison Stoltenberg'}</span>
+                <span className="text-neutral-800 text-sm font-medium font-inter">{complaint.userName || complaint.user?.name || 'Unknown User'}</span>
                 <HiOutlineBadgeCheck className="w-3.5 h-3.5 text-blue-700" />
                 <div className="flex items-center gap-1">
                   <div className="w-1.5 h-1.5 bg-zinc-300 rounded-full" />
-                  <span className="text-zinc-600 text-xs font-normal font-inter">5 minutes ago</span>
+                  <span className="text-zinc-600 text-xs font-normal font-inter">
+                    {complaint.createdAt ? format(new Date(complaint.createdAt), 'HH:mm a') : ''}
+                  </span>
                 </div>
               </div>
-              <span className="text-zinc-500 text-xs font-normal font-inter">{complaint.userEmail || 'jamison@email.com'}</span>
+              <span className="text-zinc-500 text-xs font-normal font-inter">{complaint.userEmail || complaint.user?.email || ''}</span>
             </div>
           </div>
           <button className="p-1 hover:bg-zinc-200 rounded-md transition-colors">
@@ -101,9 +103,11 @@ export default function ComplaintDetailPage() {
 
           {/* Incoming Message (User) */}
           <div className="max-w-[400px] p-5 bg-white rounded-tr-xl rounded-bl-xl rounded-br-xl flex flex-col gap-2 shadow-sm border border-zinc-100">
-            <span className="text-zinc-600 text-xs font-normal font-inter">12:12pm</span>
+            <span className="text-zinc-600 text-xs font-normal font-inter">
+              {complaint.createdAt ? format(new Date(complaint.createdAt), 'HH:mm a') : ''}
+            </span>
             <p className="text-zinc-600 text-sm font-normal font-inter leading-5">
-              {complaint.description || "Hello! I've seen your request for a Electrician. I'll accept this and head over shortly."}
+              {complaint.description || "N/A"}
             </p>
           </div>
 

@@ -231,7 +231,7 @@ export function useUpdateEngineerProfile() {
 export function useResendGuarantorVerification() {
   return useMutation({
     mutationFn: async () => {
-      const response = await apiClient.post(ENDPOINTS.ENGINEER.RESEND_GUARANTOR_VERIFICATION)
+      const response = await apiClient.post(ENDPOINTS.GUARANTOR.RESEND)
       return response.data
     }
   })
@@ -240,8 +240,8 @@ export function useResendGuarantorVerification() {
 export function useUpdateGuarantor() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: async (data: { guarantorEmail: string }) => {
-      const response = await apiClient.put(ENDPOINTS.ENGINEER.UPDATE_GUARANTOR, data)
+    mutationFn: async (data: { guarantorName?: string; guarantorEmail: string; guarantorPhone?: string; relationship?: string; placeOfWork?: string }) => {
+      const response = await apiClient.put(ENDPOINTS.GUARANTOR.UPDATE, data)
       return response.data
     },
     onSuccess: () => {
@@ -467,7 +467,7 @@ export function useApproveQuotation() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: async (quotationId: string) => {
-      const response = await apiClient.post(ENDPOINTS.QUOTATIONS.APPROVE(quotationId))
+      const response = await apiClient.put(ENDPOINTS.QUOTATIONS.APPROVE(quotationId))
       return response.data
     },
     onSuccess: (_, quotationId) => {
@@ -481,7 +481,7 @@ export function useRejectQuotation() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: async ({ quotationId, reason }: { quotationId: string, reason: string }) => {
-      const response = await apiClient.post(ENDPOINTS.QUOTATIONS.REJECT(quotationId), { reason })
+      const response = await apiClient.put(ENDPOINTS.QUOTATIONS.REJECT(quotationId), { reason })
       return response.data
     },
     onSuccess: () => {
@@ -711,5 +711,64 @@ export function useDeleteCategory() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['categories'] })
     },
+  })
+}
+// --- Subscriptions ---
+
+export function useMySubscription() {
+  return useQuery({
+    queryKey: ['my-subscription'],
+    queryFn: async () => {
+      const response = await apiClient.get(ENDPOINTS.SUBSCRIPTIONS.MY)
+      const data = response.data.data || response.data
+      return data?.subscription || data || null
+    },
+    enabled: typeof window !== 'undefined' && !!localStorage.getItem('auth_token')
+  })
+}
+
+export function useSubscribe() {
+  return useMutation({
+    mutationFn: async (planId: 'basic' | 'standard' | 'premium') => {
+      const response = await apiClient.post(ENDPOINTS.SUBSCRIPTIONS.SUBSCRIBE, { planId })
+      return response.data.data
+    }
+  })
+}
+
+export function useVerifySubscription(reference: string) {
+  return useQuery({
+    queryKey: ['verify-subscription', reference],
+    queryFn: async () => {
+      const response = await apiClient.get(ENDPOINTS.SUBSCRIPTIONS.VERIFY(reference))
+      return response.data
+    },
+    enabled: !!reference
+  })
+}
+
+export function useSubscriptionHistory(page = 1, limit = 10) {
+  return useQuery({
+    queryKey: ['subscription-history', page, limit],
+    queryFn: async () => {
+      const response = await apiClient.get(ENDPOINTS.SUBSCRIPTIONS.HISTORY, {
+        params: { page, limit }
+      })
+      return response.data.data || response.data
+    },
+    enabled: typeof window !== 'undefined' && !!localStorage.getItem('auth_token')
+  })
+}
+
+export function useCancelSubscription() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async () => {
+      const response = await apiClient.put(ENDPOINTS.SUBSCRIPTIONS.CANCEL)
+      return response.data
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['my-subscription'] })
+    }
   })
 }

@@ -7,9 +7,13 @@ import { HiOutlineUser, HiOutlineShieldCheck, HiOutlineSupport, HiOutlineCheckCi
 import { HiStar } from 'react-icons/hi2'
 import { FigmaImage } from "@resolve/ui"
 import { cn } from "@resolve/ui"
+import { useAuthSession, useSubscribe } from '@/hooks/api-hooks'
+import { toast } from 'sonner'
+import { useRouter } from 'next/navigation'
 
 const plans = [
   {
+    id: 'basic',
     name: 'Basic',
     subtitle: 'For light, occasional usage best for: individuals or small households',
     price: '₦7,500',
@@ -25,6 +29,7 @@ const plans = [
     ],
   },
   {
+    id: 'standard',
     name: 'Standard',
     subtitle: 'For consistent home maintenance, best for: active homes and busy professionals',
     price: '₦15,000',
@@ -41,6 +46,7 @@ const plans = [
     ],
   },
   {
+    id: 'premium',
     name: 'Premium',
     subtitle: 'For full-service convenience, best for: landlords, large homes, and high-frequency users',
     price: '₦50,000',
@@ -58,6 +64,29 @@ const plans = [
 ]
 
 export const Membership = () => {
+  const { data: session } = useAuthSession()
+  const subscribe = useSubscribe()
+  const router = useRouter()
+
+  const handleSubscribe = async (planId: string) => {
+    if (!session) {
+      toast.info('Please login to subscribe')
+      router.push(`/login?redirect=/&plan=${planId}`)
+      return
+    }
+
+    try {
+      const data = await subscribe.mutateAsync(planId as any)
+      if (data?.authorizationUrl) {
+        window.location.href = data.authorizationUrl
+      } else {
+        toast.error('Failed to initialize payment')
+      }
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || 'Subscription failed')
+    }
+  }
+
   return (
     <section id="membership" className="bg-white py-20 overflow-hidden">
       <div className="mx-auto max-w-[1440px] px-8 lg:px-16">
@@ -69,12 +98,12 @@ export const Membership = () => {
           className="flex flex-col gap-3"
         >
           <div className="max-w-[651px] flex flex-col gap-1">
-            <h4 className="text-blue-700 text-xl font-bold font-['Plus_Jakarta_Sans'] leading-8">Pricing</h4>
-            <h2 className="text-neutral-700 text-3xl md:text-4xl font-bold font-['Plus_Jakarta_Sans'] leading-9">
+            <h4 className="text-blue-700 text-xl font-bold font-plus-jakarta leading-8">Pricing</h4>
+            <h2 className="text-neutral-700 text-3xl md:text-4xl font-bold font-plus-jakarta leading-9">
               Simple pricing, serious home cover.
             </h2>
           </div>
-          <p className="text-zinc-600 text-sm font-normal font-['Inter'] leading-5">
+          <p className="text-zinc-600 text-sm font-normal font-inter leading-5">
             No hidden call-out fees, All services in every plan, Cancel anytime
           </p>
 
@@ -156,7 +185,7 @@ export const Membership = () => {
                     <plan.icon className={cn("w-6 h-6", plan.dark ? "text-neutral-700" : "text-blue-700")} />
                   </div>
                   <div className="space-y-1">
-                    <h3 className={cn("text-2xl font-semibold font-['Plus_Jakarta_Sans'] leading-8", plan.dark ? "text-neutral-50" : "text-neutral-700")}>
+                    <h3 className={cn("text-2xl font-semibold font-plus-jakarta leading-8", plan.dark ? "text-neutral-50" : "text-neutral-700")}>
                       {plan.name}
                     </h3>
                     <p className={cn("text-sm font-normal leading-5 h-10", plan.dark ? "text-neutral-50/80" : "text-zinc-600")}>
@@ -166,23 +195,27 @@ export const Membership = () => {
                 </div>
 
                 <div className="flex items-end">
-                  <span className={cn("text-4xl font-bold font-['Plus_Jakarta_Sans'] leading-10", plan.dark ? "text-neutral-50" : "text-slate-900")}>
+                  <span className={cn("text-4xl font-bold font-plus-jakarta leading-10", plan.dark ? "text-neutral-50" : "text-slate-900")}>
                     {plan.price}
                   </span>
                   <span className={cn("text-xs font-semibold ml-1 mb-1", plan.dark ? "text-neutral-50/60" : "text-neutral-700")}>/mo</span>
                 </div>
               </div>
 
-              <Link href="/register" className="w-full mb-8">
-                <button className={cn(
-                  "w-full py-3 px-6 rounded-xl text-sm font-medium transition-colors",
-                  plan.dark 
-                    ? "bg-slate-50 text-blue-700 hover:bg-white" 
-                    : "bg-transparent border border-blue-700 text-blue-700 hover:bg-blue-50"
-                )}>
-                  {plan.button}
+              <div className="w-full mb-8">
+                <button 
+                  onClick={() => handleSubscribe(plan.id)}
+                  disabled={subscribe.isPending}
+                  className={cn(
+                    "w-full py-3 px-6 rounded-xl text-sm font-medium transition-colors disabled:opacity-50",
+                    plan.dark 
+                      ? "bg-slate-50 text-blue-700 hover:bg-white" 
+                      : "bg-transparent border border-blue-700 text-blue-700 hover:bg-blue-50"
+                  )}
+                >
+                  {subscribe.isPending ? 'Processing...' : plan.button}
                 </button>
-              </Link>
+              </div>
 
               <div className="flex flex-col gap-px">
                 {plan.features.map((feature, idx) => (

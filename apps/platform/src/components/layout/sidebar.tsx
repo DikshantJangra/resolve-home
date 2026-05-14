@@ -30,6 +30,7 @@ const defaultSidebarItems: SidebarItem[] = [
   { label: 'Home', icon: HiOutlineHome, href: '/dashboard' },
   { label: 'Bookings', icon: HiOutlineClipboardCheck, href: '/bookings', requiresVerification: true },
   { label: 'Messages', icon: HiOutlineChatAlt, href: '/messages', requiresVerification: true },
+  { label: 'Subscriptions', icon: HiOutlineCreditCard, href: '/subscriptions' },
   { label: 'My Profile', icon: HiOutlineUser, href: '/profile' },
   { label: 'My Wallet', icon: HiOutlineCreditCard, href: '/wallet', requiresVerification: true },
   { label: 'Settings', icon: HiOutlineCog, href: '/settings' },

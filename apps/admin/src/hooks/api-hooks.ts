@@ -79,6 +79,28 @@ export function useUpdatePassword() {
   })
 }
 
+export function useResendGuarantorVerification() {
+  return useMutation({
+    mutationFn: async () => {
+      const response = await apiClient.post(ENDPOINTS.GUARANTOR.RESEND)
+      return response.data
+    }
+  })
+}
+
+export function useUpdateGuarantor() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (data: any) => {
+      const response = await apiClient.put(ENDPOINTS.GUARANTOR.UPDATE, data)
+      return response.data
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['user-profile'] })
+    }
+  })
+}
+
 export function useUploadFile() {
   return useMutation({
     mutationFn: async (file: File) => {
@@ -231,43 +253,52 @@ export function useBanUser() {
 // --- Admin Engineers ---
 
 export function useAdminEngineers() {
+  // No GET /api/admin/engineers endpoint exists — use users list and filter by role
   return useQuery({
     queryKey: ['admin-engineers'],
     queryFn: async () => {
-      const response = await apiClient.get(ENDPOINTS.ADMIN_ENGINEERS.BASE)
+      const response = await apiClient.get(ENDPOINTS.ADMIN_USERS.BASE)
       const data = response.data.data || response.data
-      
-      if (Array.isArray(data)) return data
-      if (data && typeof data === 'object') {
-        return data.engineers || data.items || data.data || []
-      }
-      return []
+
+      const all = Array.isArray(data) ? data : (data?.users || data?.items || data?.data || [])
+      return all.filter((u: any) =>
+        u.role?.toLowerCase() === 'engineer' ||
+        u.role?.toLowerCase() === 'worker' ||
+        u.engineerProfile != null
+      )
     }
   })
 }
 
 export function useAdminEngineer(id: string) {
+  // No GET /api/admin/engineers/{id} endpoint — fall back to users endpoint
   return useQuery({
     queryKey: ['admin-engineer', id],
     queryFn: async () => {
-      const response = await apiClient.get(ENDPOINTS.ADMIN_ENGINEERS.BY_ID(id))
+      const response = await apiClient.get(ENDPOINTS.ADMIN_USERS.BY_ID(id))
       const data = response.data.data || response.data
-      return data?.engineer || data?.item || data?.data || data
+      return data?.user || data?.item || data?.data || data
     },
     enabled: !!id
   })
 }
 
-export function useApproveEngineer() {
-  const queryClient = useQueryClient()
-  return useMutation({
-    mutationFn: async ({ engineerId, data }: { engineerId: string, data: any }) => {
-      const response = await apiClient.put(ENDPOINTS.ADMIN_ENGINEERS.BY_ID(engineerId), data)
-      return response.data
+export function useAdminPendingEngineerById(id: string) {
+  return useQuery({
+    queryKey: ['admin-pending-engineer', id],
+    queryFn: async () => {
+      try {
+        const response = await apiClient.get(ENDPOINTS.ADMIN_ENGINEER_VERIFICATIONS.BY_ID(id))
+        const data = response.data.data || response.data
+        return data?.verification || data?.user || data
+      } catch (error) {
+        console.error('Failed to fetch from engineer-verifications BY_ID, falling back to general user', error)
+        const response = await apiClient.get(ENDPOINTS.ADMIN_USERS.BY_ID(id))
+        const data = response.data.data || response.data
+        return data?.user || data
+      }
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin-engineers'] })
-    }
+    enabled: !!id
   })
 }
 
@@ -383,22 +414,26 @@ export function useAdminWalletTransactions() {
 }
 // --- Admin Engineer Verifications ---
 
-export function useAdminVerificationRequests(page = 1, limit = 10) {
+export function useAdminVerificationRequests(_page = 1, _limit = 10) {
   return useQuery({
-    queryKey: ['admin-verification-requests', page, limit],
+    queryKey: ['admin-verification-requests'],
     queryFn: async () => {
-      const response = await apiClient.get(ENDPOINTS.ADMIN_ENGINEER_VERIFICATIONS.PENDING, {
-        params: { page, limit }
-      })
-      console.log('[API] Verification Requests Response:', response.data)
-      const data = response.data.data || response.data
-      
-      // Handle both { data: [...] } and { data: { verifications: [...], pagination: {...} } }
-      if (Array.isArray(data)) return { verifications: data, pagination: null }
-      
-      return {
-        verifications: data.verifications || data.items || data.engineers || (Array.isArray(data) ? data : []),
-        pagination: response.data.pagination || data.pagination || null
+      try {
+        const response = await apiClient.get(ENDPOINTS.ADMIN_ENGINEER_VERIFICATIONS.PENDING, { silentError: true })
+        const data = response.data.data || response.data
+        const verifications: any[] = Array.isArray(data) ? data : (data?.verifications || data?.items || data?.data || [])
+        return { verifications, pagination: data?.pagination || null }
+      } catch (error) {
+        console.error('Failed to fetch from engineer-verifications/pending, falling back to all users filter', error)
+        // Fallback: backend /pending endpoint has a routing conflict — fetch all users and filter by role
+        const response = await apiClient.get(ENDPOINTS.ADMIN_USERS.BASE)
+        const data = response.data.data || response.data
+        const all: any[] = Array.isArray(data) ? data : (data?.users || data?.items || data?.data || [])
+        const verifications = all.filter((u: any) => 
+          (u.role?.toLowerCase() === 'engineer' || u.role?.toLowerCase() === 'worker') && 
+          (u.status === 'pending' || (u.engineerProfile && u.engineerProfile.verificationStatus === 'pending'))
+        )
+        return { verifications, pagination: null }
       }
     }
   })
@@ -407,19 +442,22 @@ export function useAdminVerificationRequests(page = 1, limit = 10) {
 export function useAdminApproveEngineer() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: async ({ id, assignedServices }: { id: string, assignedServices?: string[] }) => {
-      // Use the unified verify endpoint as per openapi.json
-      const response = await apiClient.put(ENDPOINTS.ADMIN_ENGINEER_VERIFICATIONS.VERIFY(id), {
-        verificationStatus: 'approved',
-        isVerified: true,
-        assignedServices
-      })
-      return response.data
+    mutationFn: async ({ id, note }: { id: string, note?: string }) => {
+      // Try the new dedicated verification endpoint first
+      try {
+        const response = await apiClient.put(ENDPOINTS.ADMIN_ENGINEER_VERIFICATIONS.APPROVE(id), { note })
+        return response.data
+      } catch (error) {
+        // Fallback to the engineers endpoint
+        const response = await apiClient.put(ENDPOINTS.ADMIN_ENGINEERS.APPROVE(id), { note })
+        return response.data
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-verification-requests'] })
       queryClient.invalidateQueries({ queryKey: ['admin-engineers'] })
       queryClient.invalidateQueries({ queryKey: ['admin-engineer'] })
+      queryClient.invalidateQueries({ queryKey: ['admin-pending-engineer'] })
     }
   })
 }
@@ -427,43 +465,22 @@ export function useAdminApproveEngineer() {
 export function useAdminRejectEngineer() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: async ({ id, notes }: { id: string, notes?: string }) => {
-      // Use the unified verify endpoint as per openapi.json
-      const response = await apiClient.put(ENDPOINTS.ADMIN_ENGINEER_VERIFICATIONS.VERIFY(id), {
-        verificationStatus: 'rejected',
-        isVerified: false,
-        notes
-      })
-      return response.data
+    mutationFn: async ({ id, note }: { id: string, note?: string }) => {
+      // Try the new dedicated verification endpoint first
+      try {
+        const response = await apiClient.put(ENDPOINTS.ADMIN_ENGINEER_VERIFICATIONS.REJECT(id), { note })
+        return response.data
+      } catch (error) {
+        // Fallback to the engineers endpoint
+        const response = await apiClient.put(ENDPOINTS.ADMIN_ENGINEERS.REJECT(id), { note })
+        return response.data
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-verification-requests'] })
       queryClient.invalidateQueries({ queryKey: ['admin-engineers'] })
       queryClient.invalidateQueries({ queryKey: ['admin-engineer'] })
-    }
-  })
-}
-
-export function useAdminVerifyEngineer() {
-  const queryClient = useQueryClient()
-  return useMutation({
-    mutationFn: async ({ id, status, notes, assignedServices }: { id: string, status: 'approved' | 'rejected', notes?: string, assignedServices?: string[] }) => {
-      // If the specific approve/reject endpoints are preferred by the developer
-      const endpoint = status === 'approved' 
-        ? ENDPOINTS.ADMIN_ENGINEER_VERIFICATIONS.APPROVE(id)
-        : ENDPOINTS.ADMIN_ENGINEER_VERIFICATIONS.REJECT(id)
-      
-      const response = await apiClient.put(endpoint, {
-        notes,
-        assignedServices,
-        verificationStatus: status, // Fallback if the endpoint handles both
-        isVerified: status === 'approved'
-      })
-      return response.data
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin-verification-requests'] })
-      queryClient.invalidateQueries({ queryKey: ['admin-engineers'] })
+      queryClient.invalidateQueries({ queryKey: ['admin-pending-engineer'] })
     }
   })
 }
@@ -597,6 +614,151 @@ export function useDeleteService() {
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['services', variables.categoryId] })
+    }
+  })
+}
+
+// --- Admin Subscriptions ---
+
+export function useAdminSubscriptions(page = 1, limit = 20, status?: string) {
+  return useQuery({
+    queryKey: ['admin-subscriptions', page, limit, status],
+    queryFn: async () => {
+      const response = await apiClient.get(ENDPOINTS.SUBSCRIPTIONS.ADMIN, {
+        params: { page, limit, status }
+      })
+      return response.data.data || response.data
+    }
+  })
+}
+
+// --- User Subscriptions ---
+
+export function useMySubscription() {
+  return useQuery({
+    queryKey: ['my-subscription'],
+    queryFn: async () => {
+      const response = await apiClient.get(ENDPOINTS.SUBSCRIPTIONS.MY)
+      const data = response.data.data || response.data
+      return data?.subscription || data || null
+    }
+  })
+}
+
+export function useSubscriptionHistory(page = 1, limit = 10) {
+  return useQuery({
+    queryKey: ['subscription-history', page, limit],
+    queryFn: async () => {
+      const response = await apiClient.get(ENDPOINTS.SUBSCRIPTIONS.HISTORY, {
+        params: { page, limit }
+      })
+      return response.data.data || response.data
+    }
+  })
+}
+
+export function useSubscribe() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (data: { plan: string; [key: string]: any }) => {
+      const response = await apiClient.post(ENDPOINTS.SUBSCRIPTIONS.SUBSCRIBE, data)
+      return response.data
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['my-subscription'] })
+    }
+  })
+}
+
+export function useVerifySubscription() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (reference: string) => {
+      const response = await apiClient.get(ENDPOINTS.SUBSCRIPTIONS.VERIFY(reference))
+      return response.data
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['my-subscription'] })
+      queryClient.invalidateQueries({ queryKey: ['subscription-history'] })
+    }
+  })
+}
+
+export function useChangePlan() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (data: { plan: string; [key: string]: any }) => {
+      const response = await apiClient.put(ENDPOINTS.SUBSCRIPTIONS.CHANGE_PLAN, data)
+      return response.data
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['my-subscription'] })
+    }
+  })
+}
+
+export function useCancelSubscription() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async () => {
+      const response = await apiClient.put(ENDPOINTS.SUBSCRIPTIONS.CANCEL)
+      return response.data
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['my-subscription'] })
+    }
+  })
+}
+
+export function useToggleAutoRenew() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (enabled: boolean) => {
+      const response = await apiClient.put(ENDPOINTS.SUBSCRIPTIONS.AUTO_RENEW, { enabled })
+      return response.data
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['my-subscription'] })
+    }
+  })
+}
+
+// --- Quotations ---
+
+export function useBookingQuotations(bookingId: string) {
+  return useQuery({
+    queryKey: ['quotations', bookingId],
+    queryFn: async () => {
+      const response = await apiClient.get(ENDPOINTS.QUOTATIONS.BY_BOOKING(bookingId))
+      const data = response.data.data || response.data
+      return Array.isArray(data) ? data : (data?.quotations || [])
+    },
+    enabled: !!bookingId
+  })
+}
+
+export function useApproveQuotation() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const response = await apiClient.put(ENDPOINTS.QUOTATIONS.APPROVE(id))
+      return response.data
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['quotations'] })
+    }
+  })
+}
+
+export function useRejectQuotation() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ id, reason }: { id: string, reason?: string }) => {
+      const response = await apiClient.put(ENDPOINTS.QUOTATIONS.REJECT(id), { reason })
+      return response.data
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['quotations'] })
     }
   })
 }

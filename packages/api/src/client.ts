@@ -1,4 +1,10 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios'
+
+declare module 'axios' {
+  interface AxiosRequestConfig {
+    silentError?: boolean
+  }
+}
 import { toast } from 'sonner'
 
 const apiBaseUrl = typeof window !== 'undefined' ? '' : (process.env.NEXT_PUBLIC_API_URL || 'https://resolvhome.onrender.com')
@@ -40,10 +46,10 @@ apiClient.interceptors.response.use(
     // Attach the friendly message to the error object so components can use it
     error.message = message
     
-    if (error.response?.status === 401) {
+    const silent = (error.config as any)?.silentError
+    if (error.response?.status === 401 || silent) {
       // Silently ignore — callers handle empty/unauthenticated state
     } else if (error.response?.status !== undefined) {
-      // Show global toast for all other API errors
       toast.error(message)
     }
 

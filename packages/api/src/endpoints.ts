@@ -65,8 +65,6 @@ export const ENDPOINTS = {
     BOOKINGS:         '/api/engineer/bookings',
     MY_BOOKINGS:      '/api/bookings/engineer/my-bookings',
     BOOKING_BY_ID:    (id: string) => `/api/engineer/bookings/${id}`,
-    RESEND_GUARANTOR_VERIFICATION: '/api/engineer/resend-guarantor-verification',
-    UPDATE_GUARANTOR: '/api/engineer/update-guarantor',
   },
 
   // ─── Wallet ───────────────────────────────────────────────────────────────
@@ -132,16 +130,30 @@ export const ENDPOINTS = {
 
   // ─── Admin — Engineers ────────────────────────────────────────────────────
   ADMIN_ENGINEERS: {
-    BASE:  '/api/admin/engineers',
-    BY_ID: (id: string) => `/api/admin/engineers/${id}`,
+    PENDING: '/api/admin/engineers/pending',
+    APPROVE: (id: string) => `/api/admin/engineers/${id}/approve`,
+    REJECT:  (id: string) => `/api/admin/engineers/${id}/reject`,
   },
 
-  // ─── Admin — Engineer Verifications ──────────────────────────────────────
+  // ─── Admin — Engineer Verification ─────────────────────────────────────────
   ADMIN_ENGINEER_VERIFICATIONS: {
-    PENDING: '/api/admin/engineer-verifications/pending',
-    VERIFY:  (id: string) => `/api/admin/engineer-verifications/${id}/verify`,
-    APPROVE: (id: string) => `/api/admin/engineer-verifications/${id}/approve`,
-    REJECT:  (id: string) => `/api/admin/engineer-verifications/${id}/reject`,
+    BASE:     '/api/admin/engineer-verifications',
+    PENDING:  '/api/admin/engineer-verifications/pending',
+    BY_ID:    (id: string) => `/api/admin/engineer-verifications/${id}`,
+    APPROVE:  (id: string) => `/api/admin/engineer-verifications/${id}/approve`,
+    REJECT:   (id: string) => `/api/admin/engineer-verifications/${id}/reject`,
+  },
+
+  // ─── Subscriptions ────────────────────────────────────────────────────────
+  SUBSCRIPTIONS: {
+    MY:           '/api/subscriptions/my',
+    SUBSCRIBE:    '/api/subscriptions/subscribe',
+    VERIFY:       (ref: string) => `/api/subscriptions/verify/${ref}`,
+    CHANGE_PLAN:  '/api/subscriptions/change-plan',
+    CANCEL:       '/api/subscriptions/cancel',
+    AUTO_RENEW:   '/api/subscriptions/auto-renew',
+    HISTORY:      '/api/subscriptions/history',
+    ADMIN:        '/api/admin/subscriptions',
   },
 
   // ─── Admin — Bookings ─────────────────────────────────────────────────────
@@ -156,5 +168,12 @@ export const ENDPOINTS = {
   ADMIN_COMPLAINTS: {
     BASE:    '/api/admin/complaints',
     RESPOND: (id: string) => `/api/admin/complaints/${id}/respond`,
+  },
+
+  // ─── Guarantor ────────────────────────────────────────────────────────────
+  GUARANTOR: {
+    VERIFY: (token: string) => `/api/guarantor/verify/${token}`,
+    UPDATE: '/api/engineer/guarantor',
+    RESEND: '/api/engineer/guarantor/resend',
   },
 } as const

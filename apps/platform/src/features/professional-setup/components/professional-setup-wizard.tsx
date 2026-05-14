@@ -58,7 +58,7 @@ export const ProfessionalSetupWizard = ({ onComplete, initialStep }: { onComplet
       return
     }
 
-    updateGuarantor({ guarantorEmail: tempEmail }, {
+    updateGuarantor({ guarantorName: store.guarantorName, guarantorEmail: tempEmail }, {
       onSuccess: () => {
         store.updateField('guarantorEmail', tempEmail)
         setIsEditingEmail(false)

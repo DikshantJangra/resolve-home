@@ -18,13 +18,13 @@ import {
   HiOutlineExternalLink
 } from 'react-icons/hi'
 import { cn, Button, Skeleton, formatImageUrl } from "@resolve/ui"
-import { useAdminEngineer, useAdminApproveEngineer, useAdminRejectEngineer, useCategories } from '@/hooks/api-hooks'
+import { useAdminPendingEngineerById, useAdminApproveEngineer, useAdminRejectEngineer, useCategories } from '@/hooks/api-hooks'
 import { toast } from 'sonner'
 
 export default function VerificationDetailPage() {
   const { id } = useParams()
   const router = useRouter()
-  const { data: engineer, isLoading, error } = useAdminEngineer(id as string)
+  const { data: engineer, isLoading, error } = useAdminPendingEngineerById(id as string)
   const { data: categories } = useCategories()
 
   React.useEffect(() => {
@@ -47,10 +47,10 @@ export default function VerificationDetailPage() {
   // Helper to find category name from ID
   const getCategoryName = (categoryId: string) => {
     if (!categories || !Array.isArray(categories)) return categoryId
-    const category = categories.find((c: any) => 
-      c.id === categoryId || 
-      c._id === categoryId || 
-      String(c.id) === String(categoryId) || 
+    const category = categories.find((c: any) =>
+      c.id === categoryId ||
+      c._id === categoryId ||
+      String(c.id) === String(categoryId) ||
       String(c._id) === String(categoryId)
     )
     return category?.name || categoryId
@@ -94,31 +94,34 @@ export default function VerificationDetailPage() {
   }
 
   // Robust data extraction
-  const profile = engineer.engineerProfile || engineer.profile || {};
+  // The data might be in engineer.user, engineer.engineerProfile, or engineer itself
+  const user = engineer.user || (engineer.email ? engineer : {});
+  const profile = engineer.engineerProfile || engineer.profile || engineer.engineer || {};
   const guarantor = engineer.guarantor || profile.guarantor || {};
-  const location = engineer.location || profile.location || {};
-  
-  const displayData = {
-    name: engineer.fullName || engineer.name || profile.name || 'N/A',
-    email: engineer.email || profile.email || 'N/A',
-    phone: engineer.phoneNumber || engineer.phone || profile.phone || 'N/A',
-    category: engineer.primarySpecialty || getCategoryName(engineer.category || profile.category) || 'N/A',
-    experience: engineer.yearsOfExperience || engineer.experience || profile.yearsOfExperience || 'N/A',
-    address: engineer.address || location.streetAddress || 'N/A',
-    city: engineer.city || location.city || 'N/A',
-    state: engineer.state || location.state || 'N/A',
-    bvn: engineer.idNumber || engineer.bvn || profile.idNumber || 'N/A',
-    idType: engineer.idType || profile.idType || 'BVN',
-    documentUrl: engineer.idDocument || profile.idDocument || engineer.documentUrl,
-    guarantorName: guarantor.name || guarantor.fullName || engineer.guarantorName || engineer.guarantor_name || (Array.isArray(engineer.guarantors) ? engineer.guarantors[0]?.name : 'N/A'),
-    guarantorPhone: guarantor.phone || guarantor.phoneNumber || engineer.guarantorPhone || engineer.guarantor_phone || (Array.isArray(engineer.guarantors) ? engineer.guarantors[0]?.phone : 'N/A'),
-    guarantorEmail: guarantor.email || engineer.guarantorEmail || engineer.guarantor_email || (Array.isArray(engineer.guarantors) ? engineer.guarantors[0]?.email : 'N/A'),
-    guarantorRelationship: guarantor.relationship || engineer.guarantorRelationship || engineer.guarantor_relationship || (Array.isArray(engineer.guarantors) ? engineer.guarantors[0]?.relationship : 'N/A'),
-    guarantorWorkPlace: guarantor.workPlace || guarantor.placeOfWork || engineer.guarantorWorkPlace || engineer.guarantor_work_place || (Array.isArray(engineer.guarantors) ? engineer.guarantors[0]?.workPlace : 'N/A'),
+  const location = engineer.location || profile.location || engineer.location || {};
+  const idVerification = engineer.idVerification || profile.idVerification || {};
 
-    isGuarantorVerified: !!(engineer.isGuarantorVerified || profile.isGuarantorVerified || engineer.guarantorVerified)
+  const displayData = {
+    name: engineer.fullName || engineer.name || user.fullName || user.name || profile.name || 'N/A',
+    email: engineer.email || user.email || profile.email || 'N/A',
+    phone: engineer.phoneNumber || engineer.phone || user.phoneNumber || user.phone || profile.phone || 'N/A',
+    category: engineer.primarySpecialty || profile.primarySpecialty || getCategoryName(engineer.category || profile.category) || 'N/A',
+    experience: engineer.yearsOfExperience || profile.yearsOfExperience || engineer.experience || profile.experience || 'N/A',
+    address: engineer.address || location.streetAddress || profile.address || 'N/A',
+    city: engineer.city || location.city || profile.city || 'N/A',
+    state: engineer.state || location.state || profile.state || 'N/A',
+    bvn: engineer.idNumber || engineer.bvn || profile.idNumber || profile.bvn || idVerification.bvn || 'N/A',
+    idType: engineer.idType || profile.idType || idVerification.type || 'BVN',
+    documentUrl: engineer.idDocument || profile.idDocument || engineer.documentUrl || idVerification.documentUrl || profile.documentUrl,
+    guarantorName: guarantor.name || guarantor.fullName || profile.guarantorName || engineer.guarantorName || (Array.isArray(engineer.guarantors) ? engineer.guarantors[0]?.name : 'N/A'),
+    guarantorPhone: guarantor.phone || guarantor.phoneNumber || profile.guarantorPhone || engineer.guarantorPhone || (Array.isArray(engineer.guarantors) ? engineer.guarantors[0]?.phone : 'N/A'),
+    guarantorEmail: guarantor.email || profile.guarantorEmail || engineer.guarantorEmail || (Array.isArray(engineer.guarantors) ? engineer.guarantors[0]?.email : 'N/A'),
+    guarantorRelationship: guarantor.relationship || profile.relationship || engineer.guarantorRelationship || (Array.isArray(engineer.guarantors) ? engineer.guarantors[0]?.relationship : 'N/A'),
+    guarantorWorkPlace: guarantor.workPlace || guarantor.placeOfWork || profile.placeOfWork || engineer.guarantorWorkPlace || (Array.isArray(engineer.guarantors) ? engineer.guarantors[0]?.workPlace : 'N/A'),
+
+    isGuarantorVerified: !!(engineer.isGuarantorVerified || profile.isGuarantorVerified || engineer.guarantorVerified || user.isGuarantorVerified)
   };
-  
+
   console.log('[VerificationDetail] Computed Display Data:', displayData);
 
   const documentUrl = displayData.documentUrl;

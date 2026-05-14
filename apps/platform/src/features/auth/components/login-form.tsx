@@ -49,7 +49,12 @@ export function LoginForm() {
   // Redirect if already logged in
   React.useEffect(() => {
     if (session?.user) {
-      router.push(callbackUrl)
+      const planId = searchParams.get("plan")
+      if (planId) {
+        router.push(`/subscriptions?plan=${planId}`)
+      } else {
+        router.push(callbackUrl)
+      }
     }
   }, [session, router, callbackUrl])
 

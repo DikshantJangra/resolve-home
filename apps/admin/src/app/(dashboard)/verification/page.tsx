@@ -1,8 +1,8 @@
 'use client'
 
 import React, { useState, useMemo } from 'react'
-import { 
-  HiOutlineSearch, 
+import {
+  HiOutlineSearch,
   HiOutlineCheckCircle,
   HiOutlineXCircle,
   HiOutlineClock,
@@ -13,17 +13,20 @@ import {
   HiOutlineArrowRight
 } from 'react-icons/hi'
 import { cn, Button, Skeleton } from "@resolve/ui"
-import { useAdminVerificationRequests, useAdminVerifyEngineer, useAdminEngineers } from '@/hooks/api-hooks'
+import { useAdminVerificationRequests, useAdminApproveEngineer, useAdminRejectEngineer, useAdminEngineers } from '@/hooks/api-hooks'
 import { ENDPOINTS } from "@resolve/api"
 import Link from 'next/link'
 import { toast } from 'sonner'
 
 export default function VerificationPage() {
   const [search, setSearch] = useState('')
-  const [page, setPage] = useState(1)
-  const { data: verifData, isLoading: verifLoading, error: verifError } = useAdminVerificationRequests(page)
+  const { data: verifData, isLoading: verifLoading, error: verifError } = useAdminVerificationRequests()
   const { data: engineers, isLoading: engLoading } = useAdminEngineers()
-  const { mutate: verifyEngineer } = useAdminVerifyEngineer()
+  const { mutate: approveEngineer } = useAdminApproveEngineer()
+  const { mutate: rejectEngineer, isPending: isRejecting } = useAdminRejectEngineer()
+  const [isRejectModalOpen, setIsRejectModalOpen] = useState(false)
+  const [rejectionNote, setRejectionNote] = useState('')
+  const [activeRequestId, setActiveRequestId] = useState<string | null>(null)
 
   React.useEffect(() => {
     if (verifData) {
@@ -32,54 +35,41 @@ export default function VerificationPage() {
   }, [verifData]);
 
   const verifications = verifData?.verifications || []
-  const pagination = verifData?.pagination
 
   const isLoading = verifLoading || engLoading
 
   const stats = useMemo(() => {
     const pending = verifications.length || 0
     const total = engineers?.length || 0
-    const approved = engineers?.filter((e: any) => e.status === 'approved').length || 0
-    const rejected = engineers?.filter((e: any) => e.status === 'rejected').length || 0
-    
-    // Calculate rate (percentage of approved engineers)
+    const approved = engineers?.filter((e: any) => e.engineerProfile?.verificationStatus === 'approved' || e.status === 'approved').length || 0
+    const rejected = engineers?.filter((e: any) => e.engineerProfile?.verificationStatus === 'rejected' || e.status === 'rejected').length || 0
     const rate = total > 0 ? `${((approved / total) * 100).toFixed(1)}%` : '0%'
-
-    return {
-      pending,
-      rate,
-      rejected
-    }
+    return { pending, rate, rejected }
   }, [verifications, engineers])
 
   const filteredVerifications = useMemo(() => {
-    // Merge verifications from the specific endpoint with pending engineers from the general list
-    // This provides a fallback if the verifications endpoint structure is different
-    const pendingFromEngineers = engineers?.filter((e: any) => 
-      e.status?.toLowerCase() === 'pending' || 
-      e.verificationStatus?.toLowerCase() === 'pending' ||
-      e.engineerProfile?.verificationStatus?.toLowerCase() === 'pending'
-    ) || []
-    
-    // Combine and deduplicate by ID
-    const combined = [...verifications]
-    
-    pendingFromEngineers.forEach((pe: any) => {
-      if (!combined.find(v => v.id === pe.id)) {
-        combined.push(pe)
-      }
-    })
-
-    return combined.filter((v: any) => {
-      const searchStr = `${v.fullName || v.name} ${v.email} ${v.category || v.primarySpecialty}`.toLowerCase()
+    return verifications.filter((v: any) => {
+      const searchStr = `${v.name} ${v.email} ${v.category || v.primarySpecialty}`.toLowerCase()
       return searchStr.includes(search.toLowerCase())
     })
-  }, [verifications, engineers, search])
+  }, [verifications, search])
 
   const handleAction = (id: string, status: 'approved' | 'rejected') => {
-    verifyEngineer({ id, status }, {
+    if (status === 'rejected' && !isRejectModalOpen) {
+      setActiveRequestId(id)
+      setIsRejectModalOpen(true)
+      return
+    }
+
+    const action = status === 'approved' ? approveEngineer : rejectEngineer
+    const payload = status === 'approved' ? { id } : { id, note: rejectionNote }
+
+    action(payload as any, {
       onSuccess: () => {
         toast.success(`Engineer ${status === 'approved' ? 'approved' : 'rejected'} successfully`)
+        setIsRejectModalOpen(false)
+        setRejectionNote('')
+        setActiveRequestId(null)
       },
       onError: (err: any) => {
         toast.error(err?.response?.data?.message || `Failed to ${status} engineer`)
@@ -111,7 +101,7 @@ export default function VerificationPage() {
         <HiOutlineExclamationCircle className="w-12 h-12 text-red-500" />
         <h2 className="text-xl font-semibold text-neutral-700">Verification Fetching Error</h2>
         <p className="text-zinc-600">{(verifError as any)?.message || "Failed to fetch verification requests from the server."}</p>
-        <p className="text-xs text-zinc-400">Endpoint: {ENDPOINTS.ADMIN_ENGINEER_VERIFICATIONS.PENDING}</p>
+        <p className="text-xs text-zinc-400">Endpoint: {ENDPOINTS.ADMIN_ENGINEERS.PENDING}</p>
         <Button variant="outline" onClick={() => window.location.reload()}>Retry</Button>
       </div>
     )
@@ -128,8 +118,8 @@ export default function VerificationPage() {
           </p>
         </div>
         <div className="relative w-full md:w-96">
-          <input 
-            placeholder="Search resolve" 
+          <input
+            placeholder="Search resolve"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="w-full h-12 px-4 pr-12 rounded-xl border border-zinc-300 text-sm outline-none focus:ring-2 focus:ring-blue-500/10 focus:border-blue-700 transition-all shadow-sm"
@@ -140,28 +130,78 @@ export default function VerificationPage() {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
-        <StatCard 
-          label="Pending Verifications" 
-          value={stats.pending} 
-          trend="+12.5%" 
-          trendUp={true} 
-          icon={<HiOutlineClock className="w-5 h-5 text-zinc-600" />} 
+        <StatCard
+          label="Pending Verifications"
+          value={stats.pending}
+          trend="+12.5%"
+          trendUp={true}
+          icon={<HiOutlineClock className="w-5 h-5 text-zinc-600" />}
         />
-        <StatCard 
-          label="Verification Rate" 
-          value={stats.rate} 
-          trend="+12.5%" 
-          trendUp={true} 
-          icon={<HiOutlineShieldCheck className="w-5 h-5 text-zinc-600" />} 
+        <StatCard
+          label="Verification Rate"
+          value={stats.rate}
+          trend="+12.5%"
+          trendUp={true}
+          icon={<HiOutlineShieldCheck className="w-5 h-5 text-zinc-600" />}
         />
-        <StatCard 
-          label="Rejected Professionals" 
-          value={stats.rejected} 
-          trend="+12.5%" 
-          trendUp={true} 
-          icon={<HiOutlineXCircle className="w-5 h-5 text-zinc-600" />} 
+        <StatCard
+          label="Rejected Professionals"
+          value={stats.rejected}
+          trend="+12.5%"
+          trendUp={true}
+          icon={<HiOutlineXCircle className="w-5 h-5 text-zinc-600" />}
         />
       </div>
+
+      {/* Reject Modal */}
+      {isRejectModalOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white rounded-3xl w-full max-w-md overflow-hidden shadow-2xl animate-in zoom-in-95 duration-200">
+            <div className="px-6 py-5 border-b border-zinc-100 flex justify-between items-center bg-stone-50">
+              <h3 className="text-xl font-bold text-neutral-700">Reject Professional</h3>
+              <button 
+                onClick={() => {
+                  setIsRejectModalOpen(false)
+                  setActiveRequestId(null)
+                }} 
+                className="p-2 hover:bg-zinc-200 rounded-full transition-colors"
+              >
+                <HiOutlineXCircle className="w-5 h-5 text-zinc-500" />
+              </button>
+            </div>
+            <div className="p-8 flex flex-col gap-6">
+              <div className="flex flex-col gap-2">
+                <label className="text-sm font-semibold text-neutral-700">Rejection Note</label>
+                <textarea 
+                  value={rejectionNote}
+                  onChange={(e) => setRejectionNote(e.target.value)}
+                  placeholder="Explain why this professional is being rejected..."
+                  className="w-full h-32 p-4 rounded-xl border border-zinc-300 focus:ring-2 focus:ring-red-500/20 focus:border-red-500 outline-none transition-all text-sm font-inter resize-none"
+                />
+              </div>
+              <div className="flex flex-col gap-3">
+                <Button 
+                  onClick={() => activeRequestId && handleAction(activeRequestId, 'rejected')}
+                  disabled={!rejectionNote.trim() || isRejecting}
+                  className="w-full h-12 bg-red-500 hover:bg-red-600 text-white rounded-xl font-semibold shadow-lg shadow-red-500/10"
+                >
+                  {isRejecting ? 'Rejecting...' : 'Confirm Rejection'}
+                </Button>
+                <Button 
+                  variant="outline" 
+                  onClick={() => {
+                    setIsRejectModalOpen(false)
+                    setActiveRequestId(null)
+                  }}
+                  className="w-full h-12 rounded-xl"
+                >
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Verification Table */}
       <div className="bg-white rounded-xl border border-zinc-300 overflow-hidden shadow-sm">
@@ -176,46 +216,57 @@ export default function VerificationPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-zinc-200">
-              {filteredVerifications.length > 0 ? filteredVerifications.map((v: any) => (
-                <tr key={v.id || v._id} className="hover:bg-zinc-50 transition-colors group">
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-bold text-sm">
-                        {v.fullName?.charAt(0) || v.name?.charAt(0) || 'U'}
+              {filteredVerifications.length > 0 ? filteredVerifications.map((v: any) => {
+                const id = v.id || v._id
+                const name = v.name || v.fullName || v.engineer?.name || v.engineer?.fullName || 'Unknown'
+                const email = v.email || v.engineer?.email || 'N/A'
+                const initials = name.charAt(0).toUpperCase()
+                
+                return (
+                  <tr key={id} className="hover:bg-zinc-50 transition-colors group">
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-bold text-sm">
+                          {initials}
+                        </div>
+                        <div className="flex flex-col">
+                          <span className="text-neutral-700 text-sm font-medium font-inter">{name}</span>
+                          <span className="text-zinc-500 text-xs font-normal font-inter">{email}</span>
+                        </div>
                       </div>
-                      <div className="flex flex-col">
-                        <span className="text-neutral-700 text-sm font-medium font-inter">{v.fullName || v.name}</span>
-                        <span className="text-zinc-500 text-xs font-normal font-inter">{v.email}</span>
-                      </div>
-                    </div>
-                  </td>
+                    </td>
                   <td className="px-6 py-4">
                     <span className="text-zinc-600 text-sm font-medium font-inter">
                       {v.createdAt ? new Date(v.createdAt).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }) : 'N/A'}
                     </span>
                   </td>
                   <td className="px-6 py-4">
-                    <div className="flex items-center gap-2">
-                      <div className={cn(
-                        "w-2.5 h-2.5 rounded-full",
-                        v.status === 'approved' ? "bg-green-600" : v.status === 'rejected' ? "bg-red-500" : "bg-zinc-400"
-                      )} />
-                      <span className={cn(
-                        "text-sm font-medium font-inter capitalize",
-                        v.status === 'approved' ? "text-green-700" : v.status === 'rejected' ? "text-red-600" : "text-zinc-600"
-                      )}>
-                        {v.status || 'Pending'}
-                      </span>
-                    </div>
+                    {(() => {
+                      const vStatus = (v.verificationStatus || v.status || '').toLowerCase()
+                      return (
+                        <div className="flex items-center gap-2">
+                          <div className={cn(
+                            "w-2.5 h-2.5 rounded-full",
+                            vStatus === 'approved' ? "bg-green-600" : vStatus === 'rejected' ? "bg-red-500" : "bg-zinc-400"
+                          )} />
+                          <span className={cn(
+                            "text-sm font-medium font-inter capitalize",
+                            vStatus === 'approved' ? "text-green-700" : vStatus === 'rejected' ? "text-red-600" : "text-zinc-600"
+                          )}>
+                            {vStatus || 'Pending'}
+                          </span>
+                        </div>
+                      )
+                    })()}
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-4">
                       {(() => {
                         const isGuarantorVerified = !!(v.isGuarantorVerified || v.guarantorVerified || v.engineerProfile?.isGuarantorVerified);
                         return (
-                          <button 
+                          <button
                             disabled={!isGuarantorVerified}
-                            onClick={() => handleAction(v.id || v._id, 'approved')}
+                            onClick={() => handleAction(id, 'approved')}
                             className={cn(
                               "transition-colors",
                               isGuarantorVerified ? "text-green-600 hover:text-green-700" : "text-zinc-300 cursor-not-allowed grayscale"
@@ -226,15 +277,15 @@ export default function VerificationPage() {
                           </button>
                         );
                       })()}
-                      <button 
-                        onClick={() => handleAction(v.id || v._id, 'rejected')}
+                      <button
+                        onClick={() => handleAction(id, 'rejected')}
                         className="text-red-400 hover:text-red-500 transition-colors"
                         title="Reject"
                       >
                         <HiOutlineXCircle className="w-6 h-6" />
                       </button>
-                      <Link 
-                        href={`/verification/${v.id || v._id}`}
+                      <Link
+                        href={`/verification/${id}`}
                         className="text-amber-600 hover:text-amber-700 transition-colors"
                         title="View Details"
                       >
@@ -243,8 +294,7 @@ export default function VerificationPage() {
                     </div>
                   </td>
                 </tr>
-
-              )) : (
+              )}) : (
                 <tr>
                   <td colSpan={4} className="px-6 py-24 text-center">
                     <div className="flex flex-col items-center gap-3">
@@ -257,33 +307,7 @@ export default function VerificationPage() {
             </tbody>
           </table>
         </div>
-        
-        {/* Pagination */}
-        {pagination && pagination.totalPages > 1 && (
-          <div className="px-6 py-4 border-t border-zinc-200 flex items-center justify-between bg-white">
-            <div className="text-sm text-zinc-500">
-              Showing <span className="font-medium">{((page - 1) * 10) + 1}</span> to <span className="font-medium">{Math.min(page * 10, pagination.total)}</span> of <span className="font-medium">{pagination.total}</span> results
-            </div>
-            <div className="flex gap-2">
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={() => setPage(p => Math.max(1, p - 1))}
-                disabled={page === 1}
-              >
-                Previous
-              </Button>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={() => setPage(p => Math.min(pagination.totalPages, p + 1))}
-                disabled={page === pagination.totalPages}
-              >
-                Next
-              </Button>
-            </div>
-          </div>
-        )}
+
       </div>
     </div>
   )

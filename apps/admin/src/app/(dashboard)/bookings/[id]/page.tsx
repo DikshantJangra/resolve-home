@@ -80,7 +80,7 @@ export default function BookingDetailsPage({ params }: { params: { id: string } 
               <div className="flex flex-col gap-5">
                 <DetailRow label="Service Category" value={booking.serviceCategory || 'Plumbing'} />
                 <DetailRow label="Scheduled Time" value={booking.scheduledTime || '2:00 PM – 4:00 PM'} />
-                <DetailRow label="Date" value={booking.scheduledDate || '12 - June - 2025'} />
+                <DetailRow label="Date" value={booking.scheduledDate || booking.date || 'N/A'} />
               </div>
             </div>
 
@@ -113,17 +113,17 @@ export default function BookingDetailsPage({ params }: { params: { id: string } 
               {/* Homeowner Card */}
               <PersonCard 
                 title="Homeowner Info"
-                name={booking.customerName || 'Tollideen Samwood'}
-                address={booking.location?.address || '14 Allen Avenue, Ikeja, Lagos'}
-                avatar={booking.customerAvatar || "https://placehold.co/47x47"}
+                name={booking.customerName || booking.customer?.name || 'Unknown User'}
+                address={booking.location?.address || booking.address || 'N/A'}
+                avatar={booking.customerAvatar || booking.customer?.profileImage || "https://placehold.co/47x47"}
               />
 
               {/* Professional Card */}
               <PersonCard 
                 title="Allocated Professional"
-                name={booking.engineerName || 'Unassigned'}
-                address={booking.engineerAddress || 'ResolvHome Platform Partner'}
-                avatar={booking.engineerAvatar || "https://placehold.co/47x47"}
+                name={booking.engineerName || booking.engineer?.name || 'Unassigned'}
+                address={booking.engineerAddress || booking.engineer?.location?.address || 'ResolvHome Platform Partner'}
+                avatar={booking.engineerAvatar || booking.engineer?.profileImage || "https://placehold.co/47x47"}
                 hasReassign={!!booking.engineerName}
               />
             </div>

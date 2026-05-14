@@ -19,7 +19,7 @@ import {
   HiOutlineExclamationCircle
 } from 'react-icons/hi'
 import { cn, Button, Skeleton } from "@resolve/ui"
-import { useAdminEngineer, useAdminUser, useAdminUsers, useAdminBookings } from '@/hooks/api-hooks'
+import { useAdminUser, useAdminBookings } from '@/hooks/api-hooks'
 import { BookingCard } from '@/components/bookings/booking-card'
 
 export default function ProfessionalDetailsPage() {
@@ -27,16 +27,12 @@ export default function ProfessionalDetailsPage() {
   const router = useRouter()
   const [activeTab, setActiveTab] = useState<'overview' | 'personal'>('overview')
   
-  const { data: engineerData, isLoading: isEngineerLoading } = useAdminEngineer(id as string)
   const { data: userData, isLoading: isUserLoading } = useAdminUser(id as string)
-  const { data: allUsers, isLoading: isAllUsersLoading } = useAdminUsers()
   const { data: allBookings, isLoading: isBookingsLoading } = useAdminBookings()
 
-  const isLoading = isEngineerLoading || isUserLoading || isAllUsersLoading || isBookingsLoading
-  
-  // Try to find the professional in individual fetches, then fallback to the full users list
-  const proFromList = allUsers?.find((u: any) => (u.id || u._id) === id)
-  const pro = engineerData || userData || proFromList
+  const isLoading = isUserLoading || isBookingsLoading
+
+  const pro = userData
 
   // Get real booking history for this professional
   const proBookings = allBookings?.filter((b: any) => 
@@ -58,9 +54,7 @@ export default function ProfessionalDetailsPage() {
     )
   }
 
-  // SILENCE ERROR: If we can't find an engineer record, we still want to check for a user record
-  // So we only show error if both are done loading and both failed
-  const showNotFoundError = !isEngineerLoading && !isUserLoading && !isAllUsersLoading && !pro
+  const showNotFoundError = !isUserLoading && !pro
 
   if (showNotFoundError) {
     return (
@@ -110,15 +104,15 @@ export default function ProfessionalDetailsPage() {
                   <span className="text-zinc-500 font-bold text-lg">{pro.name?.charAt(0) || 'P'}</span>
                 )}
               </div>
-              <div className="flex flex-col">
+              <div className="flex flex-col gap-0.5">
                 <div className="flex items-center gap-2">
-                  <span className="text-zinc-700 text-base font-semibold font-inter">{pro.name || pro.fullName || 'Opeyemi Samuel'}</span>
+                  <span className="text-zinc-700 text-base font-semibold font-inter">{pro.name || pro.fullName || 'N/A'}</span>
                   {pro.isVerified && <HiOutlineBadgeCheck className="text-blue-700 w-4 h-4" />}
                 </div>
                 <div className="flex items-center gap-2 text-zinc-500 text-sm">
-                  <span>{pro.category || pro.specialty || pro.primarySpecialty || 'Electrical'}</span>
+                  <span>{pro.category || pro.specialty || pro.primarySpecialty || 'N/A'}</span>
                   <div className="w-1.5 h-1.5 bg-zinc-300 rounded-full" />
-                  <span>{pro.location || pro.address?.city || 'Lagos'}</span>
+                  <span>{pro.location || pro.address?.city || 'N/A'}</span>
                 </div>
               </div>
             </div>
@@ -202,12 +196,12 @@ export default function ProfessionalDetailsPage() {
             <div className="p-6 bg-white rounded-xl border border-zinc-300 flex flex-col gap-6 shadow-sm">
               <h3 className="text-neutral-700 text-base font-semibold font-inter">Professional Info</h3>
               <div className="space-y-6">
-                <InfoRow label="Full Name" value={pro.name || pro.fullName || 'Opeyemi Samuel'} />
-                <InfoRow label="Category" value={pro.category || pro.specialty || pro.primarySpecialty || 'Electrical'} />
-                <InfoRow label="Phone Number" value={pro.phone || pro.phoneNumber || '+234 901 234 5678'} />
-                <InfoRow label="Email Address" value={pro.email || 'pro.work@example.com'} />
-                <InfoRow label="Experience" value={pro.experience || '5+ Years'} />
-                <InfoRow label="Joined Date" value={pro.createdAt ? new Date(pro.createdAt).toLocaleDateString() : '12 - June - 2025'} />
+                <InfoRow label="Full Name" value={pro.name || pro.fullName || 'N/A'} />
+                <InfoRow label="Category" value={pro.category || pro.specialty || pro.primarySpecialty || 'N/A'} />
+                <InfoRow label="Phone Number" value={pro.phone || pro.phoneNumber || 'N/A'} />
+                <InfoRow label="Email Address" value={pro.email || 'N/A'} />
+                <InfoRow label="Experience" value={pro.experience || 'N/A'} />
+                <InfoRow label="Joined Date" value={pro.createdAt ? new Date(pro.createdAt).toLocaleDateString() : 'N/A'} />
               </div>
             </div>
 

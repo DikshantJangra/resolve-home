@@ -127,7 +127,7 @@ export default function HomeownersPage() {
                 </td>
                 <td className="px-6 py-4">
                   <span className="text-zinc-600 text-sm font-medium font-inter">
-                    {user.location || 'Lekki, Ajah'}
+                    {user.location || user.city || 'N/A'}
                   </span>
                 </td>
                 <td className="px-6 py-4">
@@ -138,13 +138,13 @@ export default function HomeownersPage() {
                       : "bg-stone-50 border-zinc-300 text-zinc-600"
                   )}>
                     <span className="text-sm font-medium font-inter">
-                      {user.plan || (Math.random() > 0.5 ? 'Premium' : 'Basic')}
+                      {user.subscription?.planName || user.plan || 'Free'}
                     </span>
                   </div>
                 </td>
                 <td className="px-6 py-4">
                   <span className="text-zinc-600 text-sm font-medium font-inter">
-                    {user.bookingsCount || '21'}
+                    {user.bookingsCount || user.totalBookings || '0'}
                   </span>
                 </td>
                 <td className="px-6 py-4">
