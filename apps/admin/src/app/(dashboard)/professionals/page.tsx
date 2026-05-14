@@ -230,11 +230,12 @@ export default function ProfessionalsPage() {
                   <td className="px-6 py-5">
                     <Link href={`/professionals/${pro.id || pro._id}`} className="flex items-center gap-2">
                       {(() => {
+                        const ep = pro.engineerProfile || pro
                         const status = pro.isBanned
                           ? { dot: 'bg-rose-400', text: 'text-rose-400', label: 'Suspended' }
-                          : (pro.verificationStatus === 'approved' || pro.isVerified || pro.approvedAt)
+                          : (ep.verificationStatus === 'approved' || ep.isVerified || ep.approvedAt)
                             ? { dot: 'bg-green-700', text: 'text-green-700', label: 'Active' }
-                            : pro.verificationStatus === 'rejected'
+                            : ep.verificationStatus === 'rejected'
                               ? { dot: 'bg-red-400', text: 'text-red-400', label: 'Rejected' }
                               : { dot: 'bg-amber-400', text: 'text-amber-600', label: 'Pending' }
                         return (
