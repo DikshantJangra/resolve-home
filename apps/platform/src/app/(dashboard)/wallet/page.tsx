@@ -35,23 +35,31 @@ export default function WalletPage() {
 
   // Payment Verification Logic
   const searchParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null
-  const reference = searchParams?.get('reference')
+  const reference = searchParams?.get('reference') || searchParams?.get('trxref')
   const { data: verificationResult, isLoading: isVerifying } = useVerifyDeposit(reference || '')
   const queryClient = useQueryClient()
   const [hasShownSuccess, setHasShownSuccess] = React.useState(false)
 
   React.useEffect(() => {
-    if (verificationResult?.success && !hasShownSuccess) {
-      toast.success('Wallet Funded Successfully!', {
-        description: `₦${verificationResult.amount.toLocaleString()} has been added to your balance.`
-      })
-      setHasShownSuccess(true)
-      // Clean up URL
-      window.history.replaceState({}, '', window.location.pathname)
-      // Refresh data
-      queryClient.invalidateQueries({ queryKey: ['wallet'] })
-      queryClient.invalidateQueries({ queryKey: ['wallet-transactions'] })
-      queryClient.invalidateQueries({ queryKey: ['wallet-statistics'] })
+    if (verificationResult) {
+      if (verificationResult.success && !hasShownSuccess) {
+        toast.success('Wallet Funded Successfully!', {
+          description: `₦${verificationResult.amount.toLocaleString()} has been added to your balance.`
+        })
+        setHasShownSuccess(true)
+        // Clean up URL
+        window.history.replaceState({}, '', window.location.pathname)
+        // Refresh data
+        queryClient.invalidateQueries({ queryKey: ['wallet'] })
+        queryClient.invalidateQueries({ queryKey: ['wallet-transactions'] })
+        queryClient.invalidateQueries({ queryKey: ['wallet-statistics'] })
+      } else if (verificationResult.success === false && !hasShownSuccess) {
+        toast.error('Deposit Verification Failed', {
+          description: verificationResult.message || 'We could not verify your deposit. Please contact support.'
+        })
+        setHasShownSuccess(true)
+        window.history.replaceState({}, '', window.location.pathname)
+      }
     }
   }, [verificationResult, hasShownSuccess, queryClient])
 

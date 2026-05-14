@@ -28,7 +28,7 @@ function SubscriptionsContent() {
     }, 500)
     return () => clearTimeout(timer)
   }, [])
-  const reference = searchParams.get('reference') || ''
+  const reference = searchParams.get('reference') || searchParams.get('trxref') || ''
 
   const { data: subscription, isLoading: subLoading } = useMySubscription()
   const { data: history, isLoading: historyLoading } = useSubscriptionHistory()
@@ -100,14 +100,22 @@ function SubscriptionsContent() {
 
   // Handle payment verification result
   React.useEffect(() => {
-    if (verificationResult?.success && !hasShownSuccess) {
-      toast.success('Subscription Activated!', {
-        description: `Your plan is now active. Welcome aboard!`
-      })
-      setHasShownSuccess(true)
-      window.history.replaceState({}, '', window.location.pathname)
-      queryClient.invalidateQueries({ queryKey: ['my-subscription'] })
-      queryClient.invalidateQueries({ queryKey: ['subscription-history'] })
+    if (verificationResult) {
+      if (verificationResult.success && !hasShownSuccess) {
+        toast.success('Subscription Activated!', {
+          description: `Your plan is now active. Welcome aboard!`
+        })
+        setHasShownSuccess(true)
+        window.history.replaceState({}, '', window.location.pathname)
+        queryClient.invalidateQueries({ queryKey: ['my-subscription'] })
+        queryClient.invalidateQueries({ queryKey: ['subscription-history'] })
+      } else if (verificationResult.success === false && !hasShownSuccess) {
+        toast.error('Verification Failed', {
+          description: verificationResult.message || 'We could not verify your payment. Please contact support.'
+        })
+        setHasShownSuccess(true) // Mark as shown to avoid repeating
+        window.history.replaceState({}, '', window.location.pathname)
+      }
     }
   }, [verificationResult, hasShownSuccess, queryClient])
 
