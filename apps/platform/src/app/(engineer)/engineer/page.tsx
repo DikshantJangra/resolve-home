@@ -15,7 +15,12 @@ export default function EngineerDashboardPage() {
   const { data: userProfile, isPending: isProfilePending } = useUserProfile()
   
   const user = userProfile?.user || session?.user
-  const isVerified = (user as any)?.isVerified || (user as any)?.status === 'verified'
+  const isVerified = !!(
+    (user as any)?.isVerified || 
+    (user as any)?.status === 'verified' || 
+    userProfile?.engineerProfile?.verificationStatus === 'approved' ||
+    userProfile?.engineerProfile?.isVerified
+  )
 
   const showVerificationOverlay = !isVerified
   const { data: bookings, isPending: isBookingsPending, error } = useEngineerBookings({ enabled: !!isVerified })
@@ -106,7 +111,7 @@ export default function EngineerDashboardPage() {
 
       {/* Verification Overlay - Portal'd to body for clean stacking */}
       {showVerificationOverlay && mounted && createPortal(
-        <div className="fixed inset-0 z-[1000] flex items-start justify-center pt-10 pb-20 overflow-y-auto bg-white/10 backdrop-blur-md">
+        <div className="fixed inset-0 z-[1000] flex items-start justify-center sm:pt-10 sm:pb-20 overflow-y-auto bg-white/10 backdrop-blur-md">
           <div className="w-full max-w-2xl px-4 animate-in fade-in slide-in-from-bottom-8 duration-500">
             {userProfile?.engineerProfile ? (
               <ProfessionalSetupWizard onComplete={() => {}} initialStep={4} />

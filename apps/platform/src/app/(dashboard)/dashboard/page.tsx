@@ -117,7 +117,7 @@ export default function DashboardPage() {
 
       {/* Verification Overlay */}
       {showVerificationOverlay && (
-        <div className="fixed inset-0 z-[100] flex items-start justify-center pt-10 pb-20 overflow-y-auto bg-white/10 backdrop-blur-md">
+        <div className="fixed inset-0 z-[100] flex items-start justify-center sm:pt-10 sm:pb-20 overflow-y-auto bg-white/10 backdrop-blur-md">
           <div className="w-full max-w-2xl px-4 animate-in fade-in slide-in-from-bottom-8 duration-500">
             {status === 'pending' ? (
               <ProfessionalSetupWizard 

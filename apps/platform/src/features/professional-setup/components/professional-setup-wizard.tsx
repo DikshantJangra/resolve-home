@@ -34,6 +34,7 @@ export const ProfessionalSetupWizard = ({ onComplete, initialStep }: { onComplet
   const { data: banks = [], isLoading: loadingBanks } = useNigerianBanks()
   const { mutate: updateProfile, isPending } = useUpdateEngineerProfile()
   const fileInputRef = React.useRef<HTMLInputElement>(null)
+  const contentRef = React.useRef<HTMLDivElement>(null)
   const [isUploading, setIsUploading] = React.useState(false)
   const [isLocating, setIsLocating] = React.useState(false)
   const [isEditingEmail, setIsEditingEmail] = React.useState(false)
@@ -170,6 +171,10 @@ export const ProfessionalSetupWizard = ({ onComplete, initialStep }: { onComplet
       store.updateField('experience', '')
     }
   }, [store.experience])
+  React.useEffect(() => {
+    contentRef.current?.scrollTo({ top: 0 })
+  }, [store.currentStep])
+
   // Automatically select "Others" as default if available
   React.useEffect(() => {
     if (categories && !store.categoryId) {
@@ -758,7 +763,7 @@ export const ProfessionalSetupWizard = ({ onComplete, initialStep }: { onComplet
           <h2 className="text-2xl font-semibold text-neutral-700">Complete set up</h2>
           <button
             onClick={() => store.prevStep()}
-            className="flex items-center gap-2 text-blue-700"
+            className="flex items-center gap-2 text-blue-700 disabled:opacity-30 disabled:cursor-not-allowed"
             disabled={store.currentStep === 1}
           >
             <HiOutlineChevronLeft className="w-5 h-5" />
@@ -791,7 +796,7 @@ export const ProfessionalSetupWizard = ({ onComplete, initialStep }: { onComplet
       </div>
 
       {/* Form Content */}
-      <div className="flex-1 p-4 sm:p-6 overflow-y-auto scrollbar-thin scrollbar-thumb-zinc-200 overscroll-contain touch-pan-y">
+      <div ref={contentRef} className="flex-1 p-4 sm:p-6 overflow-y-auto scrollbar-thin scrollbar-thumb-zinc-200 overscroll-contain touch-pan-y">
         {renderStep()}
       </div>
 

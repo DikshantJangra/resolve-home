@@ -51,7 +51,12 @@ export const Sidebar = ({ onClose, items = defaultSidebarItems }: SidebarProps) 
   }, [])
 
   const isEngineer = userProfile?.user?.role === 'worker'
-  const isVerified = (userProfile?.user as any)?.isVerified || (userProfile?.user as any)?.status === 'verified'
+  const isVerified = !!(
+    (userProfile?.user as any)?.isVerified || 
+    (userProfile?.user as any)?.status === 'verified' || 
+    userProfile?.engineerProfile?.verificationStatus === 'approved' ||
+    userProfile?.engineerProfile?.isVerified
+  )
 
   React.useEffect(() => {
     if (userProfile) {
