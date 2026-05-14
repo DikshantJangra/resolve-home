@@ -287,16 +287,9 @@ export function useAdminPendingEngineerById(id: string) {
   return useQuery({
     queryKey: ['admin-pending-engineer', id],
     queryFn: async () => {
-      try {
-        const response = await apiClient.get(ENDPOINTS.ADMIN_ENGINEER_VERIFICATIONS.BY_ID(id))
-        const data = response.data.data || response.data
-        return data?.verification || data?.user || data
-      } catch (error) {
-        console.error('Failed to fetch from engineer-verifications BY_ID, falling back to general user', error)
-        const response = await apiClient.get(ENDPOINTS.ADMIN_USERS.BY_ID(id))
-        const data = response.data.data || response.data
-        return data?.user || data
-      }
+      const response = await apiClient.get(ENDPOINTS.ADMIN_ENGINEERS.BY_ID(id))
+      const data = response.data.data || response.data
+      return data?.engineer || data
     },
     enabled: !!id
   })
@@ -418,23 +411,10 @@ export function useAdminVerificationRequests(_page = 1, _limit = 10) {
   return useQuery({
     queryKey: ['admin-verification-requests'],
     queryFn: async () => {
-      try {
-        const response = await apiClient.get(ENDPOINTS.ADMIN_ENGINEER_VERIFICATIONS.PENDING, { silentError: true })
-        const data = response.data.data || response.data
-        const verifications: any[] = Array.isArray(data) ? data : (data?.verifications || data?.items || data?.data || [])
-        return { verifications, pagination: data?.pagination || null }
-      } catch (error) {
-        console.error('Failed to fetch from engineer-verifications/pending, falling back to all users filter', error)
-        // Fallback: backend /pending endpoint has a routing conflict — fetch all users and filter by role
-        const response = await apiClient.get(ENDPOINTS.ADMIN_USERS.BASE)
-        const data = response.data.data || response.data
-        const all: any[] = Array.isArray(data) ? data : (data?.users || data?.items || data?.data || [])
-        const verifications = all.filter((u: any) => 
-          (u.role?.toLowerCase() === 'engineer' || u.role?.toLowerCase() === 'worker') && 
-          (u.status === 'pending' || (u.engineerProfile && u.engineerProfile.verificationStatus === 'pending'))
-        )
-        return { verifications, pagination: null }
-      }
+      const response = await apiClient.get(ENDPOINTS.ADMIN_ENGINEERS.PENDING)
+      const data = response.data.data || response.data
+      const verifications: any[] = Array.isArray(data) ? data : (data?.engineers || data?.items || [])
+      return { verifications, pagination: data?.pagination || null }
     }
   })
 }

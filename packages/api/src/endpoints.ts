@@ -131,6 +131,7 @@ export const ENDPOINTS = {
   // ─── Admin — Engineers ────────────────────────────────────────────────────
   ADMIN_ENGINEERS: {
     PENDING: '/api/admin/engineers/pending',
+    BY_ID:   (id: string) => `/api/admin/engineers/${id}`,
     APPROVE: (id: string) => `/api/admin/engineers/${id}/approve`,
     REJECT:  (id: string) => `/api/admin/engineers/${id}/reject`,
   },
