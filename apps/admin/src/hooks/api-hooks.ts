@@ -231,9 +231,29 @@ export function useAdminUser(id: string) {
     queryFn: async () => {
       const response = await apiClient.get(ENDPOINTS.ADMIN_USERS.BY_ID(id))
       const data = response.data.data || response.data
-      return data?.user || data?.item || data?.data || data
+      const user = data?.user || data?.item || data?.data || data
+      const engineerProfile = data?.engineerProfile || null
+      // Merge engineerProfile into the user object for easy access
+      return engineerProfile ? { ...user, engineerProfile } : user
     },
     enabled: !!id
+  })
+}
+
+export function useCreateProfessional() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (data: { name: string; email: string; password: string; phone?: string }) => {
+      const response = await apiClient.post(ENDPOINTS.ADMIN_USERS.BASE, {
+        ...data,
+        role: 'worker',
+      })
+      return response.data
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-users'] })
+      queryClient.invalidateQueries({ queryKey: ['admin-engineers'] })
+    }
   })
 }
 

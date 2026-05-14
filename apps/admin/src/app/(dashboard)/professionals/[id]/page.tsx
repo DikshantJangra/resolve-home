@@ -85,10 +85,10 @@ export default function ProfessionalDetailsPage() {
   }
 
   const stats = [
-    { title: "Total Earnings", value: `₦${(pro.earnings || 0).toLocaleString()}`, trend: pro.earningsTrend || "0%", icon: HiOutlineCurrencyDollar },
-    { title: "Jobs Done", value: pro.totalJobs || proBookings.length || 0, trend: pro.jobsTrend || "0%", icon: HiOutlineBriefcase },
-    { title: "Success Rate", value: `${pro.successRate || 100}%`, trend: pro.successTrend || "0%", icon: HiOutlineBadgeCheck },
-    { title: "Avg. Rating", value: pro.rating || "N/A", trend: pro.ratingTrend || "0%", icon: HiOutlineStar },
+    { title: "Total Earnings", value: `₦${(pro.engineerProfile?.totalEarnings || pro.earnings || 0).toLocaleString()}`, trend: "0%", icon: HiOutlineCurrencyDollar },
+    { title: "Jobs Done", value: pro.engineerProfile?.completedJobs ?? pro.engineerProfile?.totalBookings ?? proBookings.length ?? 0, trend: "0%", icon: HiOutlineBriefcase },
+    { title: "Success Rate", value: `${pro.engineerProfile?.successRate ?? 100}%`, trend: "0%", icon: HiOutlineBadgeCheck },
+    { title: "Avg. Rating", value: pro.engineerProfile?.rating || pro.rating || "N/A", trend: "0%", icon: HiOutlineStar },
   ]
 
   // Removed dummy booking history logic
@@ -257,10 +257,10 @@ export default function ProfessionalDetailsPage() {
               <h3 className="text-neutral-700 text-base font-semibold font-inter">Professional Info</h3>
               <div className="space-y-6">
                 <InfoRow label="Full Name" value={pro.name || pro.fullName || 'N/A'} />
-                <InfoRow label="Category" value={pro.category || pro.specialty || pro.primarySpecialty || 'N/A'} />
+                <InfoRow label="Category" value={pro.engineerProfile?.category || pro.engineerProfile?.primarySpecialty || 'N/A'} />
                 <InfoRow label="Phone Number" value={pro.phone || pro.phoneNumber || 'N/A'} />
                 <InfoRow label="Email Address" value={pro.email || 'N/A'} />
-                <InfoRow label="Experience" value={pro.experience || 'N/A'} />
+                <InfoRow label="Experience" value={pro.engineerProfile?.yearsOfExperience || 'N/A'} />
                 <InfoRow label="Joined Date" value={pro.createdAt ? new Date(pro.createdAt).toLocaleDateString() : 'N/A'} />
               </div>
             </div>
@@ -269,11 +269,11 @@ export default function ProfessionalDetailsPage() {
             <div className="p-6 bg-white rounded-xl border border-zinc-300 flex flex-col gap-6 shadow-sm h-fit">
               <h3 className="text-neutral-700 text-base font-semibold font-inter">Verification & Identity</h3>
               <div className="space-y-6">
-                <InfoRow label="BVN (Verified)" value={pro.bvn || pro.idNumber || '9876 5432 1098'} />
-                <InfoRow label="Work Address" value={pro.location || pro.address?.street || 'Lagos'} />
-                <InfoRow label="Account Name" value={pro.name || pro.fullName || 'Opeyemi Samuel'} />
-                <InfoRow label="Bank Name" value={pro.bankName || 'Zenith Bank'} />
-                <InfoRow label="Account Number" value={pro.accountNumber || '2109847251'} />
+                <InfoRow label={`${pro.engineerProfile?.idType || 'ID'} (${pro.engineerProfile?.idVerification?.status || 'Pending'})`} value={pro.engineerProfile?.idNumber || 'N/A'} />
+                <InfoRow label="Work Address" value={pro.engineerProfile?.location?.state || pro.engineerProfile?.location?.city || 'N/A'} />
+                <InfoRow label="Account Name" value={pro.engineerProfile?.bankDetails?.accountName || 'N/A'} />
+                <InfoRow label="Bank Name" value={pro.engineerProfile?.bankDetails?.bankName || 'N/A'} />
+                <InfoRow label="Account Number" value={pro.engineerProfile?.bankDetails?.accountNumber || 'N/A'} />
               </div>
             </div>
           </div>

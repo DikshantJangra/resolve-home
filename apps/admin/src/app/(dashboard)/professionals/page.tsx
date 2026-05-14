@@ -4,17 +4,15 @@ import React, { useState } from 'react'
 import Link from 'next/link'
 import {
   HiOutlineSearch,
-  HiOutlineFilter,
   HiOutlineTrendingUp,
   HiOutlineBriefcase,
   HiOutlineStar,
-  HiOutlineCurrencyDollar,
   HiOutlineUsers,
   HiOutlineBadgeCheck,
   HiOutlineChevronDown
 } from 'react-icons/hi'
 import { cn, Button, Skeleton, Input } from "@resolve/ui"
-import { useAdminUsers, useBanUser, useAdminStats, useCategories } from '@/hooks/api-hooks'
+import { useAdminUsers, useAdminStats, useCategories, useCreateProfessional } from '@/hooks/api-hooks'
 import { toast } from 'sonner'
 
 const StatCard = ({ title, value, trend, icon: Icon }: {
@@ -46,11 +44,30 @@ export default function ProfessionalsPage() {
   const [search, setSearch] = useState('')
   const [categoryFilter, setCategoryFilter] = useState('all')
   const [statusFilter, setStatusFilter] = useState('all')
+  const [showOnboardModal, setShowOnboardModal] = useState(false)
+  const [form, setForm] = useState({ name: '', email: '', phone: '', password: '' })
+  const [page, setPage] = useState(1)
+  const PAGE_SIZE = 10
 
-  const { data: users, isLoading: usersLoading, error } = useAdminUsers()
+  const { data: users, isLoading: usersLoading } = useAdminUsers()
   const { data: statsData, isLoading: statsLoading } = useAdminStats()
   const { data: categories } = useCategories()
-  const { mutate: banUser, isPending: isBanning } = useBanUser()
+  const { mutate: createProfessional, isPending: isCreating } = useCreateProfessional()
+
+  // Build a map of category id -> name for lookup
+  const categoryMap = React.useMemo(() => {
+    const map: Record<string, string> = {}
+      ; (categories || []).forEach((cat: any) => {
+        if (cat.id) map[cat.id] = cat.name
+        if (cat._id) map[cat._id] = cat.name
+      })
+    return map
+  }, [categories])
+
+  const getCategoryName = (pro: any) => {
+    const ep = pro.engineerProfile
+    return ep?.categoryName || categoryMap[ep?.category] || ep?.category || ep?.primarySpecialty || pro.category || pro.primarySpecialty || 'N/A'
+  }
 
   const professionals = (users || [])
     .filter((u: { role?: string }) =>
@@ -58,21 +75,27 @@ export default function ProfessionalsPage() {
     )
     .filter((u: any) => {
       // Search logic
-      const searchStr = `${u.name || u.fullName} ${u.email} ${u.category || u.primarySpecialty}`.toLowerCase()
+      const catName = getCategoryName(u).toLowerCase()
+      const searchStr = `${u.name || u.fullName} ${u.email} ${catName}`.toLowerCase()
       const matchesSearch = searchStr.includes(search.toLowerCase())
 
       // Category logic
-      const matchesCategory = categoryFilter === 'all' ||
-        (u.category?.toLowerCase() === categoryFilter.toLowerCase()) ||
-        (u.primarySpecialty?.toLowerCase() === categoryFilter.toLowerCase())
+      const matchesCategory = categoryFilter === 'all' || catName === categoryFilter.toLowerCase()
 
       // Status logic
+      const ep = u.engineerProfile || u
       const matchesStatus = statusFilter === 'all' ||
-        (statusFilter === 'active' && !u.isBanned) ||
-        (statusFilter === 'suspended' && u.isBanned)
+        (statusFilter === 'suspended' && u.isBanned) ||
+        (statusFilter === 'active' && !u.isBanned && (ep.verificationStatus === 'approved' || ep.isVerified || ep.approvedAt)) ||
+        (statusFilter === 'pending' && !u.isBanned && ep.verificationStatus !== 'approved' && !ep.isVerified && !ep.approvedAt && ep.verificationStatus !== 'rejected') ||
+        (statusFilter === 'rejected' && !u.isBanned && ep.verificationStatus === 'rejected')
 
       return matchesSearch && matchesCategory && matchesStatus
     })
+
+  // Pagination
+  const totalPages = Math.ceil(professionals.length / PAGE_SIZE)
+  const paginatedPros = professionals.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
 
   const stats = {
     total: (statsData as any)?.totalEngineers || professionals.length,
@@ -81,13 +104,21 @@ export default function ProfessionalsPage() {
     jobsDone: (statsData as any)?.jobsDone || professionals.reduce((acc: number, u: any) => acc + (u.totalJobs || 0), 0)
   }
 
-  const handleToggleBan = (userId: string, isBanned: boolean) => {
-    const action = isBanned ? 'unban' : 'ban'
-    if (confirm(`Are you sure you want to ${action} this professional?`)) {
-      banUser(userId, {
-        onSuccess: () => toast.success(`Professional ${action}ned successfully`)
-      })
+  const handleOnboard = () => {
+    if (!form.name || !form.email || !form.password) {
+      toast.error('Name, email and password are required')
+      return
     }
+    createProfessional(form, {
+      onSuccess: () => {
+        toast.success('Professional onboarded successfully')
+        setShowOnboardModal(false)
+        setForm({ name: '', email: '', phone: '', password: '' })
+      },
+      onError: (err: any) => {
+        toast.error(err?.response?.data?.error || 'Failed to onboard professional')
+      }
+    })
   }
 
   if (usersLoading || statsLoading) {
@@ -116,7 +147,9 @@ export default function ProfessionalsPage() {
               Onboard, verify, and monitor field service experts.
             </p>
           </div>
-          <Button className="bg-blue-700 hover:bg-blue-800 text-white px-8 py-3 rounded-xl h-auto font-medium text-sm transition-all shadow-sm">
+          <Button
+            onClick={() => setShowOnboardModal(true)}
+            className="bg-blue-700 hover:bg-blue-800 text-white px-8 py-3 rounded-xl h-auto font-medium text-sm transition-all shadow-sm">
             Onboard Pro
           </Button>
         </div>
@@ -136,7 +169,7 @@ export default function ProfessionalsPage() {
           <Input
             placeholder="Search professionals by name, email or specialty..."
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e) => { setSearch(e.target.value); setPage(1) }}
             className="w-full pl-11 h-12 bg-white"
           />
           <HiOutlineSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400 w-5 h-5" />
@@ -146,7 +179,7 @@ export default function ProfessionalsPage() {
           <div className="relative w-full md:w-48">
             <select
               value={categoryFilter}
-              onChange={(e) => setCategoryFilter(e.target.value)}
+              onChange={(e) => { setCategoryFilter(e.target.value); setPage(1) }}
               className="w-full h-12 pl-4 pr-10 rounded-xl border border-zinc-300 bg-white text-sm text-zinc-700 outline-none focus:ring-2 focus:ring-blue-500/10 focus:border-blue-500 transition-all appearance-none cursor-pointer"
             >
               <option value="all">All Specialties</option>
@@ -160,12 +193,14 @@ export default function ProfessionalsPage() {
           <div className="relative w-full md:w-40">
             <select
               value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
+              onChange={(e) => { setStatusFilter(e.target.value); setPage(1) }}
               className="w-full h-12 pl-4 pr-10 rounded-xl border border-zinc-300 bg-white text-sm text-zinc-700 outline-none focus:ring-2 focus:ring-blue-500/10 focus:border-blue-500 transition-all appearance-none cursor-pointer"
             >
               <option value="all">All Status</option>
-              <option value="active">Active Only</option>
-              <option value="suspended">Suspended Only</option>
+              <option value="active">Active</option>
+              <option value="pending">Pending</option>
+              <option value="rejected">Rejected</option>
+              <option value="suspended">Suspended</option>
             </select>
             <HiOutlineChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 w-4 h-4 pointer-events-none" />
           </div>
@@ -179,14 +214,14 @@ export default function ProfessionalsPage() {
             <thead>
               <tr className="bg-stone-50 border-b border-zinc-300">
                 <th className="px-6 py-4 text-sm font-semibold text-neutral-700 uppercase tracking-tight">NAME</th>
-                <th className="px-6 py-4 text-sm font-semibold text-neutral-700 uppercase tracking-tight">EXPERTISE</th>
+                <th className="px-6 py-4 text-sm font-semibold text-neutral-700 uppercase tracking-tight">CATEGORY</th>
                 <th className="px-6 py-4 text-sm font-semibold text-neutral-700 uppercase tracking-tight">RATING</th>
                 <th className="px-6 py-4 text-sm font-semibold text-neutral-700 uppercase tracking-tight">EARNINGS</th>
                 <th className="px-6 py-4 text-sm font-semibold text-neutral-700 uppercase tracking-tight">STATUS</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-zinc-200">
-              {professionals.length > 0 ? professionals.map((pro: any) => (
+              {paginatedPros.length > 0 ? paginatedPros.map((pro: any) => (
                 <tr
                   key={pro.id || pro._id}
                   className="hover:bg-zinc-50/50 transition-colors cursor-pointer group"
@@ -211,7 +246,7 @@ export default function ProfessionalsPage() {
                   </td>
                   <td className="px-6 py-5">
                     <Link href={`/professionals/${pro.id || pro._id}`} className="block">
-                      <span className="text-sm text-zinc-600 font-medium">{pro.category || pro.primarySpecialty || pro.specialty || 'General'}</span>
+                      <span className="text-sm text-zinc-600 font-medium">{getCategoryName(pro)}</span>
                     </Link>
                   </td>
                   <td className="px-6 py-5">
@@ -259,6 +294,116 @@ export default function ProfessionalsPage() {
           </table>
         </div>
       </div>
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between px-2">
+          <p className="text-sm text-zinc-500">
+            Showing {((page - 1) * PAGE_SIZE) + 1}–{Math.min(page * PAGE_SIZE, professionals.length)} of {professionals.length} professionals
+          </p>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setPage(p => Math.max(1, p - 1))}
+              disabled={page === 1}
+              className="px-3 py-1.5 text-sm border border-zinc-200 rounded-lg text-zinc-600 hover:bg-zinc-50 disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              Previous
+            </button>
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map(p => (
+              <button
+                key={p}
+                onClick={() => setPage(p)}
+                className={cn(
+                  "w-8 h-8 text-sm rounded-lg font-medium",
+                  p === page ? "bg-blue-700 text-white" : "border border-zinc-200 text-zinc-600 hover:bg-zinc-50"
+                )}
+              >
+                {p}
+              </button>
+            ))}
+            <button
+              onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+              disabled={page === totalPages}
+              className="px-3 py-1.5 text-sm border border-zinc-200 rounded-lg text-zinc-600 hover:bg-zinc-50 disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              Next
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Onboard Pro Modal */}
+      {showOnboardModal && (
+        <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl p-6 max-w-md w-full shadow-xl">
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-lg font-bold text-neutral-700">Onboard Professional</h3>
+              <button onClick={() => setShowOnboardModal(false)} className="p-1 hover:bg-zinc-100 rounded-lg text-zinc-400">
+                ✕
+              </button>
+            </div>
+
+            <div className="flex flex-col gap-4">
+              <div>
+                <label className="text-xs font-semibold text-zinc-500 uppercase tracking-wide mb-1.5 block">Full Name *</label>
+                <input
+                  type="text"
+                  placeholder="e.g. John Doe"
+                  value={form.name}
+                  onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
+                  className="w-full h-11 px-4 border border-zinc-200 rounded-xl text-sm outline-none focus:border-blue-600 transition-colors"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-zinc-500 uppercase tracking-wide mb-1.5 block">Email Address *</label>
+                <input
+                  type="email"
+                  placeholder="e.g. john@example.com"
+                  value={form.email}
+                  onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
+                  className="w-full h-11 px-4 border border-zinc-200 rounded-xl text-sm outline-none focus:border-blue-600 transition-colors"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-zinc-500 uppercase tracking-wide mb-1.5 block">Phone Number</label>
+                <input
+                  type="tel"
+                  placeholder="e.g. +2348012345678"
+                  value={form.phone}
+                  onChange={e => setForm(f => ({ ...f, phone: e.target.value }))}
+                  className="w-full h-11 px-4 border border-zinc-200 rounded-xl text-sm outline-none focus:border-blue-600 transition-colors"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-zinc-500 uppercase tracking-wide mb-1.5 block">Password *</label>
+                <input
+                  type="password"
+                  placeholder="Minimum 8 characters"
+                  value={form.password}
+                  onChange={e => setForm(f => ({ ...f, password: e.target.value }))}
+                  className="w-full h-11 px-4 border border-zinc-200 rounded-xl text-sm outline-none focus:border-blue-600 transition-colors"
+                />
+              </div>
+            </div>
+
+            <div className="flex gap-3 mt-6">
+              <button
+                onClick={() => setShowOnboardModal(false)}
+                className="flex-1 py-2.5 border border-zinc-200 rounded-xl text-sm font-medium text-zinc-600 hover:bg-zinc-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleOnboard}
+                disabled={isCreating}
+                className="flex-1 py-2.5 bg-blue-700 rounded-xl text-sm font-medium text-white hover:bg-blue-800 disabled:opacity-60"
+              >
+                {isCreating ? 'Creating...' : 'Onboard Pro'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
