@@ -3,20 +3,20 @@
 import React from 'react'
 import { useProfessionalSetupStore } from '@/store/professional-setup-store'
 import { Button, Input, Label } from "@resolve/ui"
-import { 
-  HiOutlineChevronLeft, 
-  HiOutlineCheckCircle, 
-  HiOutlinePlus, 
-  HiOutlineTrash, 
+import {
+  HiOutlineChevronLeft,
+  HiOutlineCheckCircle,
+  HiOutlinePlus,
+  HiOutlineTrash,
   HiOutlineDocumentText,
   HiOutlineMail,
   HiOutlinePencilAlt,
   HiOutlineRefresh,
   HiOutlineClock
 } from 'react-icons/hi'
-import { 
-  useCategories, 
-  useUpdateEngineerProfile, 
+import {
+  useCategories,
+  useUpdateEngineerProfile,
   useNigerianBanks,
   useResendGuarantorVerification,
   useUpdateGuarantor,
@@ -45,9 +45,15 @@ export const ProfessionalSetupWizard = ({ onComplete, initialStep }: { onComplet
   const { data: userProfile } = useUserProfile()
 
   const isGuarantorVerified = !!(
-    userProfile?.engineerProfile?.guarantorVerification?.verified || 
+    userProfile?.engineerProfile?.guarantorVerification?.verified ||
     userProfile?.engineerProfile?.isGuarantorVerified ||
     userProfile?.isGuarantorVerified
+  )
+
+  const isAccountVerified = !!(
+    userProfile?.engineerProfile?.isVerified ||
+    userProfile?.engineerProfile?.verificationStatus === 'approved' ||
+    userProfile?.engineerProfile?.approvedAt
   )
 
   const handleResendVerification = () => {
@@ -368,9 +374,9 @@ export const ProfessionalSetupWizard = ({ onComplete, initialStep }: { onComplet
                     <div className="flex items-center gap-4 p-4 rounded-xl border border-zinc-200 bg-zinc-50/50">
                       <div className="w-12 h-12 rounded-lg bg-white border border-zinc-200 flex items-center justify-center overflow-hidden shrink-0">
                         {store.idPhoto.match(/\.(jpg|jpeg|png|webp|gif|avif)(\?.*)?$/i) ? (
-                          <img 
-                            src={store.idPhoto} 
-                            alt="ID Document" 
+                          <img
+                            src={store.idPhoto}
+                            alt="ID Document"
                             className="w-full h-full object-cover"
                             onError={(e) => {
                               // If image fails to load, fallback to icon
@@ -662,17 +668,17 @@ export const ProfessionalSetupWizard = ({ onComplete, initialStep }: { onComplet
                     )}
                   </div>
                 </div>
-                
+
                 {isEditingEmail ? (
                   <div className="flex items-center gap-2">
-                    <button 
+                    <button
                       onClick={() => setIsEditingEmail(false)}
                       className="text-xs font-medium text-zinc-400 hover:text-zinc-600"
                     >
                       Cancel
                     </button>
-                    <Button 
-                      size="sm" 
+                    <Button
+                      size="sm"
                       className="h-8 px-3 text-xs"
                       onClick={handleUpdateGuarantorEmail}
                       disabled={isUpdatingGuarantor}
@@ -681,7 +687,7 @@ export const ProfessionalSetupWizard = ({ onComplete, initialStep }: { onComplet
                     </Button>
                   </div>
                 ) : !isGuarantorVerified && (
-                  <button 
+                  <button
                     onClick={() => {
                       setTempEmail(store.guarantorEmail)
                       setIsEditingEmail(true)
@@ -709,8 +715,8 @@ export const ProfessionalSetupWizard = ({ onComplete, initialStep }: { onComplet
                     <p className="text-xs text-zinc-400 text-left leading-relaxed">
                       The guarantor has been contacted but yet to be verified. You can resend the verification email if they haven't received it.
                     </p>
-                    <Button 
-                      variant="outline" 
+                    <Button
+                      variant="outline"
                       className="w-full h-11 border-zinc-200 hover:border-blue-700 hover:text-blue-700 text-zinc-600 flex items-center justify-center gap-2 font-semibold"
                       onClick={handleResendVerification}
                       disabled={isResending}
@@ -750,7 +756,27 @@ export const ProfessionalSetupWizard = ({ onComplete, initialStep }: { onComplet
   if (store.currentStep === 4) {
     return (
       <div className="w-full max-w-2xl mx-auto bg-white p-4 sm:p-8 rounded-2xl shadow-sm border border-zinc-200 mt-10">
-        {renderStep()}
+        {isAccountVerified ? (
+          <div className="flex flex-col items-center justify-center text-center py-6 space-y-6">
+            <div className="w-20 h-20 bg-green-50 border-2 border-green-100 rounded-2xl flex items-center justify-center shadow-sm">
+              <HiOutlineCheckCircle className="w-10 h-10 text-green-600" />
+            </div>
+            <div className="space-y-2">
+              <h2 className="text-2xl font-bold text-neutral-700 leading-tight">Account Verified!</h2>
+              <p className="text-zinc-500 text-sm max-w-sm">
+                Your professional account has been verified and activated. You are now visible on the marketplace and can start receiving jobs.
+              </p>
+            </div>
+            <div className="w-full py-3.5 px-6 bg-green-50 rounded-xl border border-green-100 flex items-center justify-center">
+              <p className="text-green-700 font-semibold text-xs flex items-center gap-2">
+                <HiOutlineCheckCircle className="w-4 h-4" />
+                Your account is active and ready
+              </p>
+            </div>
+          </div>
+        ) : (
+          renderStep()
+        )}
       </div>
     )
   }
