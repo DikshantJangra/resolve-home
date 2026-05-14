@@ -120,7 +120,7 @@ export default function BookingsPage() {
         </div>
 
         {/* List of Cards */}
-        <div className="flex flex-wrap gap-5">
+        <div className="flex flex-wrap justify-center gap-5">
           {filteredBookings.length > 0 ? (
             filteredBookings.map((booking: any) => (
               <BookingRequestCard 

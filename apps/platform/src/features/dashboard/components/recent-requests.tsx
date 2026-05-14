@@ -28,7 +28,7 @@ export const RecentRequests = () => {
     <div className="w-full p-5 bg-stone-50 rounded-xl flex flex-col gap-4 overflow-hidden border border-zinc-200">
       <h3 className="text-slate-900 text-sm font-semibold font-['Inter'] leading-5">Recent Request</h3>
       
-      <div className="self-stretch inline-flex justify-start items-center gap-5 flex-wrap content-center">
+      <div className="self-stretch inline-flex justify-center items-center gap-5 flex-wrap content-center">
         {requests?.length === 0 && (
           <div className="w-full p-8 text-center text-zinc-500 bg-white rounded-2xl border border-dashed border-zinc-200">
             No recent requests found.
