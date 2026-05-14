@@ -1,8 +1,8 @@
 'use client'
 
 import React, { useState } from 'react'
-import Link from 'next/link'
 import { HiOutlineSearch, HiOutlinePlus } from 'react-icons/hi'
+import { useBookingStore } from '@/store/booking-store'
 import { Input } from "@resolve/ui"
 import { cn } from "@resolve/ui"
 import { BookingRequestCard } from '@/features/dashboard/components/booking-request-card'
@@ -18,8 +18,9 @@ const tabs: { label: string; value: string }[] = [
 ]
 
 function BookNewCard() {
+  const setIsOpen = useBookingStore((s) => s.setIsOpen)
   return (
-    <Link href="/?book=true" className="block group">
+    <button onClick={() => setIsOpen(true)} className="block group w-full text-left">
       <div className="h-full min-h-50 p-3 bg-white rounded-2xl border-2 border-dashed border-zinc-200 flex flex-col items-center justify-center gap-3 transition-all hover:border-blue-300 hover:bg-blue-50/30 cursor-pointer">
         <div className="w-12 h-12 rounded-2xl bg-blue-50 flex items-center justify-center group-hover:bg-blue-100 transition-colors">
           <HiOutlinePlus className="w-6 h-6 text-blue-700" />
@@ -29,7 +30,7 @@ function BookNewCard() {
           <span className="text-zinc-400 text-xs font-normal font-inter">Find and hire a verified professional</span>
         </div>
       </div>
-    </Link>
+    </button>
   )
 }
 
