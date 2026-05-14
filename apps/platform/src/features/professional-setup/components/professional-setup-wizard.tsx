@@ -19,7 +19,8 @@ import {
   useUpdateEngineerProfile, 
   useNigerianBanks,
   useResendGuarantorVerification,
-  useUpdateGuarantor
+  useUpdateGuarantor,
+  useUserProfile
 } from '@/hooks/api-hooks'
 import { toast } from 'sonner'
 import { cn } from "@resolve/ui"
@@ -40,6 +41,13 @@ export const ProfessionalSetupWizard = ({ onComplete, initialStep }: { onComplet
 
   const { mutate: resendVerification, isPending: isResending } = useResendGuarantorVerification()
   const { mutate: updateGuarantor, isPending: isUpdatingGuarantor } = useUpdateGuarantor()
+  const { data: userProfile } = useUserProfile()
+
+  const isGuarantorVerified = !!(
+    userProfile?.engineerProfile?.guarantorVerification?.verified || 
+    userProfile?.engineerProfile?.isGuarantorVerified ||
+    userProfile?.isGuarantorVerified
+  )
 
   const handleResendVerification = () => {
     resendVerification(undefined, {
@@ -667,7 +675,7 @@ export const ProfessionalSetupWizard = ({ onComplete, initialStep }: { onComplet
                       {isUpdatingGuarantor ? 'Saving...' : 'Save'}
                     </Button>
                   </div>
-                ) : (
+                ) : !isGuarantorVerified && (
                   <button 
                     onClick={() => {
                       setTempEmail(store.guarantorEmail)
@@ -681,18 +689,32 @@ export const ProfessionalSetupWizard = ({ onComplete, initialStep }: { onComplet
               </div>
 
               <div className="flex flex-col gap-3">
-                <p className="text-xs text-zinc-400 text-left leading-relaxed">
-                  The guarantor has been contacted but yet to be verified. You can resend the verification email if they haven't received it.
-                </p>
-                <Button 
-                  variant="outline" 
-                  className="w-full h-11 border-zinc-200 hover:border-blue-700 hover:text-blue-700 text-zinc-600 flex items-center justify-center gap-2 font-semibold"
-                  onClick={handleResendVerification}
-                  disabled={isResending}
-                >
-                  <HiOutlineRefresh className={cn("w-4 h-4", isResending && "animate-spin")} />
-                  {isResending ? 'Resending...' : 'Resend Verification Email'}
-                </Button>
+                {isGuarantorVerified ? (
+                  <div className="flex items-center gap-3 p-3 bg-green-50 rounded-xl border border-green-100">
+                    <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center text-green-600">
+                      <HiOutlineCheckCircle className="w-5 h-5" />
+                    </div>
+                    <div className="text-left">
+                      <p className="text-sm font-bold text-green-700 leading-tight">Verified</p>
+                      <p className="text-[10px] text-green-600">Your guarantor has successfully verified your profile.</p>
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    <p className="text-xs text-zinc-400 text-left leading-relaxed">
+                      The guarantor has been contacted but yet to be verified. You can resend the verification email if they haven't received it.
+                    </p>
+                    <Button 
+                      variant="outline" 
+                      className="w-full h-11 border-zinc-200 hover:border-blue-700 hover:text-blue-700 text-zinc-600 flex items-center justify-center gap-2 font-semibold"
+                      onClick={handleResendVerification}
+                      disabled={isResending}
+                    >
+                      <HiOutlineRefresh className={cn("w-4 h-4", isResending && "animate-spin")} />
+                      {isResending ? 'Resending...' : 'Resend Verification Email'}
+                    </Button>
+                  </>
+                )}
               </div>
             </div>
 
