@@ -31,12 +31,6 @@ const StatCard = ({ title, value, trend, icon: Icon }: {
         <Icon size={24} />
       </div>
     </div>
-    {trend && (
-      <div className="flex items-center gap-1">
-        <HiOutlineTrendingUp className="text-green-400 w-5 h-5" />
-        <span className="text-green-700 text-xs font-medium font-inter leading-4">{trend}</span>
-      </div>
-    )}
   </div>
 )
 
@@ -123,15 +117,70 @@ export default function ProfessionalsPage() {
 
   if (usersLoading || statsLoading) {
     return (
-      <div className="p-4 sm:p-8 flex flex-col gap-8 max-w-[1240px] mx-auto animate-pulse">
-        <div className="flex justify-between">
-          <Skeleton className="h-10 w-64" />
-          <Skeleton className="h-12 w-48 rounded-xl" />
+      <div className="p-4 sm:p-8 flex flex-col gap-8 max-w-[1400px] mx-auto">
+        {/* Header skeleton */}
+        <div className="flex flex-col gap-6">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div className="flex flex-col gap-2">
+              <Skeleton className="h-7 w-52 rounded-lg" />
+              <Skeleton className="h-5 w-80 rounded-lg" />
+            </div>
+            <Skeleton className="h-12 w-36 rounded-xl" />
+          </div>
+
+          {/* Stat cards skeleton */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+            {[1, 2, 3, 4].map(i => (
+              <div key={i} className="p-4 rounded-xl border border-zinc-200 bg-white flex flex-col gap-3">
+                <div className="flex justify-between items-start">
+                  <div className="flex flex-col gap-2">
+                    <Skeleton className="h-4 w-28 rounded" />
+                    <Skeleton className="h-8 w-16 rounded" />
+                  </div>
+                  <Skeleton className="h-6 w-6 rounded" />
+                </div>
+                <Skeleton className="h-4 w-20 rounded" />
+              </div>
+            ))}
+          </div>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
-          {[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-28 rounded-xl" />)}
+
+        {/* Filter bar skeleton */}
+        <div className="bg-stone-50 p-4 rounded-2xl border border-zinc-200 flex flex-col md:flex-row items-center gap-4">
+          <Skeleton className="h-12 flex-1 w-full rounded-xl" />
+          <Skeleton className="h-12 w-full md:w-48 rounded-xl" />
+          <Skeleton className="h-12 w-full md:w-40 rounded-xl" />
         </div>
-        <Skeleton className="h-[400px] w-full rounded-2xl" />
+
+        {/* Table skeleton */}
+        <div className="bg-white rounded-xl border border-zinc-300 overflow-hidden">
+          {/* Table header */}
+          <div className="bg-stone-50 border-b border-zinc-300 px-6 py-4 grid grid-cols-5 gap-4">
+            {['NAME', 'CATEGORY', 'RATING', 'EARNINGS', 'STATUS'].map(col => (
+              <Skeleton key={col} className="h-4 w-20 rounded" />
+            ))}
+          </div>
+          {/* Table rows */}
+          {[1, 2, 3, 4, 5, 6, 7, 8].map(i => (
+            <div key={i} className="px-6 py-5 border-b border-zinc-100 grid grid-cols-5 gap-4 items-center">
+              {/* Name cell */}
+              <div className="flex items-center gap-3">
+                <Skeleton className="w-12 h-12 rounded-full shrink-0" />
+                <div className="flex flex-col gap-1.5">
+                  <Skeleton className="h-4 w-28 rounded" />
+                  <Skeleton className="h-3 w-36 rounded" />
+                </div>
+              </div>
+              <Skeleton className="h-4 w-24 rounded" />
+              <Skeleton className="h-7 w-16 rounded-full" />
+              <Skeleton className="h-4 w-16 rounded" />
+              <div className="flex items-center gap-2">
+                <Skeleton className="w-2.5 h-2.5 rounded-full" />
+                <Skeleton className="h-4 w-14 rounded" />
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     )
   }

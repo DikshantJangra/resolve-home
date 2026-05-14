@@ -7,7 +7,7 @@ import { HiOutlineUser, HiOutlineShieldCheck, HiOutlineSupport, HiOutlineCheckCi
 import { HiStar } from 'react-icons/hi2'
 import { FigmaImage } from "@resolve/ui"
 import { cn } from "@resolve/ui"
-import { useAuthSession, useSubscribe } from '@/hooks/api-hooks'
+import { useAuthSession } from '@/hooks/api-hooks'
 import { toast } from 'sonner'
 import { useRouter } from 'next/navigation'
 
@@ -71,26 +71,19 @@ export const Membership = () => {
   const handleSubscribe = async (planId: string) => {
     if (!session) {
       toast.info('Please login to subscribe')
-      router.push(`/login?redirect=/&plan=${planId}`)
+      router.push(`/login?callbackUrl=/subscriptions&plan=${planId}`)
       return
     }
 
-    try {
-      const data = await subscribe.mutateAsync(planId as any)
-      if (data?.authorizationUrl) {
-        window.location.href = data.authorizationUrl
-      } else {
-        toast.error('Failed to initialize payment')
-      }
-    } catch {
-    }
+    // User is logged in — go to subscriptions page with plan pre-selected
+    router.push(`/subscriptions?plan=${planId}`)
   }
 
   return (
     <section id="membership" className="bg-white py-20 overflow-hidden">
       <div className="mx-auto max-w-[1440px] px-8 lg:px-16">
         {/* Header Section */}
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
@@ -116,7 +109,7 @@ export const Membership = () => {
                 '/assets/workers/kunle.png',
                 '/assets/workers/tunde.png'
               ].map((src, idx) => (
-                <FigmaImage 
+                <FigmaImage
                   key={idx}
                   src={src}
                   alt="Happy User"
@@ -140,7 +133,7 @@ export const Membership = () => {
         </motion.div>
 
         {/* Pricing Cards */}
-        <motion.div 
+        <motion.div
           initial="hidden"
           whileInView="show"
           viewport={{ once: true, margin: "-100px" }}
@@ -156,7 +149,7 @@ export const Membership = () => {
           className="mt-14 grid grid-cols-1 md:grid-cols-3 gap-5"
         >
           {plans.map((plan) => (
-            <motion.div 
+            <motion.div
               key={plan.name}
               variants={{
                 hidden: { opacity: 0, y: 30 },
@@ -164,7 +157,7 @@ export const Membership = () => {
               }}
               className={cn(
                 "relative flex flex-col p-8 rounded-xl border transition-all duration-300 hover:shadow-xl",
-                plan.dark 
+                plan.dark
                   ? "bg-[radial-gradient(ellipse_115.97%_115.97%_at_82.00%_18.00%,_#4A2208_0%,_#1E1220_45%,_#111318_100%)] border-transparent"
                   : "bg-stone-50 border-zinc-300"
               )}
@@ -202,13 +195,13 @@ export const Membership = () => {
               </div>
 
               <div className="w-full mb-8">
-                <button 
+                <button
                   onClick={() => handleSubscribe(plan.id)}
                   disabled={subscribe.isPending}
                   className={cn(
                     "w-full py-3 px-6 rounded-xl text-sm font-medium transition-colors disabled:opacity-50",
-                    plan.dark 
-                      ? "bg-slate-50 text-blue-700 hover:bg-white" 
+                    plan.dark
+                      ? "bg-slate-50 text-blue-700 hover:bg-white"
                       : "bg-transparent border border-blue-700 text-blue-700 hover:bg-blue-50"
                   )}
                 >
@@ -218,8 +211,8 @@ export const Membership = () => {
 
               <div className="flex flex-col gap-px">
                 {plan.features.map((feature, idx) => (
-                  <div 
-                    key={idx} 
+                  <div
+                    key={idx}
                     className={cn(
                       "flex items-center gap-2 py-3 border-b border-zinc-300 last:border-0",
                       plan.dark ? "border-zinc-300/20" : "border-zinc-300"
@@ -229,7 +222,7 @@ export const Membership = () => {
                       "w-4 h-4 rounded-sm flex items-center justify-center shrink-0 border",
                       plan.dark ? "border-orange-600" : "border-emerald-800"
                     )}>
-                       <HiOutlineCheckCircle className={cn("w-3 h-3", plan.dark ? "text-orange-600" : "text-emerald-800")} />
+                      <HiOutlineCheckCircle className={cn("w-3 h-3", plan.dark ? "text-orange-600" : "text-emerald-800")} />
                     </div>
                     <span className={cn("text-sm font-normal leading-5", plan.dark ? "text-neutral-50" : "text-neutral-700")}>
                       {feature}

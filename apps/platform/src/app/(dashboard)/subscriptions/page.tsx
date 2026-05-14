@@ -1,6 +1,7 @@
 'use client'
 
 import React from 'react'
+import { useSearchParams } from 'next/navigation'
 import { useMySubscription, useSubscriptionHistory, useVerifySubscription, useCancelSubscription, useSubscribe } from '@/hooks/api-hooks'
 import { cn, Button, Skeleton } from "@resolve/ui"
 import { HiOutlineBadgeCheck, HiOutlineClock, HiOutlineCalendar, HiOutlineCreditCard, HiOutlineRefresh, HiOutlineShieldCheck } from 'react-icons/hi'
@@ -9,42 +10,51 @@ import { toast } from 'sonner'
 import { useQueryClient } from '@tanstack/react-query'
 
 export default function SubscriptionsPage() {
+  const searchParams = useSearchParams()
+  const reference = searchParams.get('reference') || ''
+
   const { data: subscription, isLoading: subLoading } = useMySubscription()
   const { data: history, isLoading: historyLoading } = useSubscriptionHistory()
+  const { data: verificationResult, isLoading: isVerifying } = useVerifySubscription(reference)
   const subscribeMutation = useSubscribe()
   const cancelMutation = useCancelSubscription()
   const queryClient = useQueryClient()
-
-  // Auto-subscribe logic if plan is in URL
-  React.useEffect(() => {
-    const planId = searchParams?.get('plan')
-    if (planId && !subscription && !subLoading && !subscribeMutation.isPending) {
-      toast.info(`Initializing ${planId} subscription...`)
-      subscribeMutation.mutate(planId as any, {
-        onSuccess: (data) => {
-          if (data?.authorizationUrl) {
-            window.location.href = data.authorizationUrl
-          }
-        },
-      })
-    }
-  }, [subscription, subLoading])
-
-  // Payment Verification Logic (Inline)
-  const searchParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null
-  const reference = searchParams?.get('reference')
-  const { data: verificationResult, isLoading: isVerifying } = useVerifySubscription(reference || '')
   const [hasShownSuccess, setHasShownSuccess] = React.useState(false)
+  const [mounted, setMounted] = React.useState(false)
+  const [isProcessingPlan, setIsProcessingPlan] = React.useState(false)
+  React.useEffect(() => { setMounted(true) }, [])
 
+  // Auto-subscribe if plan is in URL
+  React.useEffect(() => {
+    const planId = searchParams.get('plan') as 'basic' | 'standard' | 'premium' | null
+    if (!mounted || !planId || subscription || subLoading || subscribeMutation.isPending || isProcessingPlan) return
+
+    setIsProcessingPlan(true)
+    toast.info(`Initializing ${planId} plan...`)
+    subscribeMutation.mutate(planId, {
+      onSuccess: (data: any) => {
+        if (data?.authorizationUrl) {
+          window.location.href = data.authorizationUrl
+        } else {
+          toast.error('Failed to initialize payment')
+          setIsProcessingPlan(false)
+        }
+      },
+      onError: (err: any) => {
+        toast.error(err?.message || 'Failed to initialize payment')
+        setIsProcessingPlan(false)
+      }
+    })
+  }, [mounted, subLoading])
+
+  // Handle payment verification result
   React.useEffect(() => {
     if (verificationResult?.success && !hasShownSuccess) {
       toast.success('Subscription Activated!', {
         description: `Your ${verificationResult.planName || 'plan'} is now active. Welcome aboard!`
       })
       setHasShownSuccess(true)
-      // Clean up URL
       window.history.replaceState({}, '', window.location.pathname)
-      // Refresh data
       queryClient.invalidateQueries({ queryKey: ['my-subscription'] })
       queryClient.invalidateQueries({ queryKey: ['subscription-history'] })
     }
@@ -61,12 +71,18 @@ export default function SubscriptionsPage() {
     }
   }
 
-  if (subLoading || isVerifying) {
+  if (!mounted || subLoading || isVerifying) {
     return (
-      <div className="flex flex-col gap-8 max-w-4xl mx-auto p-6 animate-pulse">
-        <Skeleton className="h-10 w-48 rounded-lg" />
+      <div className="flex flex-col gap-8 max-w-4xl mx-auto p-6">
+        <div className="flex flex-col gap-2">
+          <Skeleton className="h-8 w-48 rounded-lg" />
+          <Skeleton className="h-5 w-72 rounded-lg" />
+        </div>
         <Skeleton className="h-64 w-full rounded-2xl" />
-        <Skeleton className="h-96 w-full rounded-2xl" />
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {[1, 2, 3].map(i => <Skeleton key={i} className="h-36 rounded-2xl" />)}
+        </div>
+        <Skeleton className="h-64 w-full rounded-2xl" />
       </div>
     )
   }
@@ -113,15 +129,15 @@ export default function SubscriptionsPage() {
               <span>Next billing date: <strong>{subscription.endDate ? format(new Date(subscription.endDate), 'MMMM dd, yyyy') : 'N/A'}</strong></span>
             </div>
             <div className="flex gap-3">
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 className="bg-white/10 border-white/20 text-white hover:bg-white/20"
                 onClick={() => toast.info('Plan upgrade feature coming soon!')}
               >
                 Change Plan
               </Button>
               {subscription.status === 'active' && (
-                <Button 
+                <Button
                   variant="outline"
                   className="bg-red-500/10 border-red-500/20 text-red-400 hover:bg-red-500/20"
                   onClick={handleCancel}
@@ -132,8 +148,7 @@ export default function SubscriptionsPage() {
               )}
             </div>
           </div>
-          
-          {/* Decorative background circle */}
+
           <div className="absolute -right-20 -top-20 w-64 h-64 bg-orange-500/10 rounded-full blur-3xl pointer-events-none" />
         </div>
       ) : (
@@ -145,7 +160,7 @@ export default function SubscriptionsPage() {
             <h3 className="text-lg font-bold text-neutral-700">No Active Subscription</h3>
             <p className="text-zinc-500 text-sm max-w-xs">Subscribe to a plan to enjoy priority service, reduced fees and 24/7 coverage.</p>
           </div>
-          <Button 
+          <Button
             className="mt-2 bg-blue-700 hover:bg-blue-800 text-white px-8 rounded-xl"
             onClick={() => window.location.href = '/#membership'}
           >

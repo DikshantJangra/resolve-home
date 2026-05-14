@@ -10,7 +10,7 @@ export function useAuthSession() {
       try {
         const response = await apiClient.get(ENDPOINTS.AUTH.GET_SESSION)
         const data = response.data.data
-        
+
         // If we got a session but don't have the token in localStorage, sync it
         // Note: The backend might not return the token in get-session, but Better Auth 
         // usually includes it in the user object or we can get it from the cookie if needed.
@@ -721,7 +721,7 @@ export function useMySubscription() {
     queryFn: async () => {
       const response = await apiClient.get(ENDPOINTS.SUBSCRIPTIONS.MY)
       const data = response.data.data || response.data
-      return data?.subscription || data || null
+      return data?.subscription ?? null
     },
     enabled: typeof window !== 'undefined' && !!localStorage.getItem('auth_token')
   })

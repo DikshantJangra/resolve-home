@@ -94,7 +94,12 @@ export function LoginForm() {
       }
 
       toast.success("Welcome back!")
-      router.push(callbackUrl)
+      const planId = searchParams.get("plan")
+      if (planId) {
+        router.push(`/subscriptions?plan=${planId}`)
+      } else {
+        router.push(callbackUrl)
+      }
     } catch (error: any) {
       const status = error?.response?.status
       const message = error?.response?.data?.error || error?.response?.data?.message
@@ -105,7 +110,7 @@ export function LoginForm() {
         if (token) {
           localStorage.setItem("auth_token", token)
         }
-        
+
         setLoginEmail(form.getValues("email"))
         setShowVerification(true)
         toast.error(message || "Please verify your email first.")
@@ -142,7 +147,7 @@ export function LoginForm() {
 
   if (showVerification) {
     return (
-      <AuthOtpVerification 
+      <AuthOtpVerification
         email={loginEmail}
         context="login"
         onVerifySuccess={() => {
@@ -205,8 +210,8 @@ export function LoginForm() {
               </button>
             </div>
             <div className="flex justify-end">
-              <Link 
-                href="/forgot-password" 
+              <Link
+                href="/forgot-password"
                 className="text-zinc-600 text-xs font-normal font-inter leading-4 hover:text-zinc-900 transition-colors"
               >
                 Forget Password?
