@@ -140,8 +140,8 @@ export const ENDPOINTS = {
     BASE:     '/api/admin/engineer-verifications',
     PENDING:  '/api/admin/engineer-verifications/pending',
     BY_ID:    (id: string) => `/api/admin/engineer-verifications/${id}`,
-    APPROVE:  (id: string) => `/api/admin/engineer-verifications/${id}/approve`,
-    REJECT:   (id: string) => `/api/admin/engineer-verifications/${id}/reject`,
+    APPROVE:  (id: string) => `/api/admin/engineers/${id}/approve`,
+    REJECT:   (id: string) => `/api/admin/engineers/${id}/reject`,
   },
 
   // ─── Subscriptions ────────────────────────────────────────────────────────

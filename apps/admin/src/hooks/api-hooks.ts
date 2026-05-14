@@ -443,15 +443,8 @@ export function useAdminApproveEngineer() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: async ({ id, note }: { id: string, note?: string }) => {
-      // Try the new dedicated verification endpoint first
-      try {
-        const response = await apiClient.put(ENDPOINTS.ADMIN_ENGINEER_VERIFICATIONS.APPROVE(id), { note })
-        return response.data
-      } catch (error) {
-        // Fallback to the engineers endpoint
-        const response = await apiClient.put(ENDPOINTS.ADMIN_ENGINEERS.APPROVE(id), { note })
-        return response.data
-      }
+      const response = await apiClient.put(ENDPOINTS.ADMIN_ENGINEER_VERIFICATIONS.APPROVE(id), { note })
+      return response.data
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-verification-requests'] })
@@ -466,15 +459,8 @@ export function useAdminRejectEngineer() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: async ({ id, note }: { id: string, note?: string }) => {
-      // Try the new dedicated verification endpoint first
-      try {
-        const response = await apiClient.put(ENDPOINTS.ADMIN_ENGINEER_VERIFICATIONS.REJECT(id), { note })
-        return response.data
-      } catch (error) {
-        // Fallback to the engineers endpoint
-        const response = await apiClient.put(ENDPOINTS.ADMIN_ENGINEERS.REJECT(id), { note })
-        return response.data
-      }
+      const response = await apiClient.put(ENDPOINTS.ADMIN_ENGINEER_VERIFICATIONS.REJECT(id), { note })
+      return response.data
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-verification-requests'] })

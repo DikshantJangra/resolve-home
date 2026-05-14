@@ -63,8 +63,12 @@ export default function VerificationDetailPage() {
       return
     }
 
+    // Try to find the most specific ID (engineer profile ID)
+    const targetId = engineer.engineerProfile?.id || engineer.profile?.id || engineer.id || id
     const action = status === 'approved' ? approveEngineer : rejectEngineer
-    const payload = status === 'approved' ? { id: id as string } : { id: id as string, note: rejectionNote }
+    const payload = status === 'approved' ? { id: targetId as string } : { id: targetId as string, note: rejectionNote }
+
+    console.log(`[VerificationDetail] Performing ${status} action on ID:`, targetId);
 
     action(payload as any, {
       onSuccess: () => {

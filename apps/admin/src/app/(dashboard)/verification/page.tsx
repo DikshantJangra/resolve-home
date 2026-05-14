@@ -55,14 +55,18 @@ export default function VerificationPage() {
   }, [verifications, search])
 
   const handleAction = (id: string, status: 'approved' | 'rejected') => {
+    // Find the original verification object to see if it has an engineerProfile ID
+    const request = verifications.find((v: any) => (v.id || v._id) === id)
+    const targetId = request?.engineerProfile?.id || request?.profile?.id || id
+
     if (status === 'rejected' && !isRejectModalOpen) {
-      setActiveRequestId(id)
+      setActiveRequestId(targetId)
       setIsRejectModalOpen(true)
       return
     }
 
     const action = status === 'approved' ? approveEngineer : rejectEngineer
-    const payload = status === 'approved' ? { id } : { id, note: rejectionNote }
+    const payload = status === 'approved' ? { id: targetId } : { id: targetId, note: rejectionNote }
 
     action(payload as any, {
       onSuccess: () => {
