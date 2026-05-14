@@ -63,7 +63,8 @@ export const Membership = () => {
 
   const user = session?.user || userProfile?.user || userProfile
   const isLoggedIn = !!user
-  const isLoading = sessionLoading || profileLoading
+  // Only wait for profile loading if we have a session (since useUserProfile is disabled otherwise)
+  const isLoading = sessionLoading || (!!session && profileLoading)
 
   React.useEffect(() => {
     const timer = setTimeout(() => {
