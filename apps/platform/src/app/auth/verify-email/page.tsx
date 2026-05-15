@@ -44,7 +44,7 @@ export default function VerifyEmailPage() {
       <div className="w-full max-w-[500px] bg-white rounded-[20px] shadow-xl p-8">
         <AuthOtpVerification 
           email={userProfile.user.email}
-          context="login"
+          context="signup"
           onVerifySuccess={() => {
             toast.success("Email verified successfully!")
             router.push("/dashboard")
