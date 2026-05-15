@@ -16,10 +16,11 @@ const plans = [
     name: 'Basic',
     subtitle: 'For light, occasional usage best for: individuals or small households',
     price: 7500,
+    callout: '2 call-outs / month',
     features: [
+      '2 free call-outs (bookings) per month',
       'Access to verified professionals',
       'Subscription booking priority',
-      'Reduced call-out fees',
       '24/7 support',
       'Track all jobs in real time',
     ],
@@ -31,10 +32,11 @@ const plans = [
     price: 15000,
     popular: true,
     dark: true,
+    callout: '4 call-outs / month',
     features: [
-      'Everything on basic',
+      '4 free call-outs (bookings) per month',
+      'Everything on Basic',
       'Faster booking priority',
-      'More call-out coverage',
       'Priority support',
       'Home health reports',
     ],
@@ -44,11 +46,12 @@ const plans = [
     name: 'Premium',
     subtitle: 'For full-service convenience, best for: landlords, large homes, and high-frequency users',
     price: 50000,
+    callout: 'Unlimited call-outs',
     features: [
+      'Unlimited call-outs (bookings) per month',
       'Everything on Standard',
       'Parts & labour included',
       'Same-day guarantee',
-      'Annual home inspection',
       'Dedicated account manager',
     ],
   },
@@ -199,6 +202,9 @@ export const Membership = () => {
                     <p className={cn("text-sm font-normal leading-5 h-10", plan.dark ? "text-neutral-50/80" : "text-zinc-600")}>
                       {plan.subtitle}
                     </p>
+                    <span className={cn("inline-block text-xs font-bold px-2.5 py-1 rounded-full mt-1", plan.dark ? "bg-orange-600/20 text-orange-400" : "bg-blue-50 text-blue-700")}>
+                      {plan.callout}
+                    </span>
                   </div>
                 </div>
 

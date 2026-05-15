@@ -11,6 +11,11 @@ import { useQueryClient } from '@tanstack/react-query'
 import { useRouter } from 'next/navigation'
 
 function SubscriptionsContent() {
+  const PLAN_LIMITS: Record<string, string> = {
+    basic: '2 call-outs / month',
+    standard: '4 call-outs / month',
+    premium: 'Unlimited call-outs',
+  }
   const searchParams = useSearchParams()
   const scrollRef = React.useRef<HTMLDivElement>(null)
   const plansRef = React.useRef<HTMLDivElement>(null)
@@ -173,6 +178,7 @@ function SubscriptionsContent() {
             <div className="flex flex-col">
               <span className="text-zinc-500 text-xs font-medium uppercase tracking-wider">Current Plan</span>
               <h2 className="text-neutral-700 text-xl font-bold">{subscription.planName || subscription.planId}</h2>
+              <span className="text-blue-700 text-xs font-semibold mt-0.5">{PLAN_LIMITS[subscription.planId] || ''}</span>
             </div>
           </div>
           
