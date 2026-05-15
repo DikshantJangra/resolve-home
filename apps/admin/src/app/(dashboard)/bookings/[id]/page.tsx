@@ -255,8 +255,6 @@ export default function BookingDetailsPage() {
               role={engineer.specialty}
               phone={engineer.phone}
               isPro
-              hasReassign={engineer.name !== 'Unassigned'}
-              onAssign={() => toast.info("Reassignment workflow coming soon")}
             />
           </div>
 
@@ -311,7 +309,7 @@ const DetailRow = ({ label, value, icon: Icon, isSmall }: { label: string, value
   </div>
 )
 
-const PersonCard = ({ title, name, address, avatar, role, phone, isPro, hasReassign, onAssign }: { 
+const PersonCard = ({ title, name, address, avatar, role, phone, isPro }: { 
   title: string, 
   name: string, 
   address: string, 
@@ -319,8 +317,6 @@ const PersonCard = ({ title, name, address, avatar, role, phone, isPro, hasReass
   role: string,
   phone?: string,
   isPro?: boolean,
-  hasReassign?: boolean,
-  onAssign?: () => void
 }) => (
   <div className="p-6 bg-white rounded-2xl border border-zinc-200 flex flex-col gap-6 shadow-sm hover:shadow-md transition-shadow">
     <div className="flex justify-between items-center">
@@ -352,17 +348,6 @@ const PersonCard = ({ title, name, address, avatar, role, phone, isPro, hasReass
       <div className="flex items-center gap-3">
         <IconButton icon={HiOutlinePhone} onClick={() => phone && (window.location.href = `tel:${phone}`)} disabled={!phone} />
         <IconButton icon={HiOutlineChatAlt2} />
-        {isPro && (
-          <button 
-            onClick={onAssign}
-            className={cn(
-              "flex-1 h-11 rounded-xl border border-zinc-200 text-zinc-600 text-sm font-bold font-inter transition-all",
-              "hover:bg-blue-700 hover:text-white hover:border-blue-700 shadow-sm active:scale-95"
-            )}
-          >
-            {hasReassign ? 'Reassign Job' : 'Assign Engineer'}
-          </button>
-        )}
       </div>
     </div>
   </div>
