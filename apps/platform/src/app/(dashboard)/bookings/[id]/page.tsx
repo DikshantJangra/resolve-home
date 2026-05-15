@@ -194,47 +194,102 @@ export default function BookingDetailsPage() {
           <div className="absolute inset-0 flex items-center justify-center">
              <div className="flex flex-col items-center gap-2 scale-110">
                 <div className="relative">
-                   <div className="w-12 h-12 bg-blue-700/20 rounded-full flex items-center justify-center animate-ping absolute inset-0" />
-                   <div className="w-12 h-12 bg-blue-700/20 rounded-full flex items-center justify-center relative">
-                      <div className="w-5 h-5 bg-blue-700 rounded-full border-4 border-white shadow-md" />
+                   <div className="w-12 h-12 bg-blue-700 rounded-full flex items-center justify-center relative">
+                     <div className="w-5 h-5 bg-blue-700 rounded-full border-4 border-white shadow-md" />
                    </div>
-                </div>
-                <div className="px-3 py-1.5 bg-white/95 backdrop-blur-md rounded-xl shadow-lg border border-zinc-100 flex items-center gap-2">
-                   <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
-                   <span className="text-[10px] font-bold text-blue-700 uppercase tracking-tight">Active Tracking</span>
-                </div>
+                   </div>
+                   <div className="px-3 py-1.5 bg-white/95 backdrop-blur-md rounded-xl shadow-lg border border-zinc-100 flex items-center gap-2">
+                   <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-ping" />
+                   <span className="text-[10px] font-bold text-blue-700 uppercase tracking-tight">Active Tracking</span>                </div>
              </div>
           </div>
         </div>
 
         {/* Profile and Review Sidebar */}
         <div className="lg:col-span-7 flex flex-col gap-6">
-          <div className="p-6 bg-stone-50 rounded-2xl flex flex-col gap-8 border border-zinc-100 shadow-sm">
-            {/* User Profile Header */}
-            <div className="flex items-center gap-4">
-              <img 
-                src={displayImage} 
-                alt={displayName} 
-                className="w-20 h-20 rounded-full object-cover border-4 border-white shadow-md"
-              />
-              <div className="flex flex-col gap-2">
-                <div className="flex items-center gap-2">
-                  <h3 className="text-neutral-700 text-base font-bold">{displayName}</h3>
-                  <span className="px-2 py-0.5 bg-orange-100 text-orange-600 text-[10px] font-bold rounded">Pro Verified</span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <span className="text-zinc-600 text-xs">{userRole}</span>
-                  <div className="w-1 h-1 bg-blue-700 rounded-full" />
-                  <div className="flex items-center gap-1">
-                    <HiOutlineStar className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
-                    <span className="text-zinc-600 text-xs font-medium">4.9 Rating</span>
+          {!engineer ? (
+            <div className="p-6 bg-stone-50 rounded-2xl flex flex-col items-center justify-center gap-4 border border-zinc-100 shadow-sm text-center">
+              <div className="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center text-blue-700">
+                <HiOutlineBriefcase className="w-8 h-8" />
+              </div>
+              <h3 className="text-lg font-bold text-neutral-700">No Pro Partner Assigned Yet</h3>
+              <p className="text-zinc-600 text-sm">We're still finding the best Pro Partner for your request. Check back soon!</p>
+              {isCancelling ? (
+                <Button disabled className="mt-4">Cancelling...</Button>
+              ) : ( 
+                <Button onClick={() => cancelBooking(id as string)} variant="outline" className="mt-4 border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700">Cancel Booking</Button>
+              )}
+            </div>
+          ) : (
+            <div className="p-6 bg-stone-50 rounded-2xl flex flex-col gap-8 border border-zinc-100 shadow-sm">
+              {/* User Profile Header */}
+              <div className="flex items-center gap-4">
+                <img 
+                  src={displayImage} 
+                  alt={displayName} 
+                  className="w-20 h-20 rounded-full object-cover border-4 border-white shadow-md"
+                />
+                <div className="flex flex-col gap-2">
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-neutral-700 text-base font-bold">{displayName}</h3>
+                    <span className="px-2 py-0.5 bg-orange-100 text-orange-600 text-[10px] font-bold rounded">Pro Verified</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-zinc-600 text-xs">{userRole}</span>
+                    <div className="w-1 h-1 bg-blue-700 rounded-full" />
+                    <div className="flex items-center gap-1">
+                      <HiOutlineStar className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
+                      <span className="text-zinc-600 text-xs font-medium">{engineer?.rating || 0} Rating</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-1.5 text-zinc-500 text-xs">
+                      <HiOutlineBriefcase className="w-4 h-4" />
+                      <span>{engineer?.completedJobs || 0} Jobs Completed</span>
+                    </div>
+                    <div className="flex items-center gap-1.5 text-zinc-500 text-xs">
+                      <HiOutlineLocationMarker className="w-4 h-4" />
+                      <span>{engineer?.distance ? `${engineer.distance}km away` : '---'}</span>
+                    </div>
                   </div>
                 </div>
-                <div className="flex items-center gap-4">
-                  <div className="flex items-center gap-1.5 text-zinc-500 text-xs">
-                    <HiOutlineLocationMarker className="w-3.5 h-3.5" />
-                    <span>2.4km away</span>
-                  </div>
+              </div>
+
+              {/* Contact Buttons */}
+              <div className="flex gap-4">
+                {engineer?.phone && (
+                  <Link 
+                    href={`tel:${engineer.phone}`} 
+                    className="flex-1 h-11 px-6 py-3 rounded-xl outline outline-1 outline-offset-[-1px] outline-blue-700 flex justify-center items-center gap-2.5 transition-all hover:bg-blue-50 active:scale-[0.98]"
+                  >
+                    <HiOutlinePhone className="w-5 h-5 text-blue-700" />
+                    <div className="justify-start text-blue-700 text-sm font-medium leading-5">Call Pro Partner</div>
+                  </Link>
+                )}
+                <Link 
+                  href={`/chats?bookingId=${booking.id}`} 
+                  className="flex-1 h-11 px-6 py-3 bg-blue-700 rounded-xl flex justify-center items-center gap-2.5 transition-all shadow-md active:scale-[0.98] hover:bg-blue-800"
+                >
+                  <HiOutlineChatAlt className="w-5 h-5 text-white" />
+                  <div className="justify-start text-neutral-50 text-sm font-medium leading-5">Chat with Pro Partner</div>
+                </Link>
+              </div>
+
+              {/* Quotation View */}
+              {quotation && quotation.quotation && (
+                <QuotationView quotation={quotation.quotation} bookingId={booking.id} />
+              )}
+
+              {/* Review Section (if completed booking) */}
+              {booking.status === 'completed' && !booking.review && engineer && (
+                <ReviewForm bookingId={booking.id} engineerId={engineer.id} />
+              )}
+            </div>
+          )}
+        </div>
+      <HiOutlineLocationMarker className="w-3.5 h-3.5 text-red-600" />
+      <span className="text-zinc-600 text-xs">{booking.address || 'Lagos, Nigeria'}</span>
+      </div>
                   <div className="flex items-center gap-1.5 text-zinc-500 text-xs">
                     <HiOutlineBriefcase className="w-3.5 h-3.5" />
                     <span>10 Jobs completed</span>
