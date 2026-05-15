@@ -17,6 +17,7 @@ import { BookingProgressTracker } from '@/features/booking/components/booking-pr
 import { ReviewCard } from '@/features/booking/components/review-card'
 import { ReviewForm } from '@/features/booking/components/review-form'
 import { QuotationView } from '@/features/booking/components/quotation-view'
+import { Map, type MapViewport } from '@/components/ui/map'
 import { Button, cn, formatImageUrl } from "@resolve/ui"
 import { useBookingDetail, useCancelBooking, useBookingQuotation, useUserProfile } from '@/hooks/api-hooks'
 import { format } from 'date-fns'
@@ -31,6 +32,13 @@ export default function BookingDetailsPage() {
   const { data: quotation } = useBookingQuotation(id as string)
 
   const isWorker = userProfile?.user?.role === 'worker'
+
+  const [mapViewport, setMapViewport] = React.useState<MapViewport>({
+    center: [-3.4, 6.4],
+    zoom: 12,
+    bearing: 0,
+    pitch: 0,
+  })
 
   if (isLoading) {
     return (
@@ -175,7 +183,11 @@ export default function BookingDetailsPage() {
                  <circle cx="8" cy="8" r="6" stroke="currentColor" strokeWidth="1.5"/>
                </svg>
             </div>
-            <span className="text-neutral-700 text-xs">ETA - 20 - 30 mins</span>
+            <span className="text-neutral-700 text-xs">
+              {booking.scheduledDate && booking.scheduledTime
+                ? `Scheduled: ${format(new Date(`${booking.scheduledDate}T${booking.scheduledTime}`), 'MMM d, yyyy · h:mm a')}`
+                : 'Schedule pending'}
+            </span>
           </div>
           {booking.address && (
             <div className="flex items-center gap-2">
@@ -189,18 +201,11 @@ export default function BookingDetailsPage() {
       {/* Main Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         {/* Map Visualization */}
-        <div className="lg:col-span-5 h-[520px] bg-stone-300 rounded-2xl relative overflow-hidden group shadow-sm border border-zinc-100">
-          <div className="absolute inset-0 bg-black/5" />
-          <div className="absolute inset-0 flex items-center justify-center">
-             <div className="flex flex-col items-center gap-2 scale-110">
-                <div className="relative">
-                   <div className="w-12 h-12 bg-blue-700 rounded-full flex items-center justify-center relative">
-                     <div className="w-5 h-5 bg-blue-700 rounded-full border-4 border-white shadow-md" />
-                   </div>
-                   <div className="px-3 py-1.5 bg-white/95 backdrop-blur-md rounded-xl shadow-lg border border-zinc-100 flex items-center gap-2">
-                   <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-ping" />
-                   <span className="text-[10px] font-bold text-blue-700 uppercase tracking-tight">Active Tracking</span>                </div>
-             </div>
+        <div className="lg:col-span-5 h-[520px] rounded-2xl relative overflow-hidden shadow-sm border border-zinc-100">
+          <Map viewport={mapViewport} onViewportChange={setMapViewport} />
+          <div className="absolute top-3 left-3 z-10 px-3 py-1.5 bg-white/95 backdrop-blur-md rounded-xl shadow-lg border border-zinc-100 flex items-center gap-2">
+            <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-ping" />
+            <span className="text-[10px] font-bold text-blue-700 uppercase tracking-tight">Active Tracking</span>
           </div>
         </div>
 
@@ -285,73 +290,6 @@ export default function BookingDetailsPage() {
               )}
             </div>
           )}
-        </div>
-      <HiOutlineLocationMarker className="w-3.5 h-3.5 text-red-600" />
-      <span className="text-zinc-600 text-xs">{booking.address || 'Lagos, Nigeria'}</span>
-      </div>
-                  <div className="flex items-center gap-1.5 text-zinc-500 text-xs">
-                    <HiOutlineBriefcase className="w-3.5 h-3.5" />
-                    <span>10 Jobs completed</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Review Section */}
-            <div className="flex flex-col gap-4">
-              <h4 className="text-neutral-700 text-sm font-semibold">Professional&apos;s Review</h4>
-              <div className="flex flex-col gap-4 max-h-[280px] overflow-y-auto pr-2 no-scrollbar">
-                {[1, 2].map((i) => (
-                  <div key={i} className="p-4 bg-white rounded-xl border border-zinc-100 flex flex-col gap-4 shadow-sm">
-                    <div className="flex items-center justify-between">
-                      <div className="flex gap-0.5">
-                        {[1, 2, 3, 4, 5].map((s) => (
-                          <HiOutlineStar key={s} className="w-4 h-4 text-amber-400 fill-amber-400" />
-                        ))}
-                      </div>
-                      <div className="flex items-center gap-1.5 text-[10px] text-zinc-400 font-medium">
-                        <HiOutlineLocationMarker className="w-3 h-3" />
-                        Lagos, Nigeria
-                      </div>
-                    </div>
-                    <div className="flex flex-col gap-1.5">
-                      <p className="text-neutral-800 text-sm font-bold leading-tight">Fix our 3phase inverter pumping machine</p>
-                      <p className="text-zinc-600 text-xs leading-relaxed">
-                        From the first consultation to the final touches, Refit delivered on every promise. Our home extension is exactly what we wanted.
-                      </p>
-                    </div>
-                    <div className="flex gap-2">
-                       <div className="flex-1 h-16 bg-zinc-100 rounded-lg overflow-hidden">
-                          <img src="https://images.unsplash.com/photo-1581094794329-c8112a89af12?q=80&w=200" className="w-full h-full object-cover" />
-                       </div>
-                       <div className="flex-1 h-16 bg-zinc-100 rounded-lg overflow-hidden">
-                          <img src="https://images.unsplash.com/photo-1504328345606-18bbc8c9d7d1?q=80&w=200" className="w-full h-full object-cover" />
-                       </div>
-                       <div className="flex-1 h-16 bg-black/5 rounded-lg flex items-center justify-center">
-                          <span className="text-zinc-400 text-xs font-bold">+2</span>
-                       </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Action Buttons */}
-            <div className="flex gap-4 mt-4 pt-4 border-t border-zinc-100">
-              <Button variant="outline" className="flex-1 h-12 border-red-600 text-red-600 hover:bg-red-50 rounded-xl font-semibold shadow-sm">
-                Call {isWorker ? 'Homeowner' : 'Engineer'}
-              </Button>
-              <Button 
-                onClick={() => window.location.href = '/dashboard/messages'}
-                className="flex-1 h-12 bg-blue-700 hover:bg-blue-800 rounded-xl font-semibold shadow-md shadow-blue-700/10"
-              >
-                Send Message
-              </Button>
-            </div>
-          </div>
-
-          {/* Quotation View Integration */}
-          {quotation && <QuotationView quotation={quotation} />}
         </div>
       </div>
     </div>

@@ -87,7 +87,11 @@ export const BookingRequestCard = ({ booking, isWorker = true }: BookingRequestC
                   </div>
                 </div>
               </div>
-              <div className="justify-start text-neutral-700 text-base font-semibold font-['Inter'] leading-6">₦{booking.totalPrice?.toLocaleString() || '---'}</div>
+              <div className="justify-start text-neutral-700 text-base font-semibold font-['Inter'] leading-6">
+                {booking.engineerId && booking.totalPrice > 0 
+                  ? `₦${booking.totalPrice.toLocaleString()}` 
+                  : 'Price to be quoted'}
+              </div>
             </div>
           </div>
 
