@@ -305,6 +305,11 @@ function normalizeBooking(b: any) {
     isEmergency: b.isEmergency ?? b.priority?.toLowerCase() === 'emergency',
     customerName: b.customerName || b.customerDetails?.name || b.customerDetails?.fullName || 'Customer',
     customerAvatar: b.customerAvatar || b.customerDetails?.avatar || b.customerDetails?.image || b.customerDetails?.profileImage || '',
+    customerAddress: b.customerAddress || b.location?.address || b.address || b.customerDetails?.address || 'N/A',
+    engineerName: b.engineerName || b.engineer?.name || b.engineer?.user?.name || 'Unassigned',
+    engineerAvatar: b.engineerAvatar || b.engineer?.image || b.engineer?.user?.image || '',
+    engineerAddress: b.engineerAddress || b.engineer?.location?.address || b.engineer?.engineerProfile?.location?.address || 'Resolv Platform Partner',
+    notes: b.notes || b.issueDetails || 'No specific instructions provided.',
   }
 }
 
