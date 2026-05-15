@@ -48,6 +48,7 @@ export default function BookingsPage() {
       const status = b.status?.toLowerCase()
       const matchesFilter = filter === 'all' || 
                            (filter === 'active' && (status === 'confirmed' || status === 'in-progress')) ||
+                           (filter === 'upcoming' && status === 'pending') ||
                            status === filter
       
       return matchesSearch && matchesFilter
