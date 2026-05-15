@@ -20,7 +20,7 @@ export const ReviewStep = () => {
   const reviewItems = [
     {
       label: 'Urgency',
-      value: priority === 'Emergency' ? 'Emergency fix' : 'Standard fix',
+      value: priority === 'Emergency' ? 'Emergency fix' : 'Subscription Booking',
     },
     {
       label: 'Service Required',

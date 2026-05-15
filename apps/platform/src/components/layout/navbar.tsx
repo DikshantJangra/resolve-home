@@ -1,10 +1,10 @@
 'use client'
 
 import React, { useState } from 'react'
-import { HiOutlineSearch, HiOutlineMenuAlt1, HiOutlineMenu } from 'react-icons/hi'
+import { HiOutlineSearch, HiOutlineMenuAlt1, HiOutlineMenu, HiOutlineBadgeCheck } from 'react-icons/hi'
 import { IoGridOutline, IoPersonOutline, IoLogOutOutline, IoPerson } from 'react-icons/io5'
 import { Input } from "@resolve/ui"
-import { useAuthSession, useUserProfile } from '@/hooks/api-hooks'
+import { useAuthSession, useUserProfile, useMySubscription } from '@/hooks/api-hooks'
 import { motion, AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
 import Image from 'next/image'
@@ -18,6 +18,7 @@ interface NavbarProps {
 export const Navbar = ({ onMenuClick }: NavbarProps) => {
   const { data: session } = useAuthSession()
   const { data: user } = useUserProfile()
+  const { data: subscription } = useMySubscription()
   const [isMounted, setIsMounted] = useState(false)
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isLogoutOpen, setIsLogoutOpen] = useState(false)
@@ -72,18 +73,24 @@ export const Navbar = ({ onMenuClick }: NavbarProps) => {
             </span>
           </div>
         )}
-        
         <div className="relative flex items-center gap-3">
-          <div className="relative h-10 w-10 md:h-12 md:w-12 overflow-hidden rounded-full border border-blue-700 flex items-center justify-center bg-zinc-100 shrink-0">
-            {isMounted ? (
-              <img
-                src={user?.user?.image ? formatImageUrl(user.user.image) : `https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.user?.name || 'User'}`}
-                alt={user?.user?.name || "User"}
-                className="h-full w-full object-cover"
-              />
-            ) : (
-              <div className="flex h-full w-full items-center justify-center text-zinc-400">
-                <IoPerson className="h-5 w-5 md:h-7 md:w-7" />
+          <div className="relative shrink-0">
+            <div className="relative h-10 w-10 md:h-12 md:w-12 overflow-hidden rounded-full border border-blue-700 flex items-center justify-center bg-zinc-100">
+              {isMounted ? (
+                <img
+                  src={user?.user?.image ? formatImageUrl(user.user.image) : `https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.user?.name || 'User'}`}
+                  alt={user?.user?.name || "User"}
+                  className="h-full w-full object-cover"
+                />
+              ) : (
+                <div className="flex h-full w-full items-center justify-center text-zinc-400">
+                  <IoPerson className="h-5 w-5 md:h-7 md:w-7" />
+                </div>
+              )}
+            </div>
+            {isMounted && subscription && (
+              <div className="absolute -bottom-1 -right-1 bg-white rounded-full p-0.5 z-10 shadow-sm border border-zinc-100">
+                <HiOutlineBadgeCheck className="w-4 h-4 md:w-5 md:h-5 text-blue-700" />
               </div>
             )}
           </div>
@@ -161,9 +168,9 @@ export const Navbar = ({ onMenuClick }: NavbarProps) => {
                 </>
               )}
             </AnimatePresence>
-          </div>
         </div>
       </div>
+    </div>
     </header>
 
     <LogoutModal 

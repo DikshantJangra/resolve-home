@@ -4,8 +4,8 @@ import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { cn } from "@resolve/ui";
-import { useAuthSession, useSignOut, useUserProfile } from '@/hooks/api-hooks';
-import { HiMenuAlt4 } from 'react-icons/hi';
+import { useAuthSession, useSignOut, useUserProfile, useMySubscription } from '@/hooks/api-hooks';
+import { HiMenuAlt4, HiOutlineBadgeCheck } from 'react-icons/hi';
 import { IoPerson, IoGridOutline, IoPersonOutline, IoLogOutOutline } from 'react-icons/io5';
 import { motion, AnimatePresence } from 'framer-motion';
 import { LogoutModal } from '@/features/auth/components/logout-modal';
@@ -13,6 +13,7 @@ import { LogoutModal } from '@/features/auth/components/logout-modal';
 export const Navbar = () => {
   const { data: session } = useAuthSession();
   const { data: userProfile } = useUserProfile();
+  const { data: subscription } = useMySubscription();
   const { mutate: signOut, isPending: isSigningOut } = useSignOut();
   const [activeSection, setActiveSection] = useState('hero');
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -178,17 +179,24 @@ export const Navbar = () => {
             <div className="flex items-center gap-4">
               {/* Profile Section */}
               <div className="flex items-center gap-4">
-                <div className="relative h-12 w-12 overflow-hidden rounded-full border border-blue-700 flex items-center justify-center bg-zinc-100">
-                  {user?.image ? (
-                    <Image
-                      src={user.image}
-                      alt={user.name || "User"}
-                      fill
-                      className="object-cover"
-                    />
-                  ) : (
-                    <div className="flex h-full w-full items-center justify-center text-zinc-400">
-                      <IoPerson className="h-7 w-7" />
+                <div className="relative">
+                  <div className="relative h-12 w-12 overflow-hidden rounded-full border border-blue-700 flex items-center justify-center bg-zinc-100">
+                    {user?.image ? (
+                      <Image
+                        src={user.image}
+                        alt={user.name || "User"}
+                        fill
+                        className="object-cover"
+                      />
+                    ) : (
+                      <div className="flex h-full w-full items-center justify-center text-zinc-400">
+                        <IoPerson className="h-7 w-7" />
+                      </div>
+                    )}
+                  </div>
+                  {isMounted && subscription && (
+                    <div className="absolute -bottom-1 -right-1 bg-white rounded-full p-0.5 z-10 shadow-sm border border-zinc-100">
+                      <HiOutlineBadgeCheck className="w-5 h-5 text-blue-700" />
                     </div>
                   )}
                 </div>

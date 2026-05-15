@@ -63,7 +63,7 @@ const faqs = [
   },
   {
     question: 'What are your operating hours?',
-    answer: 'Standard bookings: 7 am–9 pm daily. Emergency cover: 24/7, year-round.',
+    answer: 'Subscription bookings: 7 am–9 pm daily. Emergency cover: 24/7, year-round.',
     icon: HiOutlineClock,
   },
 ];

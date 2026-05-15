@@ -54,7 +54,7 @@ export const BookingWizard = () => {
   }
 
   return (
-    <div className="w-full h-full md:max-w-[669px] md:min-h-[600px] md:max-h-[95vh] md:mx-auto bg-white flex flex-col shadow-2xl md:rounded-2xl overflow-hidden relative z-[998]">
+    <div className="w-full h-full md:max-w-[669px] md:h-[850px] md:mx-auto bg-white flex flex-col shadow-2xl md:rounded-2xl overflow-hidden relative z-[998]">
       <BookingHeader />
       <div className="flex-1 overflow-hidden relative">
         {renderStep()}

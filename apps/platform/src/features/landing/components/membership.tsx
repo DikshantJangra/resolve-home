@@ -18,7 +18,7 @@ const plans = [
     price: 7500,
     features: [
       'Access to verified professionals',
-      'Standard booking priority',
+      'Subscription booking priority',
       'Reduced call-out fees',
       '24/7 support',
       'Track all jobs in real time',
