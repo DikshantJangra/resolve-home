@@ -404,7 +404,7 @@ export const LocationStep = () => {
               id="saveAsHome"
               checked={saveAsHome}
               onChange={(e) => setSaveAsHome(e.target.checked)}
-              className="w-4 h-4 rounded border-zinc-300 text-blue-700 focus:ring-blue-700"
+              className="peer h-4 w-4 shrink-0 rounded-sm border border-zinc-300 ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-700 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 data-[state=checked]:bg-blue-700 data-[state=checked]:text-white transition-all cursor-pointer"
             />
             <label htmlFor="saveAsHome" className="text-zinc-600 text-sm font-medium cursor-pointer">
               Save as my primary home address

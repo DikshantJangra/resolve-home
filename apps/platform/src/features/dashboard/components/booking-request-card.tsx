@@ -24,7 +24,9 @@ export const BookingRequestCard = ({ booking, isWorker = true }: BookingRequestC
 
   // Determine which user info to show (Client for worker, Worker for client)
   const displayUser = isWorker ? booking.user : booking.engineer?.user
-  const displayName = displayUser?.name || (isWorker ? 'Client' : 'Assigning Engineer...')
+  const displayName = displayUser?.name || (isWorker 
+    ? 'Homeowner' 
+    : booking.engineerId ? 'Assigned Pro Partner' : 'No Pro Partner Assigned')
   const displayImage = displayUser?.image ? formatImageUrl(displayUser.image) : `https://api.dicebear.com/7.x/avataaars/svg?seed=${displayName}`
 
   const categoryName = booking.service?.category?.name || 'Service'

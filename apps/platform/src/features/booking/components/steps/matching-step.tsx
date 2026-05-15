@@ -47,17 +47,37 @@ export const MatchingStep = () => {
     }, {
       onSuccess: (data: any) => {
         if (data.success) {
-          setAvailableEngineers(data.data.availableEngineers || [])
-          setBookingId(data.data.booking.id)
-          setStep(7) // Move to selection
+          if (data.data.availableEngineers && data.data.availableEngineers.length > 0) {
+            setAvailableEngineers(data.data.availableEngineers);
+            setBookingId(data.data.booking.id);
+            setStep(7); // Move to selection
+          } else {
+            setAvailableEngineers([]);
+            setBookingId(data.data.booking.id);
+            setStep(6); // Stay on MatchingStep, but render the 'no engineers' state
+          }
         }
       },
       onError: (error: any) => {
-        toast.error(error.message || "Failed to create booking")
-        setStep(5) // Go back to review on error
+        toast.error(error.message || "Failed to create booking");
+        setStep(5); // Go back to review on error
       }
     })
   }, [createBooking, serviceId, priority, issueDetails, location, photos, setStep, setAvailableEngineers, setBookingId])
+
+  // Conditional rendering for no engineers found
+  if (!isPending && useBookingStore.getState().availableEngineers.length === 0 && useBookingStore.getState().bookingId) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full p-10 text-center space-y-4 bg-white">
+        <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center">
+          <HiOutlineExclamationCircle className="w-8 h-8 text-red-500" />
+        </div>
+        <h3 className="text-xl font-bold text-neutral-700">No Pro Partners found</h3>
+        <p className="text-zinc-600">We couldn't find any Pro Partners near you at the moment. Please try again later or adjust your location/time.</p>
+        <Button onClick={() => setStep(4)} className="bg-blue-700">Adjust Location/Time</Button>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col items-center justify-center h-full px-5 space-y-10 bg-white">
@@ -86,10 +106,10 @@ export const MatchingStep = () => {
       
       <div className="text-center space-y-2">
         <h3 className="text-neutral-700 text-xl font-semibold font-['Plus_Jakarta_Sans'] leading-8">
-          Finding professional...
+          Finding Pro Partner...
         </h3>
         <p className="text-zinc-600 text-sm font-normal font-['Inter'] leading-5 max-w-[280px]">
-          We are matching your request with the best professional near you.
+          We are matching your request with the best Pro Partner near you.
         </p>
       </div>
     </div>
