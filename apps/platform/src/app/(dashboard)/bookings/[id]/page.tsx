@@ -197,7 +197,6 @@ export default function BookingDetailsPage() {
                    <div className="w-12 h-12 bg-blue-700 rounded-full flex items-center justify-center relative">
                      <div className="w-5 h-5 bg-blue-700 rounded-full border-4 border-white shadow-md" />
                    </div>
-                   </div>
                    <div className="px-3 py-1.5 bg-white/95 backdrop-blur-md rounded-xl shadow-lg border border-zinc-100 flex items-center gap-2">
                    <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-ping" />
                    <span className="text-[10px] font-bold text-blue-700 uppercase tracking-tight">Active Tracking</span>                </div>
