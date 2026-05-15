@@ -8,6 +8,7 @@ import { ReviewsGivenList } from '@/features/profile/components/reviews-given-li
 import { useAuthSession, useUserProfile, useUserBookings } from '@/hooks/api-hooks'
 import { format } from 'date-fns'
 import { Skeleton, formatImageUrl } from "@resolve/ui"
+import { getDicebearUrl } from '@/lib/constants'
 type TabType = 'Personal Info' | 'Booking History' | 'Reviews Given'
 
 export default function ProfilePage() {
@@ -47,7 +48,7 @@ export default function ProfilePage() {
     address: user?.homeAddress?.street || '',
     bio: user?.bio || '',
     memberSince: user?.createdAt ? format(new Date(user.createdAt), 'MMM yyyy') : 'Recently',
-    avatarUrl: user?.image ? formatImageUrl(user.image) : `https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.name || 'User'}`
+    avatarUrl: user?.image ? formatImageUrl(user.image) : getDicebearUrl(user?.name)
   }
 
   const renderTabContent = () => {

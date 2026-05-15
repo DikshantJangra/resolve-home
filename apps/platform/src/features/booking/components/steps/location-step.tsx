@@ -4,7 +4,7 @@ import React, { useState, useEffect, useMemo } from 'react'
 import { HiOutlineLocationMarker, HiChevronDown, HiOutlineHome, HiOutlineLightningBolt } from 'react-icons/hi'
 import { useBookingStore } from '@/store/booking-store'
 import { Button, Input, Label, cn } from "@resolve/ui"
-import { useUserProfile, useUpdateBioAddress } from '@/hooks/api-hooks'
+import { useUserProfile } from '@/hooks/api-hooks'
 import { toast } from 'sonner'
 import { Country, State, City } from 'country-state-city'
 
@@ -12,7 +12,6 @@ export const LocationStep = () => {
   const { location, setLocation, setStep, priority } = useBookingStore()
   const { data: profile } = useUserProfile()
   const isEmergency = priority === 'Emergency'
-  
   const [formData, setFormData] = useState({
     country: location?.country || 'Nigeria',
     countryCode: location?.countryCode || 'NG',
@@ -21,6 +20,8 @@ export const LocationStep = () => {
     city: location?.city || '',
     streetAddress: location?.streetAddress || '',
     landmark: location?.landmark || '',
+    latitude: location?.latitude || 0,
+    longitude: location?.longitude || 0,
   })
 
   // Set initial state code if state name exists
@@ -92,8 +93,6 @@ export const LocationStep = () => {
     }
   }
 
-  const [isLocating, setIsLocating] = useState(false)
-
   const handleUseGPS = () => {
     if (!navigator.geolocation) {
       alert("Geolocation is not supported by your browser")
@@ -133,6 +132,8 @@ export const LocationStep = () => {
               city: cleanCityName,
               streetAddress: road || neighbourhood || data.display_name.split(',')[0] || '',
               landmark: '',
+              latitude,
+              longitude,
             }))
             toast.success("Location detected!")
           }
@@ -156,8 +157,7 @@ export const LocationStep = () => {
     )
   }
 
-  const [saveAsHome, setSaveAsHome] = useState(false)
-  const updateBioAddress = useUpdateBioAddress()
+  const [isLocating, setIsLocating] = useState(false)
 
   const isFormValid = formData.state.trim() && formData.city.trim() && formData.streetAddress.trim() && formData.landmark.trim()
   const handleContinue = async () => {
@@ -186,20 +186,6 @@ export const LocationStep = () => {
       return;
     }
 
-    if (saveAsHome) {
-      try {
-        await updateBioAddress.mutateAsync({
-          homeAddress: {
-            street: formData.streetAddress,
-            city: formData.city,
-            state: formData.state,
-            country: formData.country,
-          }
-        })
-      } catch (error) {
-        console.error('Failed to save home address:', error)
-      }
-    }
     setLocation(formData)
     setStep(5)
   }
@@ -398,18 +384,7 @@ export const LocationStep = () => {
             </div>
           </div>
 
-          <div className="flex items-center gap-2 pt-2">
-            <input
-              type="checkbox"
-              id="saveAsHome"
-              checked={saveAsHome}
-              onChange={(e) => setSaveAsHome(e.target.checked)}
-              className="peer h-4 w-4 shrink-0 rounded-sm border border-zinc-300 ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-700 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 data-[state=checked]:bg-blue-700 data-[state=checked]:text-white transition-all cursor-pointer"
-            />
-            <label htmlFor="saveAsHome" className="text-zinc-600 text-sm font-medium cursor-pointer">
-              Save as my primary home address
-            </label>
-          </div>
+
         </div>
       </div>
     </div>

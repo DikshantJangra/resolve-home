@@ -10,6 +10,8 @@ interface BookingLocation {
   city: string
   streetAddress: string
   landmark: string
+  latitude?: number
+  longitude?: number
 }
 
 interface BookingState {

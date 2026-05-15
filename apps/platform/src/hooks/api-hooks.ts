@@ -330,6 +330,17 @@ export function useCompleteJob() {
 
 // --- Wallet ---
 
+export function useWalletBalance() {
+  return useQuery({
+    queryKey: ['wallet-balance'],
+    queryFn: async () => {
+      const response = await apiClient.get(ENDPOINTS.WALLET.BALANCE)
+      return response.data.data as { balance: number; currency: string }
+    },
+    enabled: typeof window !== 'undefined' && !!localStorage.getItem('auth_token')
+  })
+}
+
 export function useWallet() {
   return useQuery({
     queryKey: ['wallet'],

@@ -27,6 +27,15 @@ export default function WalletPage() {
   const [isWithdrawModalOpen, setIsWithdrawModalOpen] = React.useState(false)
   const [selectedBank, setSelectedBank] = React.useState<any>(null)
 
+  // Auto-open fund modal if redirected from emergency booking
+  React.useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    if (params.get('fund') === 'true') {
+      setIsFundingModalOpen(true)
+      window.history.replaceState({}, '', window.location.pathname)
+    }
+  }, [])
+
   const { data: session, isPending: sessionPending } = useAuthSession()
   const { data: userProfile, isPending: userProfilePending } = useUserProfile()
   const { data: wallet, isPending: walletPending } = useWallet()

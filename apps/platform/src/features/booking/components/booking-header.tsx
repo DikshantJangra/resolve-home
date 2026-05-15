@@ -45,7 +45,7 @@ export const BookingHeader = ({
         <h1 className="text-2xl font-semibold text-neutral-700 font-['Plus_Jakarta_Sans'] leading-8">
           {title}
         </h1>
-        {currentStep > 1 ? (
+        {currentStep > 1 && currentStep !== 6 ? (
           <button
             onClick={() => setStep(currentStep - 1)}
             className="flex items-center gap-2 text-blue-700 hover:text-blue-800 transition-colors"

@@ -3,8 +3,7 @@
 import React from 'react'
 import { 
   HiOutlineClock, 
-  HiOutlineLocationMarker, 
-  HiStar,
+  HiOutlineLocationMarker,
   HiOutlineExclamationCircle,
 } from 'react-icons/hi'
 import { HiWrenchScrewdriver } from 'react-icons/hi2'
@@ -23,11 +22,8 @@ export const BookingRequestCard = ({ booking, isWorker = true }: BookingRequestC
   const isInProgress = booking.status?.toUpperCase() === 'IN_PROGRESS'
 
   // Determine which user info to show (Client for worker, Worker for client)
-  const displayUser = isWorker ? booking.user : booking.engineer?.user
-  const displayName = displayUser?.name || (isWorker 
-    ? 'Homeowner' 
-    : booking.engineerId ? 'Assigned Pro Partner' : 'No Pro Partner Assigned')
-  const displayImage = displayUser?.image ? formatImageUrl(displayUser.image) : `https://api.dicebear.com/7.x/avataaars/svg?seed=${displayName}`
+  const displayUser = isWorker ? booking.user : (booking.engineer || booking.engineers?.[0])
+  const displayName = displayUser?.name || null
 
   const categoryName = booking.service?.category?.name || 'Service'
   const serviceName = booking.service?.name || 'Service details'
@@ -78,14 +74,21 @@ export const BookingRequestCard = ({ booking, isWorker = true }: BookingRequestC
             {/* User Info & Price Section */}
             <div className="self-stretch h-12 py-2.5 border-t border-b border-stone-50 inline-flex justify-between items-center">
               <div className="flex justify-start items-center gap-2">
-                <img className="w-8 h-8 relative rounded-2xl object-cover border border-zinc-100" src={displayImage} alt={displayName} />
-                <div className="inline-flex flex-col justify-center items-start">
-                  <div className="justify-start text-gray-700 text-xs font-semibold font-['Inter'] leading-4">{displayName}</div>
-                  <div className="h-4 inline-flex justify-start items-center gap-[3px]">
-                    <HiStar className="w-3 h-3 text-amber-500" />
-                    <div className="justify-start text-gray-700 text-xs font-semibold font-['Inter'] leading-4">4.9</div>
-                  </div>
-                </div>
+                {displayUser && displayName ? (
+                  <>
+                    {displayUser.image && (
+                      <img className="w-8 h-8 relative rounded-2xl object-cover border border-zinc-100" src={formatImageUrl(displayUser.image)} alt={displayName} />
+                    )}
+                    <div className="inline-flex flex-col justify-center items-start">
+                      <div className="justify-start text-gray-700 text-xs font-semibold font-['Inter'] leading-4">{displayName}</div>
+                      {displayUser.rating > 0 && (
+                        <div className="justify-start text-zinc-400 text-xs font-['Inter'] leading-4">{displayUser.rating} Rating</div>
+                      )}
+                    </div>
+                  </>
+                ) : (
+                  <div className="text-zinc-400 text-xs font-['Inter']">No Pro Partner Assigned</div>
+                )}
               </div>
               <div className="justify-start text-neutral-700 text-base font-semibold font-['Inter'] leading-6">
                 {booking.engineerId && booking.totalPrice > 0 

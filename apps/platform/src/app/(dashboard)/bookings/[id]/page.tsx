@@ -19,7 +19,8 @@ import { ReviewForm } from '@/features/booking/components/review-form'
 import { QuotationView } from '@/features/booking/components/quotation-view'
 import { Map, type MapViewport } from '@/components/ui/map'
 import { Button, cn, formatImageUrl } from "@resolve/ui"
-import { useBookingDetail, useCancelBooking, useBookingQuotation, useUserProfile } from '@/hooks/api-hooks'
+import { useBookingDetail, useCancelBooking, useBookingQuotation, useUserProfile, useAvailableEngineers } from '@/hooks/api-hooks'
+import { useQueryClient } from '@tanstack/react-query'
 import { format } from 'date-fns'
 import { toast } from 'sonner'
 import { ProgressStep } from '@/features/booking/types'
@@ -30,6 +31,24 @@ export default function BookingDetailsPage() {
   const { data: booking, isLoading, error } = useBookingDetail(id as string)
   const { mutate: cancelBooking, isPending: isCancelling } = useCancelBooking()
   const { data: quotation } = useBookingQuotation(id as string)
+  const queryClient = useQueryClient()
+
+  const engineer = !isLoading && booking ? (booking.engineers?.[0] || booking.engineer) : null
+  const hasNoEngineer = !isLoading && !!booking && !engineer
+
+  const { refetch: refetchEngineers, isFetching: isRefetchingEngineers } = useAvailableEngineers(
+    hasNoEngineer ? id as string : ''
+  )
+
+  const handleRefreshPro = async () => {
+    await queryClient.invalidateQueries({ queryKey: ['booking-detail', id] })
+    if (hasNoEngineer) {
+      const result = await refetchEngineers()
+      if (result.data?.engineers?.length > 0) {
+        await queryClient.invalidateQueries({ queryKey: ['booking-detail', id] })
+      }
+    }
+  }
 
   const isWorker = userProfile?.user?.role === 'worker'
 
@@ -67,7 +86,6 @@ export default function BookingDetailsPage() {
     { label: 'Completed', status: (booking.status === 'completed' ? 'current' : 'pending') as any },
   ]
 
-  const engineer = booking.engineers?.[0] || booking.engineer
   const customer = booking.user
   
   const displayUser = isWorker ? customer : engineer
@@ -125,20 +143,24 @@ export default function BookingDetailsPage() {
 
         {/* Dynamic Progress Timeline */}
         <div className="py-4 border-t border-b border-stone-50 flex flex-col md:flex-row items-center gap-10">
-          <div className="flex items-center gap-3 shrink-0">
-            <img 
-              src={displayImage} 
-              alt={displayName} 
-              className="w-10 h-10 rounded-2xl object-cover border-2 border-white shadow-sm"
-            />
-            <div className="flex flex-col">
-              <span className="text-gray-700 text-sm font-semibold">{displayName}</span>
-              <div className="flex items-center gap-1">
-                <HiOutlineStar className="w-3 h-3 text-amber-500 fill-amber-500" />
-                <span className="text-gray-700 text-xs font-semibold">4.9</span>
+          {engineer && (
+            <div className="flex items-center gap-3 shrink-0">
+              <img 
+                src={displayImage} 
+                alt={displayName} 
+                className="w-10 h-10 rounded-2xl object-cover border-2 border-white shadow-sm"
+              />
+              <div className="flex flex-col">
+                <span className="text-gray-700 text-sm font-semibold">{displayName}</span>
+                {engineer?.rating > 0 && (
+                  <div className="flex items-center gap-1">
+                    <HiOutlineStar className="w-3 h-3 text-amber-500 fill-amber-500" />
+                    <span className="text-gray-700 text-xs font-semibold">{engineer.rating}</span>
+                  </div>
+                )}
               </div>
             </div>
-          </div>
+          )}
 
           <div className="flex-1 w-full min-w-0 overflow-x-auto no-scrollbar">
              <div className="flex items-center justify-between min-w-[500px] px-2">
@@ -217,11 +239,22 @@ export default function BookingDetailsPage() {
                 <HiOutlineBriefcase className="w-8 h-8" />
               </div>
               <h3 className="text-lg font-bold text-neutral-700">No Pro Partner Assigned Yet</h3>
-              <p className="text-zinc-600 text-sm">We're still finding the best Pro Partner for your request. Check back soon!</p>
+              <p className="text-zinc-600 text-sm">We're still finding the best Pro Partner for your request.</p>
+              <Button
+                onClick={handleRefreshPro}
+                disabled={isRefetchingEngineers}
+                variant="outline"
+                className="flex items-center gap-2"
+              >
+                <svg className={cn('w-4 h-4', isRefetchingEngineers && 'animate-spin')} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+                {isRefetchingEngineers ? 'Checking...' : 'Refresh'}
+              </Button>
               {isCancelling ? (
-                <Button disabled className="mt-4">Cancelling...</Button>
-              ) : ( 
-                <Button onClick={() => cancelBooking(id as string)} variant="outline" className="mt-4 border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700">Cancel Booking</Button>
+                <Button disabled>Cancelling...</Button>
+              ) : (
+                <Button onClick={() => cancelBooking(id as string)} variant="outline" className="border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700">Cancel Booking</Button>
               )}
             </div>
           ) : (
