@@ -97,7 +97,7 @@ export default function BookingDetailsPage() {
             <div className="flex flex-col gap-0.5">
               <div className="flex items-center gap-2">
                 <h2 className="text-neutral-700 text-base font-semibold">{booking.service?.name || 'Service'}</h2>
-                <span className="text-zinc-500 text-[10px] font-medium uppercase">JOB ID: #RH-{booking.id.slice(-6).toUpperCase()}</span>
+                <span className="text-zinc-500 text-[10px] font-medium uppercase">JOB ID: #RH-{booking.id ? booking.id.slice(-6).toUpperCase() : 'N/A'}</span>
               </div>
               <p className="text-zinc-600 text-xs">{booking.notes || 'Job details and investigation required.'}</p>
             </div>
