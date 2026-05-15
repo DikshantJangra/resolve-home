@@ -39,7 +39,7 @@ export function BookingWizardModal() {
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
-            className="relative w-full h-full md:h-auto md:max-w-[669px] pointer-events-auto"
+            className="relative w-full h-full md:h-auto md:max-w-[669px] max-h-full overflow-y-auto pointer-events-auto"
           >
             <BookingWizard />
           </motion.div>
