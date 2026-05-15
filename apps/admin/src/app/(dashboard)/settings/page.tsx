@@ -398,8 +398,8 @@ function RecentActivityTable({ transactions, loading }: any) {
                         {tx.professionalName?.charAt(0) || 'P'}
                       </div>
                       <div className="flex flex-col">
-                        <span className="text-neutral-700 text-sm font-medium font-inter">{tx.professionalName || 'Lionel Crona'}</span>
-                        <span className="text-zinc-500 text-xs font-normal font-inter">{tx.professionalEmail || 'lionel@email.com'}</span>
+                        <span className="text-neutral-700 text-sm font-medium font-inter">{tx.professionalName || 'N/A'}</span>
+                        <span className="text-zinc-500 text-xs font-normal font-inter">{tx.professionalEmail || ''}</span>
                       </div>
                     </div>
                   </td>
@@ -413,15 +413,15 @@ function RecentActivityTable({ transactions, loading }: any) {
                         "text-sm font-medium font-inter capitalize",
                         tx.status === 'success' ? "text-green-700" : tx.status === 'pending' ? "text-amber-500" : "text-rose-400"
                       )}>
-                        {tx.status || 'Success'}
+                        {tx.status || 'pending'}
                       </span>
                     </div>
                   </td>
                   <td className="px-6 py-4 text-zinc-600 text-sm font-medium font-inter">
-                    {tx.reference || 'PAY-8921-20'}
+                    {tx.reference || '—'}
                   </td>
                   <td className="px-6 py-4 text-neutral-700 text-sm font-semibold font-inter">
-                    ₦{(tx.amount || 45200).toLocaleString()}
+                    ₦{(tx.amount || 0).toLocaleString()}
                   </td>
                 </tr>
               ))
@@ -514,48 +514,9 @@ function TeamTab({ team, loading }: any) {
                       </tr>
                     ))
                   ) : (
-                    // Fallback to dummy data matching the design if no team members found
-                    [
-                      { id: 1, name: 'Lionel Crona', email: 'lionel@email.com', role: 'Super Admin', status: 'active', lastActive: null },
-                      { id: 2, name: 'Marianna Volkman', email: 'marianna@email.com', role: 'Super Admin', status: 'active', lastActive: null },
-                      { id: 3, name: 'Keon Hammes', email: 'keon@email.com', role: 'Super Admin', status: 'not-active', lastActive: null },
-                    ].map((member: any) => (
-                      <tr key={member.id} className="hover:bg-zinc-50 transition-colors">
-                        <td className="px-6 py-2">
-                          <div className="flex items-center gap-3 h-12">
-                            <div className="w-12 h-12 relative bg-zinc-600/10 rounded-full overflow-hidden flex items-center justify-center shrink-0">
-                              <span className="text-zinc-700 text-sm font-medium font-inter">
-                                {member.name.charAt(0)}
-                              </span>
-                            </div>
-                            <div className="inline-flex flex-col justify-start items-start gap-[2px]">
-                              <div className="text-zinc-800 text-sm font-medium font-inter leading-5">{member.name}</div>
-                              <div className="text-zinc-500 text-xs font-normal font-inter leading-4">{member.email}</div>
-                            </div>
-                          </div>
-                        </td>
-                        <td className="px-6 py-2 h-16">
-                          <div className="text-zinc-600 text-sm font-medium font-inter leading-5">{member.role}</div>
-                        </td>
-                        <td className="px-6 py-2 h-16">
-                          <div className="text-zinc-600 text-sm font-medium font-inter leading-5">2 hours ago</div>
-                        </td>
-                        <td className="px-6 py-2 h-16">
-                          <div className="flex items-center gap-3">
-                            <div className={cn(
-                              "w-2.5 h-2.5 rounded-full",
-                              member.status === 'active' ? "bg-green-700" : "bg-rose-400"
-                            )} />
-                            <div className={cn(
-                              "text-sm font-medium font-inter leading-5",
-                              member.status === 'active' ? "text-green-700" : "text-rose-400"
-                            )}>
-                              {member.status === 'active' ? 'Active' : 'Not active'}
-                            </div>
-                          </div>
-                        </td>
-                      </tr>
-                    ))
+                    <tr>
+                      <td colSpan={4} className="px-6 py-10 text-center text-zinc-400 text-sm">No team members found.</td>
+                    </tr>
                   )}
                 </tbody>
               </table>

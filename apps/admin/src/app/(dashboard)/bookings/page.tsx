@@ -15,9 +15,12 @@ import { cn, Button, Skeleton } from "@resolve/ui"
 import { useAdminBookings, useAdminBookingStats } from '@/hooks/api-hooks'
 import { BookingCard } from '@/components/bookings/booking-card'
 
+const PAGE_SIZE = 12
+
 export default function BookingsPage() {
   const [search, setSearch] = useState('')
   const [filter, setFilter] = useState('all')
+  const [page, setPage] = useState(1)
   const { data: bookings, isLoading: bookingsLoading, error } = useAdminBookings()
   const { data: statsData, isLoading: statsLoading } = useAdminBookingStats()
 
@@ -50,6 +53,9 @@ export default function BookingsPage() {
       return matchesSearch && matchesFilter
     }) || []
   }, [bookings, search, filter])
+
+  const totalPages = Math.ceil(filteredBookings.length / PAGE_SIZE)
+  const paginatedBookings = filteredBookings.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
 
   const statusTabs = [
     { id: 'all', label: 'All', count: bookings?.length || 0 },
@@ -96,7 +102,7 @@ export default function BookingsPage() {
           <input 
             placeholder="Search booking" 
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e) => { setSearch(e.target.value); setPage(1) }}
             className="w-full h-12 px-4 pr-12 rounded-xl border border-zinc-300 text-sm outline-none focus:ring-2 focus:ring-blue-500/10 focus:border-blue-700 transition-all shadow-sm"
           />
           <HiOutlineSearch className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-400 w-5 h-5" />
@@ -141,7 +147,7 @@ export default function BookingsPage() {
           {statusTabs.map((tab) => (
             <button
               key={tab.id}
-              onClick={() => setFilter(tab.id)}
+              onClick={() => { setFilter(tab.id); setPage(1) }}
               className={cn(
                 "py-3 flex items-center gap-2 border-b-2 transition-all relative whitespace-nowrap",
                 filter === tab.id 
@@ -161,7 +167,7 @@ export default function BookingsPage() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-          {filteredBookings.length > 0 ? filteredBookings.map((booking: any) => (
+          {paginatedBookings.length > 0 ? paginatedBookings.map((booking: any) => (
             <BookingCard key={booking.id} booking={booking} />
           )) : (
             <div className="col-span-full py-24 text-center bg-stone-50 rounded-2xl border-2 border-dashed border-zinc-200">
@@ -170,6 +176,18 @@ export default function BookingsPage() {
             </div>
           )}
         </div>
+        {totalPages > 1 && (
+          <div className="flex items-center justify-between px-2">
+            <p className="text-sm text-zinc-500">Showing {((page - 1) * PAGE_SIZE) + 1}–{Math.min(page * PAGE_SIZE, filteredBookings.length)} of {filteredBookings.length} items</p>
+            <div className="flex items-center gap-2">
+              <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} className="px-3 py-1.5 text-sm border border-zinc-200 rounded-lg text-zinc-600 hover:bg-zinc-50 disabled:opacity-40 disabled:cursor-not-allowed">Previous</button>
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map(p => (
+                <button key={p} onClick={() => setPage(p)} className={cn("w-8 h-8 text-sm rounded-lg font-medium", p === page ? "bg-blue-700 text-white" : "border border-zinc-200 text-zinc-600 hover:bg-zinc-50")}>{p}</button>
+              ))}
+              <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages} className="px-3 py-1.5 text-sm border border-zinc-200 rounded-lg text-zinc-600 hover:bg-zinc-50 disabled:opacity-40 disabled:cursor-not-allowed">Next</button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )

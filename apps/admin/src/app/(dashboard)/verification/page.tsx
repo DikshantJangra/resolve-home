@@ -18,8 +18,11 @@ import { ENDPOINTS } from "@resolve/api"
 import Link from 'next/link'
 import { toast } from 'sonner'
 
+const PAGE_SIZE = 10
+
 export default function VerificationPage() {
   const [search, setSearch] = useState('')
+  const [page, setPage] = useState(1)
   const { data: verifData, isLoading: verifLoading, error: verifError } = useAdminVerificationRequests()
   const { data: engineers, isLoading: engLoading } = useAdminEngineers()
   const { mutate: approveEngineer } = useAdminApproveEngineer()
@@ -53,6 +56,9 @@ export default function VerificationPage() {
       return searchStr.includes(search.toLowerCase())
     })
   }, [verifications, search])
+
+  const totalPages = Math.ceil(filteredVerifications.length / PAGE_SIZE)
+  const paginatedVerifications = filteredVerifications.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
 
   const handleAction = (id: string, status: 'approved' | 'rejected') => {
     // Find the original verification object to see if it has an engineerProfile ID
@@ -125,7 +131,7 @@ export default function VerificationPage() {
           <input
             placeholder="Search resolve"
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e) => { setSearch(e.target.value); setPage(1) }}
             className="w-full h-12 px-4 pr-12 rounded-xl border border-zinc-300 text-sm outline-none focus:ring-2 focus:ring-blue-500/10 focus:border-blue-700 transition-all shadow-sm"
           />
           <HiOutlineSearch className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-400 w-5 h-5" />
@@ -137,21 +143,16 @@ export default function VerificationPage() {
         <StatCard
           label="Pending Verifications"
           value={stats.pending}
-          trend="+12.5%"
-          trendUp={true}
           icon={<HiOutlineClock className="w-5 h-5 text-zinc-600" />}
         />
         <StatCard
           label="Verification Rate"
           value={stats.rate}
-          trend="+12.5%"
-          trendUp={true}
           icon={<HiOutlineShieldCheck className="w-5 h-5 text-zinc-600" />}
         />
         <StatCard
           label="Rejected Professionals"
           value={stats.rejected}
-          trend="+12.5%"
           trendUp={true}
           icon={<HiOutlineXCircle className="w-5 h-5 text-zinc-600" />}
         />
@@ -220,7 +221,7 @@ export default function VerificationPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-zinc-200">
-              {filteredVerifications.length > 0 ? filteredVerifications.map((v: any) => {
+              {paginatedVerifications.length > 0 ? paginatedVerifications.map((v: any) => {
                 const id = v.id || v._id
                 const name = v.name || v.fullName || v.engineer?.name || v.engineer?.fullName || 'Unknown'
                 const email = v.email || v.engineer?.email || 'N/A'
@@ -317,7 +318,18 @@ export default function VerificationPage() {
             </tbody>
           </table>
         </div>
-
+        {totalPages > 1 && (
+          <div className="flex items-center justify-between px-2 mt-4">
+            <p className="text-sm text-zinc-500">Showing {((page - 1) * PAGE_SIZE) + 1}–{Math.min(page * PAGE_SIZE, filteredVerifications.length)} of {filteredVerifications.length} items</p>
+            <div className="flex items-center gap-2">
+              <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} className="px-3 py-1.5 text-sm border border-zinc-200 rounded-lg text-zinc-600 hover:bg-zinc-50 disabled:opacity-40 disabled:cursor-not-allowed">Previous</button>
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map(p => (
+                <button key={p} onClick={() => setPage(p)} className={cn("w-8 h-8 text-sm rounded-lg font-medium", p === page ? "bg-blue-700 text-white" : "border border-zinc-200 text-zinc-600 hover:bg-zinc-50")}>{p}</button>
+              ))}
+              <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages} className="px-3 py-1.5 text-sm border border-zinc-200 rounded-lg text-zinc-600 hover:bg-zinc-50 disabled:opacity-40 disabled:cursor-not-allowed">Next</button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )

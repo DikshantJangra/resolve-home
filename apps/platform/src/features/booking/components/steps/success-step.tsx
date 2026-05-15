@@ -71,11 +71,17 @@ export const SuccessStep = () => {
         <div className="w-full p-5 bg-stone-50 rounded-xl flex flex-col justify-center items-start gap-8 overflow-hidden">
           <div className="self-stretch inline-flex justify-start items-start gap-4">
             <div className="flex justify-start items-center gap-3">
-              <img 
-                className="w-20 h-20 rounded-full object-cover shadow-sm" 
-                src={currentPro.image || "https://placehold.co/88x88"} 
-                alt={currentPro.name}
-              />
+              {currentPro.image ? (
+                <img
+                  className="w-20 h-20 rounded-full object-cover shadow-sm"
+                  src={currentPro.image}
+                  alt={currentPro.name}
+                />
+              ) : (
+                <div className="w-20 h-20 rounded-full bg-zinc-100 flex items-center justify-center text-zinc-600 text-2xl font-bold shadow-sm">
+                  {currentPro.name?.[0] || 'P'}
+                </div>
+              )}
               <div className="inline-flex flex-col justify-start items-start gap-3.5">
                 <div className="flex flex-col justify-start items-start gap-2">
                   <div className="inline-flex justify-start items-end gap-2">

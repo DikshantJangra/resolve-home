@@ -14,8 +14,11 @@ import { cn, Button, Skeleton, Input } from "@resolve/ui"
 import { useAdminUsers, useAdminStats } from '@/hooks/api-hooks'
 import Link from 'next/link'
 
+const PAGE_SIZE = 10
+
 export default function HomeownersPage() {
   const [search, setSearch] = useState('')
+  const [page, setPage] = useState(1)
   const { data: users, isLoading: usersLoading } = useAdminUsers()
   const { data: statsData, isLoading: statsLoading } = useAdminStats()
 
@@ -32,6 +35,9 @@ export default function HomeownersPage() {
     { label: 'Active Members', value: (statsData as any)?.activeMembers || homeowners.filter((u: any) => !u.isBanned).length, trend: (statsData as any)?.trends?.active, icon: HiOutlineUserGroup },
     { label: 'Inactive members', value: (statsData as any)?.inactiveMembers || homeowners.filter((u: any) => u.isBanned).length, trend: (statsData as any)?.trends?.inactive, icon: HiOutlineUserGroup },
   ]
+
+  const totalPages = Math.ceil(homeowners.length / PAGE_SIZE)
+  const paginatedHomeowners = homeowners.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
 
   if (usersLoading || statsLoading) {
     return (
@@ -59,7 +65,7 @@ export default function HomeownersPage() {
           <Input 
             placeholder="Search homeowner" 
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e) => { setSearch(e.target.value); setPage(1) }}
             className="pl-4 pr-10 rounded-xl" 
           />
           <HiOutlineSearch className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-400" />
@@ -90,6 +96,7 @@ export default function HomeownersPage() {
       </div>
 
       {/* Table Container */}
+      <div className="flex flex-col gap-4">
       <div className="rounded-xl border border-zinc-300 overflow-hidden bg-white shadow-sm">
         <div className="overflow-x-auto">
         <table className="w-full text-left min-w-[640px]">
@@ -103,7 +110,7 @@ export default function HomeownersPage() {
             </tr>
           </thead>
           <tbody className="divide-y divide-zinc-200">
-            {homeowners.length > 0 ? homeowners.map((user: any) => (
+            {paginatedHomeowners.length > 0 ? paginatedHomeowners.map((user: any) => (
               <tr key={user.id} className="hover:bg-zinc-50/50 transition-colors">
                 <td className="px-6 py-4">
                   <Link href={`/homeowners/${user.id}`} className="flex items-center gap-3 group">
@@ -172,6 +179,19 @@ export default function HomeownersPage() {
           </tbody>
         </table>
         </div>
+      </div>
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between px-2">
+          <p className="text-sm text-zinc-500">Showing {((page - 1) * PAGE_SIZE) + 1}–{Math.min(page * PAGE_SIZE, homeowners.length)} of {homeowners.length} items</p>
+          <div className="flex items-center gap-2">
+            <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} className="px-3 py-1.5 text-sm border border-zinc-200 rounded-lg text-zinc-600 hover:bg-zinc-50 disabled:opacity-40 disabled:cursor-not-allowed">Previous</button>
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map(p => (
+              <button key={p} onClick={() => setPage(p)} className={cn("w-8 h-8 text-sm rounded-lg font-medium", p === page ? "bg-blue-700 text-white" : "border border-zinc-200 text-zinc-600 hover:bg-zinc-50")}>{p}</button>
+            ))}
+            <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages} className="px-3 py-1.5 text-sm border border-zinc-200 rounded-lg text-zinc-600 hover:bg-zinc-50 disabled:opacity-40 disabled:cursor-not-allowed">Next</button>
+          </div>
+        </div>
+      )}
       </div>
     </div>
   )

@@ -14,9 +14,16 @@ const formatCurrency = (amount: number) => {
   }).format(amount)
 }
 
+const PAGE_SIZE = 10
+
 export default function WalletPage() {
+  const [page, setPage] = React.useState(1)
   const { data: stats, isLoading: statsLoading } = useAdminWalletStats()
   const { data: transactions, isLoading: txLoading } = useAdminWalletTransactions()
+
+  const txList = (transactions as any[]) || []
+  const totalPages = Math.ceil(txList.length / PAGE_SIZE)
+  const paginatedTx = txList.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
 
   return (
     <div className="p-4 sm:p-8 flex flex-col gap-8">
@@ -36,24 +43,24 @@ export default function WalletPage() {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-        <StatCard 
-          label="Total Earnings (YTD)" 
-          value={(stats as any)?.totalDeposits || 0} 
-          trend="0%" 
+        <StatCard
+          label="Total Earnings (YTD)"
+          value={(stats as any)?.totalDeposits || 0}
+          trend={(stats as any)?.trends?.totalDeposits}
           icon={<HiOutlineDatabase className="w-5 h-5 text-zinc-600" />}
           loading={statsLoading}
         />
-        <StatCard 
-          label="Escrow Balance" 
-          value={(stats as any)?.balance || 0} 
-          trend="0%" 
+        <StatCard
+          label="Escrow Balance"
+          value={(stats as any)?.balance || 0}
+          trend={(stats as any)?.trends?.balance}
           icon={<HiOutlineCreditCard className="w-5 h-5 text-zinc-600" />}
           loading={statsLoading}
         />
-        <StatCard 
-          label="Platform Revenue" 
-          value={(stats as any)?.totalSpent || 0} 
-          trend="0%" 
+        <StatCard
+          label="Platform Revenue"
+          value={(stats as any)?.totalSpent || 0}
+          trend={(stats as any)?.trends?.totalSpent}
           icon={<HiOutlineChartBar className="w-5 h-5 text-zinc-600" />}
           loading={statsLoading}
         />
@@ -75,8 +82,8 @@ export default function WalletPage() {
             <tbody className="divide-y divide-zinc-300">
               {txLoading ? (
                 Array(7).fill(0).map((_, i) => <SkeletonRow key={i} />)
-              ) : transactions && transactions.length > 0 ? (
-                (transactions as any[]).map((tx) => (
+              ) : paginatedTx.length > 0 ? (
+                paginatedTx.map((tx) => (
                   <tr key={tx.id} className="hover:bg-zinc-50 transition-colors">
                     <td className="px-6 py-4 text-zinc-600 text-sm font-medium font-inter">
                       {format(new Date(tx.createdAt), 'MMM dd, yyyy')}
@@ -114,6 +121,18 @@ export default function WalletPage() {
           </table>
         </div>
       </div>
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between px-2">
+          <p className="text-sm text-zinc-500">Showing {((page - 1) * PAGE_SIZE) + 1}–{Math.min(page * PAGE_SIZE, txList.length)} of {txList.length} items</p>
+          <div className="flex items-center gap-2">
+            <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} className="px-3 py-1.5 text-sm border border-zinc-200 rounded-lg text-zinc-600 hover:bg-zinc-50 disabled:opacity-40 disabled:cursor-not-allowed">Previous</button>
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map(p => (
+              <button key={p} onClick={() => setPage(p)} className={`w-8 h-8 text-sm rounded-lg font-medium ${p === page ? "bg-blue-700 text-white" : "border border-zinc-200 text-zinc-600 hover:bg-zinc-50"}`}>{p}</button>
+            ))}
+            <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages} className="px-3 py-1.5 text-sm border border-zinc-200 rounded-lg text-zinc-600 hover:bg-zinc-50 disabled:opacity-40 disabled:cursor-not-allowed">Next</button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
@@ -136,12 +155,14 @@ function StatCard({ label, value, trend, icon, loading }: any) {
           {icon}
         </div>
       </div>
-      <div className="flex items-center gap-1">
-        <div className="w-5 h-5 flex items-center justify-center">
-          <HiOutlineTrendingUp className="w-4 h-4 text-green-400" />
+      {trend && (
+        <div className="flex items-center gap-1">
+          <div className="w-5 h-5 flex items-center justify-center">
+            <HiOutlineTrendingUp className="w-4 h-4 text-green-400" />
+          </div>
+          <span className="text-green-700 text-xs font-medium font-inter leading-4">{trend}</span>
         </div>
-        <span className="text-green-700 text-xs font-medium font-inter leading-4">{trend}</span>
-      </div>
+      )}
     </Card>
   )
 }
@@ -212,43 +233,5 @@ function SkeletonRow() {
       <td className="px-6 py-4"><Skeleton className="h-4 w-28 bg-zinc-100" /></td>
       <td className="px-6 py-4"><Skeleton className="h-4 w-20 bg-zinc-100" /></td>
     </tr>
-  )
-}
-
-function MockDataRows() {
-  const mockData = [
-    { date: 'Dec 15, 2024', name: 'Lionel Crona', email: 'lionel@email.com', status: 'Success', ref: 'PAY-8921-20', amount: 45200 },
-    { date: 'Jan 02, 2025', name: 'Marianna Volkman', email: 'marianna@email.com', status: 'Pending', ref: 'PAY-8921-20', amount: 45200 },
-    { date: 'Nov 28, 2024', name: 'Lionel Crona', email: 'lionel@email.com', status: 'Success', ref: 'PAY-8921-20', amount: 45200 },
-    { date: 'Oct 18, 2024', name: 'Lionel Crona', email: 'lionel@email.com', status: 'Pending', ref: 'PAY-8921-20', amount: 45200 },
-    { date: 'Feb 14, 2025', name: 'Keon Hammes', email: 'keon@email.com', status: 'Failed', ref: 'PAY-8921-20', amount: 45200 },
-    { date: 'Oct 18, 2024', name: 'Lionel Crona', email: 'lionel@email.com', status: 'Pending', ref: 'PAY-8921-20', amount: 45200 },
-    { date: 'Mar 22, 2025', name: 'Lionel Crona', email: 'lionel@email.com', status: 'Pending', ref: 'PAY-8921-20', amount: 45200 },
-  ]
-
-  return (
-    <>
-      {mockData.map((item, i) => (
-        <tr key={i} className="hover:bg-zinc-50 transition-colors">
-          <td className="px-6 py-4 text-zinc-600 text-sm font-medium font-inter leading-5">{item.date}</td>
-          <td className="px-6 py-4">
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-full bg-zinc-600/10 flex items-center justify-center text-zinc-600 text-sm font-medium">
-                {item.name[0]}
-              </div>
-              <div className="flex flex-col">
-                <span className="text-neutral-900 text-sm font-medium font-inter leading-5">{item.name}</span>
-                <span className="text-zinc-400 text-xs font-normal font-inter leading-4">{item.email}</span>
-              </div>
-            </div>
-          </td>
-          <td className="px-6 py-4">
-            <StatusBadge status={item.status} />
-          </td>
-          <td className="px-6 py-4 text-zinc-600 text-sm font-medium font-inter leading-5">{item.ref}</td>
-          <td className="px-6 py-4 text-neutral-700 text-sm font-semibold font-inter leading-5">{formatCurrency(item.amount)}</td>
-        </tr>
-      ))}
-    </>
   )
 }

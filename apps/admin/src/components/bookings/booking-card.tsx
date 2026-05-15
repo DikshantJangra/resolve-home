@@ -73,17 +73,25 @@ export const BookingCard = ({ booking }: BookingCardProps) => {
           {/* User & Price Section */}
           <div className="py-3 border-t border-b border-stone-50 flex justify-between items-center">
             <div className="flex items-center gap-2">
-              <img 
-                className="w-9 h-9 rounded-full border border-zinc-100 object-cover" 
-                src={formatImageUrl(booking.customerAvatar) || "https://placehold.co/34x34"} 
-                alt={booking.customerName} 
-              />
+              {formatImageUrl(booking.customerAvatar) ? (
+                <img
+                  className="w-9 h-9 rounded-full border border-zinc-100 object-cover"
+                  src={formatImageUrl(booking.customerAvatar)}
+                  alt={booking.customerName}
+                />
+              ) : (
+                <div className="w-9 h-9 rounded-full border border-zinc-100 bg-zinc-100 flex items-center justify-center text-zinc-600 text-xs font-medium">
+                  {booking.customerName?.[0] || 'C'}
+                </div>
+              )}
               <div className="flex flex-col">
                 <span className="text-gray-800 text-xs font-semibold font-inter leading-4">{booking.customerName || 'Customer'}</span>
-                <div className="flex items-center gap-1">
-                  <span className="text-amber-500 text-xs">★</span>
-                  <span className="text-gray-600 text-xs font-medium font-inter leading-4">{booking.rating || '4.9'}</span>
-                </div>
+                {booking.rating && (
+                  <div className="flex items-center gap-1">
+                    <span className="text-amber-500 text-xs">★</span>
+                    <span className="text-gray-600 text-xs font-medium font-inter leading-4">{booking.rating}</span>
+                  </div>
+                )}
               </div>
             </div>
             <div className="text-neutral-800 text-base font-bold font-inter leading-6">

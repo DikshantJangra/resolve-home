@@ -46,7 +46,7 @@ export const ServiceQuotation = ({ quotation, isMe }: ServiceQuotationProps) => 
           </div>
         </div>
         <div className="self-stretch justify-start text-zinc-600 text-sm font-normal font-['Inter'] leading-5">
-          {quotation.description || 'Replace faulty kitchen circuits and investigate pooling near sink area.'}
+          {quotation.description}
         </div>
       </div>
 

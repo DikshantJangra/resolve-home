@@ -14,8 +14,11 @@ import { useAdminComplaints, useAdminComplaintStats } from '@/hooks/api-hooks'
 import { format } from 'date-fns'
 import Link from 'next/link'
 
+const PAGE_SIZE = 10
+
 export default function ComplaintsPage() {
   const [search, setSearch] = useState('')
+  const [page, setPage] = useState(1)
   const { data: complaints, isLoading: complaintsLoading } = useAdminComplaints()
   const { data: statsData, isLoading: statsLoading } = useAdminComplaintStats()
 
@@ -26,10 +29,13 @@ export default function ComplaintsPage() {
     return matchesSearch
   }) || []
 
+  const totalPages = Math.ceil(filteredComplaints.length / PAGE_SIZE)
+  const paginatedComplaints = filteredComplaints.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
+
   const stats = [
-    { label: 'Total Complaints', value: (statsData as any)?.totalComplaints || '0', trend: '+12.5%', icon: HiOutlineClipboardList },
-    { label: 'Resolved Cases', value: (statsData as any)?.resolvedCases || '0', trend: '+12.5%', icon: HiOutlineBadgeCheck },
-    { label: 'Pending Disputes', value: (statsData as any)?.pendingDisputes || '0', trend: '+12.5%', icon: HiOutlineExclamationCircle },
+    { label: 'Total Complaints', value: (statsData as any)?.totalComplaints || '0', trend: (statsData as any)?.trends?.totalComplaints, icon: HiOutlineClipboardList },
+    { label: 'Resolved Cases', value: (statsData as any)?.resolvedCases || '0', trend: (statsData as any)?.trends?.resolvedCases, icon: HiOutlineBadgeCheck },
+    { label: 'Pending Disputes', value: (statsData as any)?.pendingDisputes || '0', trend: (statsData as any)?.trends?.pendingDisputes, icon: HiOutlineExclamationCircle },
   ]
 
   if (complaintsLoading || statsLoading) {
@@ -72,10 +78,12 @@ export default function ComplaintsPage() {
                 <stat.icon className="w-5 h-5" />
               </div>
             </div>
-            <div className="flex items-center gap-1">
-              <HiOutlineTrendingUp className="w-4 h-4 text-green-400" />
-              <span className="text-green-700 text-xs font-medium font-inter leading-4">{stat.trend}</span>
-            </div>
+            {stat.trend && (
+              <div className="flex items-center gap-1">
+                <HiOutlineTrendingUp className="w-4 h-4 text-green-400" />
+                <span className="text-green-700 text-xs font-medium font-inter leading-4">{stat.trend}</span>
+              </div>
+            )}
           </div>
         ))}
       </div>
@@ -95,7 +103,7 @@ export default function ComplaintsPage() {
             </tr>
           </thead>
           <tbody className="divide-y divide-zinc-300">
-            {filteredComplaints.length > 0 ? filteredComplaints.map((c: any) => (
+            {paginatedComplaints.length > 0 ? paginatedComplaints.map((c: any) => (
               <tr key={c.id} className="hover:bg-zinc-50/50 transition-colors group">
                 <td className="px-6 py-4">
                   <span className="text-zinc-600 text-sm font-medium font-inter">
@@ -104,13 +112,13 @@ export default function ComplaintsPage() {
                 </td>
                 <td className="px-6 py-4">
                   <span className="text-zinc-600 text-sm font-medium font-inter">
-                    {c.createdAt ? format(new Date(c.createdAt), 'MMM dd, yyyy') : 'Dec 15, 2024'}
+                    {c.createdAt ? format(new Date(c.createdAt), 'MMM dd, yyyy') : 'N/A'}
                   </span>
                 </td>
                 <td className="px-6 py-4">
                   <div className="w-80">
                     <p className="text-zinc-600 text-sm font-medium font-inter line-clamp-1">
-                      {c.title || 'The refund has not processed'}
+                      {c.title || 'N/A'}
                     </p>
                   </div>
                 </td>
@@ -126,19 +134,19 @@ export default function ComplaintsPage() {
                     <div className="flex flex-col">
                       <div className="flex items-center gap-2">
                         <span className="text-neutral-800 text-sm font-medium font-inter">
-                          {c.userName || 'Jamison Stoltenberg'}
+                          {c.userName || 'N/A'}
                         </span>
                         {c.userRole === 'professional' && (
                           <HiOutlineBadgeCheck className="w-3.5 h-3.5 text-blue-700" />
                         )}
                       </div>
-                      <span className="text-zinc-500 text-xs font-normal font-inter">{c.userEmail || 'jamison@email.com'}</span>
+                      <span className="text-zinc-500 text-xs font-normal font-inter">{c.userEmail || ''}</span>
                     </div>
                   </div>
                 </td>
                 <td className="px-6 py-4">
                   <span className="text-zinc-600 text-sm font-medium font-inter capitalize">
-                    {c.userRole || 'Professional'}
+                    {c.userRole || 'N/A'}
                   </span>
                 </td>
                 <td className="px-6 py-4">
@@ -151,7 +159,7 @@ export default function ComplaintsPage() {
                       "text-sm font-medium font-inter capitalize",
                       c.status === 'open' ? "text-green-700" : (c.status === 'pending' ? "text-rose-400" : "text-zinc-600")
                     )}>
-                      {c.status || 'Open'}
+                      {c.status || 'N/A'}
                     </span>
                   </Link>
                 </td>
@@ -167,6 +175,18 @@ export default function ComplaintsPage() {
         </table>
         </div>
       </div>
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between px-2">
+          <p className="text-sm text-zinc-500">Showing {((page - 1) * PAGE_SIZE) + 1}–{Math.min(page * PAGE_SIZE, filteredComplaints.length)} of {filteredComplaints.length} items</p>
+          <div className="flex items-center gap-2">
+            <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} className="px-3 py-1.5 text-sm border border-zinc-200 rounded-lg text-zinc-600 hover:bg-zinc-50 disabled:opacity-40 disabled:cursor-not-allowed">Previous</button>
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map(p => (
+              <button key={p} onClick={() => setPage(p)} className={cn("w-8 h-8 text-sm rounded-lg font-medium", p === page ? "bg-blue-700 text-white" : "border border-zinc-200 text-zinc-600 hover:bg-zinc-50")}>{p}</button>
+            ))}
+            <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages} className="px-3 py-1.5 text-sm border border-zinc-200 rounded-lg text-zinc-600 hover:bg-zinc-50 disabled:opacity-40 disabled:cursor-not-allowed">Next</button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

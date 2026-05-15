@@ -16,14 +16,15 @@ import { cn, Skeleton, Button } from "@resolve/ui"
 import { useAdminBooking, useUpdateBookingStatus } from '@/hooks/api-hooks'
 import { toast } from 'sonner'
 
-export default function BookingDetailsPage({ params }: { params: { id: string } }) {
+export default function BookingDetailsPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter()
-  const { data: booking, isLoading, error } = useAdminBooking(params.id)
+  const { id } = React.use(params)
+  const { data: booking, isLoading, error } = useAdminBooking(id)
   const updateStatus = useUpdateBookingStatus()
 
   const handleStatusUpdate = async (status: string) => {
     try {
-      await updateStatus.mutateAsync({ bookingId: params.id, status })
+      await updateStatus.mutateAsync({ bookingId: id, status })
       toast.success(`Booking marked as ${status}`)
     } catch (err) {
     }
@@ -77,8 +78,8 @@ export default function BookingDetailsPage({ params }: { params: { id: string } 
             <div className="flex flex-col gap-4 pb-8 border-b border-zinc-300">
               <h2 className="text-neutral-700 text-sm font-semibold font-inter">Service Specification</h2>
               <div className="flex flex-col gap-5">
-                <DetailRow label="Service Category" value={booking.serviceCategory || 'Plumbing'} />
-                <DetailRow label="Scheduled Time" value={booking.scheduledTime || '2:00 PM – 4:00 PM'} />
+                <DetailRow label="Service Category" value={booking.serviceCategory || 'N/A'} />
+                <DetailRow label="Scheduled Time" value={booking.scheduledTime || 'N/A'} />
                 <DetailRow label="Date" value={booking.scheduledDate || booking.date || 'N/A'} />
               </div>
             </div>
@@ -90,12 +91,7 @@ export default function BookingDetailsPage({ params }: { params: { id: string } 
                 <DetailRow label="Labor cost" value={`₦${(booking.laborCost || 0).toLocaleString()}`} />
                 {booking.materials?.map((item: any, idx: number) => (
                   <DetailRow key={idx} label={item.name} value={`₦${(item.cost || 0).toLocaleString()}`} />
-                )) || (
-                  <>
-                    <DetailRow label="AC Filter" value="₦0" />
-                    <DetailRow label="Copper Pipe" value="₦0" />
-                  </>
-                )}
+                ))}
                 <div className="px-2 py-2 bg-indigo-50 rounded flex justify-between items-center mt-2">
                   <span className="text-neutral-700 text-sm font-semibold font-inter uppercase">TOTAL</span>
                   <span className="text-zinc-600 text-sm font-semibold font-inter">₦{(booking.totalPrice || 0).toLocaleString()}</span>
@@ -114,7 +110,7 @@ export default function BookingDetailsPage({ params }: { params: { id: string } 
                 title="Homeowner Info"
                 name={booking.customerName || booking.customer?.name || 'Unknown User'}
                 address={booking.location?.address || booking.address || 'N/A'}
-                avatar={booking.customerAvatar || booking.customer?.profileImage || "https://placehold.co/47x47"}
+                avatar={booking.customerAvatar || booking.customer?.profileImage || ''}
               />
 
               {/* Professional Card */}
@@ -122,7 +118,7 @@ export default function BookingDetailsPage({ params }: { params: { id: string } 
                 title="Allocated Professional"
                 name={booking.engineerName || booking.engineer?.name || 'Unassigned'}
                 address={booking.engineerAddress || booking.engineer?.location?.address || 'ResolvHome Platform Partner'}
-                avatar={booking.engineerAvatar || booking.engineer?.profileImage || "https://placehold.co/47x47"}
+                avatar={booking.engineerAvatar || booking.engineer?.profileImage || ''}
                 hasReassign={!!booking.engineerName}
               />
             </div>
@@ -181,7 +177,11 @@ const PersonCard = ({ title, name, address, avatar, hasReassign }: {
     <h3 className="text-neutral-700 text-sm font-semibold font-inter leading-5">{title}</h3>
     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
       <div className="flex items-center gap-3">
-        <img className="w-12 h-12 rounded-full border border-blue-700 object-cover" src={avatar} alt={name} />
+        {avatar ? (
+          <img className="w-12 h-12 rounded-full border border-blue-700 object-cover" src={avatar} alt={name} />
+        ) : (
+          <div className="w-12 h-12 rounded-full border border-blue-700 bg-zinc-100 flex items-center justify-center text-zinc-600 text-sm font-medium">{name?.[0] || '?'}</div>
+        )}
         <div className="flex flex-col">
           <span className="text-zinc-600 text-base font-semibold font-inter leading-6">{name}</span>
           <span className="text-zinc-600 text-sm font-normal font-inter leading-5">{address}</span>

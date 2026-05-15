@@ -2,8 +2,7 @@
 
 import React from 'react'
 import { useParams, useRouter } from 'next/navigation'
-import { 
-  HiOutlineTrendingUp,
+import {
   HiOutlineBriefcase,
   HiOutlineUsers,
   HiOutlineUserGroup,
@@ -11,7 +10,6 @@ import {
   HiOutlineMail,
   HiOutlinePhone,
   HiOutlineExclamationCircle,
-  HiOutlineCalendar
 } from 'react-icons/hi'
 import { cn, Button, Skeleton } from "@resolve/ui"
 import { useAdminUser, useAdminBookings } from '@/hooks/api-hooks'
@@ -24,11 +22,14 @@ export default function HomeownerDetailPage() {
 
   const homeownerBookings = allBookings?.filter((b: any) => b.userId === id || b.homeownerId === id) || []
 
+  const completedBookings = homeownerBookings.filter((b: any) => b.status === 'completed').length
+  const activeBookings = homeownerBookings.filter((b: any) => b.status === 'in-progress' || b.status === 'active').length
+
   const stats = [
-    { label: 'Total Homeowners', value: '158', trend: '+12.5%', icon: HiOutlineUsers },
-    { label: 'Membership Pro', value: '98%', trend: '+12.5%', icon: HiOutlineBriefcase },
-    { label: 'Active Members', value: '4.7', trend: '+12.5%', icon: HiOutlineUserGroup },
-    { label: 'Inactive members', value: '4.7', trend: '+12.5%', icon: HiOutlineUserGroup },
+    { label: 'Total Bookings', value: homeownerBookings.length, icon: HiOutlineBriefcase },
+    { label: 'Completed', value: completedBookings, icon: HiOutlineUsers },
+    { label: 'Active Bookings', value: activeBookings, icon: HiOutlineUserGroup },
+    { label: 'Plan', value: (user as any)?.subscription?.planName || 'Free', icon: HiOutlineUserGroup },
   ]
 
   if (isUserLoading || isBookingsLoading) {
@@ -77,10 +78,10 @@ export default function HomeownerDetailPage() {
                 </div>
                 <div className="flex flex-col">
                   <span className="text-zinc-600 text-base font-semibold font-inter leading-6">
-                    {user?.name || "Tollideen Samwood"}
+                    {(user as any)?.name || (user as any)?.fullName || 'N/A'}
                   </span>
                   <span className="text-zinc-600 text-sm font-normal font-inter leading-5">
-                    {user?.address || "14 Allen Avenue, Ikeja, Lagos"}
+                    {[(user as any)?.homeAddress?.street, (user as any)?.homeAddress?.city, (user as any)?.homeAddress?.state].filter(Boolean).join(', ') || (user as any)?.address || (user as any)?.city || 'N/A'}
                   </span>
                 </div>
               </div>
@@ -112,10 +113,6 @@ export default function HomeownerDetailPage() {
                     <stat.icon className="w-5 h-5" />
                   </div>
                 </div>
-                <div className="flex items-center gap-1">
-                  <HiOutlineTrendingUp className="w-4 h-4 text-green-400" />
-                  <span className="text-green-700 text-xs font-medium font-inter leading-4">{stat.trend}</span>
-                </div>
               </div>
             ))}
           </div>
@@ -139,26 +136,28 @@ export default function HomeownerDetailPage() {
                   </div>
                   <div className="flex flex-col">
                     <span className="text-neutral-800 text-sm font-medium font-inter">
-                      {booking.serviceName || "New Booking"}
+                      {booking.serviceName || booking.service?.name || 'N/A'}
                     </span>
                     <div className="flex items-center gap-1">
                       <span className="text-zinc-500 text-sm font-medium font-inter">
-                        {booking.customerName || user?.name}
+                        {booking.customerName || (user as any)?.name || 'N/A'}
                       </span>
-                      <div className="w-1.5 h-1.5 bg-zinc-300 rounded-full mx-1" />
-                      <span className="text-zinc-500 text-sm font-medium font-inter">
-                        {booking.categoryName || "Electrical"}
-                      </span>
+                      {booking.categoryName && <>
+                        <div className="w-1.5 h-1.5 bg-zinc-300 rounded-full mx-1" />
+                        <span className="text-zinc-500 text-sm font-medium font-inter">
+                          {booking.categoryName}
+                        </span>
+                      </>}
                     </div>
                   </div>
                 </div>
                 <div className="flex flex-col items-end gap-1">
                   <span className="text-neutral-800 text-sm font-medium font-inter">
-                    ₦{booking.totalPrice?.toLocaleString() || "12,000"}
+                    {booking.totalPrice != null ? `₦${booking.totalPrice.toLocaleString()}` : 'N/A'}
                   </span>
                   <div className="px-3 py-1 bg-indigo-50 rounded-full">
                     <span className="text-blue-700 text-xs font-medium font-inter">
-                      {booking.status || "Completed"}
+                      {booking.status || 'Pending'}
                     </span>
                   </div>
                 </div>

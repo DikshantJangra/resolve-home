@@ -137,14 +137,6 @@ export function useAdminStats() {
         totalHomeowners,
         totalEngineers,
         completedJobs,
-        averageRating: 4.8, // Fallback since rating might not be in the list
-        trends: {
-          revenue: "+12.5%",
-          homeowners: "+5.2%",
-          engineers: "+8.1%",
-          jobs: "+10.2%",
-          rating: "+0.1"
-        }
       }
     },
     enabled: !!users && !!engineers && !!bookings,
@@ -167,13 +159,6 @@ export function useAdminBookingStats() {
         totalBookings,
         inProgress,
         emergency,
-        avgResponse: '14 mins',
-        trends: {
-          total: "+4.3%",
-          inProgress: "+2.1%",
-          emergency: "-1.5%",
-          avgResponse: "+0.5%"
-        }
       }
     },
     enabled: !!bookings,
@@ -196,11 +181,6 @@ export function useAdminComplaintStats() {
         totalComplaints,
         resolvedCases,
         pendingDisputes,
-        trends: {
-          total: "+12.5%",
-          resolved: "+8.2%",
-          pending: "-4.5%"
-        }
       }
     },
     enabled: !!complaints,
@@ -317,18 +297,25 @@ export function useAdminPendingEngineerById(id: string) {
 
 // --- Admin Bookings ---
 
+function normalizeBooking(b: any) {
+  return {
+    ...b,
+    serviceName: b.serviceName || b.service?.name || b.service?.title || '',
+    serviceCategory: b.serviceCategory || b.service?.category || b.service?.name || '',
+    isEmergency: b.isEmergency ?? b.priority?.toLowerCase() === 'emergency',
+    customerName: b.customerName || b.customerDetails?.name || b.customerDetails?.fullName || 'Customer',
+    customerAvatar: b.customerAvatar || b.customerDetails?.avatar || b.customerDetails?.image || b.customerDetails?.profileImage || '',
+  }
+}
+
 export function useAdminBookings() {
   return useQuery({
     queryKey: ['admin-bookings'],
     queryFn: async () => {
       const response = await apiClient.get(ENDPOINTS.ADMIN_BOOKINGS.BASE)
-      const data = response.data.data || response.data
-
-      if (Array.isArray(data)) return data
-      if (data && typeof data === 'object') {
-        return data.bookings || data.items || data.data || []
-      }
-      return []
+      const raw = response.data.data || response.data
+      const list = Array.isArray(raw) ? raw : (raw?.bookings || raw?.items || raw?.data || [])
+      return list.map(normalizeBooking)
     }
   })
 }
@@ -339,9 +326,10 @@ export function useAdminBooking(id: string) {
     queryFn: async () => {
       const response = await apiClient.get(ENDPOINTS.ADMIN_BOOKINGS.BY_ID(id))
       const data = response.data.data || response.data
-      return data?.booking || data
+      return normalizeBooking(data?.booking || data)
     },
-    enabled: !!id
+    enabled: !!id,
+    retry: false,
   })
 }
 

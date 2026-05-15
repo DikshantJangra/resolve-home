@@ -120,7 +120,7 @@ export const ChatSidebar = () => {
                   )}
                 </div>
                 <p className="text-sm text-zinc-500 line-clamp-1 leading-5">
-                  {lastMessage?.content || 'Discussing the active job offer...'}
+                  {lastMessage?.content || ''}
                 </p>
               </div>
             </div>
