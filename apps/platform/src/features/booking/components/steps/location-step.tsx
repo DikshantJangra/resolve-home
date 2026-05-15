@@ -89,6 +89,8 @@ export const LocationStep = () => {
         city: addr.city || '',
         streetAddress: addr.street || addr.streetAddress || addr.address || '',
         landmark: addr.landmark || addr.nearestLandmark || '',
+        latitude: 0,
+        longitude: 0,
       })
     }
   }

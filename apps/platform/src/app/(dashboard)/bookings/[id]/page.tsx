@@ -314,12 +314,12 @@ export default function BookingDetailsPage() {
 
               {/* Quotation View */}
               {quotation && quotation.quotation && (
-                <QuotationView quotation={quotation.quotation} bookingId={booking.id} />
+                <QuotationView quotation={quotation.quotation} />
               )}
 
               {/* Review Section (if completed booking) */}
               {booking.status === 'completed' && !booking.review && engineer && (
-                <ReviewForm bookingId={booking.id} engineerId={engineer.id} />
+                <ReviewForm bookingId={booking.id} />
               )}
             </div>
           )}
