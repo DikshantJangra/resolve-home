@@ -3,8 +3,10 @@
 import React, { useEffect, useRef } from 'react'
 import { motion } from 'framer-motion'
 import { useBookingStore } from '@/store/booking-store'
-import { useCreateBooking } from '@/hooks/api-hooks'
+import { useCreateBooking, useAvailableEngineers } from '@/hooks/api-hooks'
 import { toast } from 'sonner'
+import { HiOutlineExclamationCircle, HiOutlineRefresh } from 'react-icons/hi'
+import { Button } from '@resolve/ui'
 
 export const MatchingStep = () => {
   const { 
@@ -65,18 +67,42 @@ export const MatchingStep = () => {
     })
   }, [createBooking, serviceId, priority, issueDetails, location, photos, setStep, setAvailableEngineers, setBookingId])
 
-  // Conditional rendering for no engineers found
-  if (!isPending && useBookingStore.getState().availableEngineers.length === 0 && useBookingStore.getState().bookingId) {
+  const bookingId = useBookingStore((s) => s.bookingId)
+  const availableEngineers = useBookingStore((s) => s.availableEngineers)
+  const noEngineers = !isPending && availableEngineers.length === 0 && !!bookingId
+
+  const { refetch: refetchEngineers, isFetching: isRefetching } = useAvailableEngineers(
+    noEngineers ? bookingId! : ''
+  )
+
+  const handleRefresh = async () => {
+    const result = await refetchEngineers()
+    const engineers = result.data?.engineers
+    if (engineers?.length > 0) {
+      setAvailableEngineers(engineers)
+      setStep(7)
+    } else {
+      toast.error('Still no Pro Partners found nearby. Try again shortly.')
+    }
+  }
+
+  if (noEngineers) {
     return (
       <div className="flex flex-col items-center justify-center h-full p-10 text-center space-y-4 bg-white">
         <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center">
           <HiOutlineExclamationCircle className="w-8 h-8 text-red-500" />
         </div>
         <h3 className="text-xl font-bold text-neutral-700">No Pro Partners found</h3>
-        <p className="text-zinc-600">We couldn't find any Pro Partners near you at the moment. Please try again later or adjust your location/time.</p>
-        <Button onClick={() => setStep(4)} className="bg-blue-700">Adjust Location/Time</Button>
+        <p className="text-zinc-600">We couldn't find any Pro Partners near you at the moment.</p>
+        <div className="flex gap-3">
+          <Button onClick={handleRefresh} disabled={isRefetching} className="bg-blue-700 flex items-center gap-2">
+            <HiOutlineRefresh className={isRefetching ? 'animate-spin' : ''} />
+            {isRefetching ? 'Checking...' : 'Refresh'}
+          </Button>
+          <Button onClick={() => setStep(4)} variant="outline">Adjust Location</Button>
+        </div>
       </div>
-    );
+    )
   }
 
   return (
