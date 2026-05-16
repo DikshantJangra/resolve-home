@@ -27,7 +27,8 @@ import {
   useAdminUsers,
   useNotificationSettings,
   useUpdateNotificationSettings,
-  useAdminWalletTransactions
+  useAdminWalletTransactions,
+  useAdminInvite
 } from '@/hooks/api-hooks'
 import { toast } from 'sonner'
 
@@ -438,13 +439,86 @@ function RecentActivityTable({ transactions, loading }: any) {
 }
 
 function TeamTab({ team, loading }: any) {
+  const [isInviteOpen, setIsInviteOpen] = useState(false)
+  const [inviteData, setInviteData] = useState({ email: '', role: 'Hire a professional', redirectUrl: '' })
+  const invite = useAdminInvite()
+
+  const handleInvite = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!inviteData.email) { toast.error('Email is required'); return }
+    invite.mutate(inviteData, {
+      onSuccess: () => {
+        toast.success(`Invitation sent to ${inviteData.email}`)
+        setIsInviteOpen(false)
+        setInviteData({ email: '', role: 'Hire a professional', redirectUrl: '' })
+      },
+      onError: (err: any) => toast.error(err?.message || 'Failed to send invitation')
+    })
+  }
+
   return (
     <div className="w-full flex flex-col justify-start items-start gap-2">
+      {/* Invite Modal */}
+      {isInviteOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl overflow-hidden">
+            <div className="px-6 py-5 border-b border-zinc-100 bg-slate-50 flex justify-between items-center">
+              <h3 className="text-lg font-bold text-neutral-700">Invite New Member</h3>
+              <button onClick={() => setIsInviteOpen(false)} className="p-2 hover:bg-zinc-200 rounded-full transition-colors text-zinc-500 text-xl leading-none">&times;</button>
+            </div>
+            <form onSubmit={handleInvite} className="p-6 flex flex-col gap-5">
+              <div className="flex flex-col gap-1.5">
+                <Label>Email Address</Label>
+                <Input
+                  type="email"
+                  placeholder="colleague@example.com"
+                  value={inviteData.email}
+                  onChange={e => setInviteData(p => ({ ...p, email: e.target.value }))}
+                  className="h-11"
+                  required
+                />
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <Label>Role</Label>
+                <select
+                  value={inviteData.role}
+                  onChange={e => setInviteData(p => ({ ...p, role: e.target.value }))}
+                  className="h-11 px-3 rounded-lg border border-zinc-300 text-sm text-zinc-700 outline-none focus:border-blue-700"
+                >
+                  <option value="Hire a professional">Home Owner</option>
+                  <option value="Work as a Professional">Pro Partner</option>
+                </select>
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <Label>Redirect URL <span className="text-zinc-400 font-normal">(optional)</span></Label>
+                <Input
+                  type="url"
+                  placeholder="https://your-site.com/register"
+                  value={inviteData.redirectUrl}
+                  onChange={e => setInviteData(p => ({ ...p, redirectUrl: e.target.value }))}
+                  className="h-11"
+                />
+                <p className="text-xs text-zinc-400">Leave blank to use the default registration URL.</p>
+              </div>
+              <div className="flex gap-3 pt-2">
+                <Button type="button" variant="outline" onClick={() => setIsInviteOpen(false)} className="flex-1 h-11 rounded-xl">Cancel</Button>
+                <Button type="submit" disabled={invite.isPending} className="flex-1 h-11 bg-blue-700 hover:bg-blue-800 text-white rounded-xl">
+                  {invite.isPending ? 'Sending...' : 'Send Invitation'}
+                </Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
       <div className="self-stretch inline-flex justify-start items-center gap-5">
         <div className="flex-1 min-w-full p-5 bg-stone-50 rounded-xl inline-flex flex-col justify-start items-start gap-5">
           <div className="self-stretch inline-flex justify-between items-center">
-            <div className="justify-start text-neutral-700 text-base font-semibold font-inter leading-6">Administrators & Staff</div>
-            <button className="justify-start text-blue-700 text-base font-semibold font-inter leading-6 hover:text-blue-800 transition-colors">
+            <div className="justify-start text-neutral-700 text-base font-semibold font-inter leading-6">Administrators &amp; Staff</div>
+            <button
+              onClick={() => setIsInviteOpen(true)}
+              className="justify-start text-blue-700 text-base font-semibold font-inter leading-6 hover:text-blue-800 transition-colors"
+            >
               Invite new member
             </button>
           </div>
@@ -548,11 +622,18 @@ function NotificationsTab({ settings, updateSettings, loading }: any) {
   }, [settings])
 
   const toggleSetting = (key: string) => {
-    const newSettings = { ...localSettings, [key]: !localSettings[key] }
-    setLocalSettings(newSettings)
-    if (updateSettings?.mutate) {
-      updateSettings.mutate(newSettings)
-    }
+    const newVal = !localSettings[key]
+    setLocalSettings((prev: any) => ({ ...prev, [key]: newVal }))
+    updateSettings.mutate(
+      { [key]: newVal },
+      {
+        onSuccess: () => toast.success('Notification preference updated'),
+        onError: () => {
+          setLocalSettings((prev: any) => ({ ...prev, [key]: !newVal }))
+          toast.error('Failed to update preference')
+        }
+      }
+    )
   }
 
   if (loading) {

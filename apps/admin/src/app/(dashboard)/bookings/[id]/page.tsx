@@ -42,11 +42,87 @@ export default function BookingDetailsPage() {
 
   if (isLoading) {
     return (
-      <div className="p-4 sm:p-8 flex flex-col gap-6 max-w-[1400px] mx-auto">
-        <Skeleton className="h-10 w-48" />
-        <div className="flex flex-col lg:flex-row gap-5">
-          <Skeleton className="w-full lg:w-96 h-[600px] rounded-xl" />
-          <Skeleton className="flex-1 h-[600px] rounded-xl" />
+      <div className="p-4 sm:p-8 flex flex-col gap-6 max-w-[1400px] mx-auto animate-pulse">
+        {/* Header */}
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 bg-zinc-100 rounded-xl" />
+          <div className="flex flex-col gap-1.5">
+            <div className="h-5 w-36 bg-zinc-100 rounded" />
+            <div className="h-3 w-24 bg-zinc-100 rounded" />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          {/* Left column */}
+          <div className="lg:col-span-4 flex flex-col gap-6">
+            <div className="p-6 rounded-2xl border border-zinc-200 bg-white flex flex-col gap-6">
+              <div className="h-4 w-40 bg-zinc-100 rounded" />
+              {[1,2,3,4].map(i => (
+                <div key={i} className="flex justify-between">
+                  <div className="h-3 w-24 bg-zinc-100 rounded" />
+                  <div className="h-3 w-20 bg-zinc-100 rounded" />
+                </div>
+              ))}
+              <div className="h-px bg-zinc-100" />
+              <div className="h-4 w-32 bg-zinc-100 rounded" />
+              {[1,2,3].map(i => (
+                <div key={i} className="flex justify-between">
+                  <div className="h-3 w-20 bg-zinc-100 rounded" />
+                  <div className="h-3 w-16 bg-zinc-100 rounded" />
+                </div>
+              ))}
+              <div className="h-12 bg-blue-50 rounded-xl" />
+            </div>
+            <div className="p-6 rounded-2xl border border-zinc-200 bg-stone-50 flex flex-col gap-3">
+              <div className="h-4 w-40 bg-zinc-100 rounded" />
+              <div className="h-3 w-full bg-zinc-100 rounded" />
+              <div className="h-3 w-3/4 bg-zinc-100 rounded" />
+            </div>
+          </div>
+
+          {/* Right column */}
+          <div className="lg:col-span-8 flex flex-col gap-6">
+            {/* Timeline */}
+            <div className="p-6 rounded-2xl border border-zinc-200 bg-white">
+              <div className="flex items-center justify-between min-w-[600px] px-4">
+                {[1,2,3,4,5].map((i, idx) => (
+                  <div key={i} className="flex items-center gap-2 flex-1">
+                    <div className="flex flex-col items-center gap-2">
+                      <div className="w-6 h-6 rounded-full bg-zinc-100" />
+                      <div className="h-3 w-14 bg-zinc-100 rounded" />
+                    </div>
+                    {idx < 4 && <div className="flex-1 h-0.5 bg-zinc-100 -mt-5" />}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Person cards */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {[1,2].map(i => (
+                <div key={i} className="p-6 bg-white rounded-2xl border border-zinc-200 flex flex-col gap-4">
+                  <div className="h-3 w-28 bg-zinc-100 rounded" />
+                  <div className="flex items-start gap-4">
+                    <div className="w-14 h-14 rounded-2xl bg-zinc-100 shrink-0" />
+                    <div className="flex flex-col gap-2 flex-1">
+                      <div className="h-4 w-32 bg-zinc-100 rounded" />
+                      <div className="h-3 w-20 bg-zinc-100 rounded" />
+                      <div className="h-3 w-40 bg-zinc-100 rounded" />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Actions */}
+            <div className="p-8 rounded-2xl border border-zinc-200 bg-white flex flex-col gap-6">
+              <div className="h-4 w-40 bg-zinc-100 rounded" />
+              <div className="flex gap-4">
+                <div className="flex-1 h-12 bg-zinc-100 rounded-xl" />
+                <div className="flex-1 h-12 bg-zinc-100 rounded-xl" />
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     )
@@ -76,16 +152,16 @@ export default function BookingDetailsPage() {
     name: booking.customerName,
     avatar: booking.customerAvatar,
     address: booking.customerAddress,
-    phone: (booking.user || booking.customerDetails)?.phone
+    phone: booking.customerPhone || booking.customerDetails?.phone
   }
 
-  const engineer = {
+  const engineer = booking.engineerName !== 'Unassigned' ? {
     name: booking.engineerName,
     avatar: booking.engineerAvatar,
     address: booking.engineerAddress,
-    phone: (booking.engineer?.user || booking.engineer)?.phone,
-    specialty: booking.engineer?.engineerProfile?.specialty || 'Professional'
-  }
+    phone: booking.engineerPhone,
+    specialty: booking.engineerSpecialty
+  } : null
 
   return (
     <div className="p-4 sm:p-8 flex flex-col gap-6 max-w-[1400px] mx-auto pb-20">
@@ -161,7 +237,7 @@ export default function BookingDetailsPage() {
               <div className="flex flex-col gap-4">
                 <DetailRow 
                   label="Labor cost" 
-                  value={`₦${(activeQuotation?.laborCost || 0).toLocaleString()}`} 
+                  value={`₦${(activeQuotation?.laborFee || activeQuotation?.laborCost || 0).toLocaleString()}`} 
                 />
                 
                 {activeQuotation?.materials?.length > 0 ? (
@@ -241,21 +317,28 @@ export default function BookingDetailsPage() {
               title="Homeowner Details"
               name={homeowner.name}
               address={homeowner.address}
-              avatar={formatImageUrl(homeowner.avatar)}
+              avatar={homeowner.avatar}
               role="Client"
               phone={homeowner.phone}
             />
 
             {/* Professional Card */}
-            <PersonCard 
-              title="Allocated Professional"
-              name={engineer.name}
-              address={engineer.address}
-              avatar={formatImageUrl(engineer.avatar)}
-              role={engineer.specialty}
-              phone={engineer.phone}
-              isPro
-            />
+            {engineer ? (
+              <PersonCard 
+                title="Allocated Professional"
+                name={engineer.name}
+                address={engineer.address}
+                avatar={engineer.avatar}
+                role={engineer.specialty}
+                phone={engineer.phone}
+                isPro
+              />
+            ) : (
+              <div className="p-6 bg-stone-50 rounded-2xl border border-dashed border-zinc-200 flex flex-col items-center justify-center gap-2 text-center">
+                <span className="text-zinc-400 text-sm font-medium">No Pro Partner Assigned</span>
+                <span className="text-zinc-300 text-xs">A professional hasn't been assigned yet</span>
+              </div>
+            )}
           </div>
 
           {/* Quick Actions Container */}
@@ -279,14 +362,6 @@ export default function BookingDetailsPage() {
                 variant="primary"
                 onClick={() => handleStatusUpdate('completed')}
                 disabled={updateStatus.isPending || booking.status === 'completed'}
-              />
-              <ActionButton 
-                label="Flag for dispute" 
-                icon={HiOutlineExclamation} 
-                variant="outline"
-                color="red"
-                onClick={() => handleStatusUpdate('disputed')}
-                disabled={updateStatus.isPending}
               />
             </div>
             <p className="text-[10px] text-zinc-400 text-center italic">
@@ -341,13 +416,6 @@ const PersonCard = ({ title, name, address, avatar, role, phone, isPro }: {
           <HiOutlineLocationMarker className="shrink-0" />
           <span className="truncate">{address}</span>
         </div>
-      </div>
-    </div>
-    
-    <div className="flex flex-col gap-3">
-      <div className="flex items-center gap-3">
-        <IconButton icon={HiOutlinePhone} onClick={() => phone && (window.location.href = `tel:${phone}`)} disabled={!phone} />
-        <IconButton icon={HiOutlineChatAlt2} />
       </div>
     </div>
   </div>

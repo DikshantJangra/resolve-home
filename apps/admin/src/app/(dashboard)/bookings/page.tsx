@@ -68,21 +68,69 @@ export default function BookingsPage() {
 
   if (bookingsLoading || statsLoading) {
     return (
-      <div className="p-4 sm:p-8 flex flex-col gap-8 max-w-[1400px] mx-auto animate-pulse">
-        <div className="flex justify-between items-start">
-          <div className="space-y-2">
-            <Skeleton className="h-8 w-48" />
-            <Skeleton className="h-4 w-64" />
+      <div className="p-4 sm:p-8 flex flex-col gap-8 max-w-[1400px] mx-auto">
+        {/* Header */}
+        <div className="flex flex-col md:flex-row justify-between items-start gap-4">
+          <div className="flex flex-col gap-2">
+            <div className="h-7 w-36 bg-zinc-200 rounded animate-pulse" />
+            <div className="h-4 w-64 bg-zinc-100 rounded animate-pulse" />
           </div>
-          <Skeleton className="h-12 w-80 rounded-xl" />
+          <div className="h-12 w-full md:w-96 bg-zinc-100 rounded-xl animate-pulse" />
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
-          {[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-32 rounded-xl" />)}
+
+        {/* Stat cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+          {[1,2,3,4].map(i => (
+            <div key={i} className="p-4 rounded-xl border border-zinc-200 bg-white flex flex-col gap-3 animate-pulse">
+              <div className="flex justify-between items-start">
+                <div className="flex flex-col gap-2">
+                  <div className="h-3 w-24 bg-zinc-100 rounded" />
+                  <div className="h-7 w-16 bg-zinc-200 rounded" />
+                </div>
+                <div className="w-9 h-9 bg-zinc-100 rounded-lg" />
+              </div>
+              <div className="h-3 w-20 bg-zinc-100 rounded" />
+            </div>
+          ))}
         </div>
-        <div className="space-y-4">
-          <Skeleton className="h-10 w-full rounded-lg" />
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-            {[1, 2, 3, 4, 5, 6].map(i => <Skeleton key={i} className="h-56 rounded-2xl" />)}
+
+        {/* Tabs */}
+        <div className="flex flex-col gap-6">
+          <div className="flex gap-6 border-b border-zinc-200 px-1">
+            {[1,2,3,4,5].map(i => (
+              <div key={i} className="h-4 w-16 bg-zinc-100 rounded animate-pulse mb-3" />
+            ))}
+          </div>
+
+          {/* Booking cards grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+            {[1,2,3,4,5,6].map(i => (
+              <div key={i} className="bg-white rounded-2xl border border-zinc-200 p-5 flex flex-col gap-4 animate-pulse">
+                <div className="flex justify-between items-start">
+                  <div className="flex items-center gap-2">
+                    <div className="w-9 h-9 bg-zinc-100 rounded-lg" />
+                    <div className="flex flex-col gap-1.5">
+                      <div className="h-3.5 w-28 bg-zinc-200 rounded" />
+                      <div className="h-3 w-20 bg-zinc-100 rounded" />
+                    </div>
+                  </div>
+                  <div className="h-6 w-16 bg-zinc-100 rounded-full" />
+                </div>
+                <div className="h-px bg-zinc-100" />
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 bg-zinc-100 rounded-full" />
+                  <div className="flex flex-col gap-1.5 flex-1">
+                    <div className="h-3 w-24 bg-zinc-100 rounded" />
+                    <div className="h-3 w-16 bg-zinc-100 rounded" />
+                  </div>
+                  <div className="h-3 w-20 bg-zinc-100 rounded" />
+                </div>
+                <div className="flex gap-2">
+                  <div className="h-3 w-28 bg-zinc-100 rounded" />
+                  <div className="h-3 w-20 bg-zinc-100 rounded" />
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </div>
@@ -168,7 +216,27 @@ export default function BookingsPage() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-          {paginatedBookings.length > 0 ? paginatedBookings.map((booking: any) => (
+          {bookingsLoading ? (
+            Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="h-56 rounded-2xl bg-white border border-zinc-200 animate-pulse">
+                <div className="p-5 flex flex-col gap-4">
+                  <div className="flex justify-between">
+                    <div className="h-4 w-24 bg-zinc-100 rounded" />
+                    <div className="h-5 w-16 bg-zinc-100 rounded-full" />
+                  </div>
+                  <div className="h-3 w-40 bg-zinc-100 rounded" />
+                  <div className="h-3 w-32 bg-zinc-100 rounded" />
+                  <div className="mt-2 flex gap-3">
+                    <div className="h-8 w-8 bg-zinc-100 rounded-full" />
+                    <div className="flex flex-col gap-1.5 flex-1">
+                      <div className="h-3 w-28 bg-zinc-100 rounded" />
+                      <div className="h-3 w-20 bg-zinc-100 rounded" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))
+          ) : paginatedBookings.length > 0 ? paginatedBookings.map((booking: any) => (
             <BookingCard key={booking.id} booking={booking} />
           )) : (
             <div className="col-span-full py-24 text-center bg-stone-50 rounded-2xl border-2 border-dashed border-zinc-200">

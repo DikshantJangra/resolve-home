@@ -12,9 +12,11 @@ import {
   HiOutlineBadgeCheck,
   HiOutlineCreditCard,
   HiOutlineCog,
-  HiOutlineX
+  HiOutlineX,
+  HiOutlineLogout
 } from 'react-icons/hi'
 import { cn } from "@resolve/ui"
+import { useSignOut } from '@/hooks/api-hooks'
 
 const sidebarItems = [
   { label: 'Overview', icon: HiOutlineViewGrid, href: '/dashboard' },
@@ -36,6 +38,7 @@ interface AdminSidebarProps {
 
 export const AdminSidebar = ({ isOpen, onClose }: AdminSidebarProps) => {
   const pathname = usePathname()
+  const { mutate: signOut, isPending: isSigningOut } = useSignOut()
 
   return (
     <>
@@ -104,6 +107,20 @@ export const AdminSidebar = ({ isOpen, onClose }: AdminSidebarProps) => {
             })}
           </div>
         </nav>
+
+        {/* Logout */}
+        <div className="px-3 py-4 border-t border-zinc-200">
+          <button
+            onClick={() => signOut()}
+            disabled={isSigningOut}
+            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-red-600 hover:bg-red-50 transition-colors disabled:opacity-50"
+          >
+            <HiOutlineLogout className="w-5 h-5 shrink-0" />
+            <span className="text-sm font-medium font-inter">
+              {isSigningOut ? 'Signing out...' : 'Sign Out'}
+            </span>
+          </button>
+        </div>
       </aside>
     </>
   )

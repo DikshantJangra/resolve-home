@@ -89,18 +89,55 @@ export default function VerificationPage() {
 
   if (isLoading) {
     return (
-      <div className="p-4 sm:p-8 flex flex-col gap-8 max-w-[1400px] mx-auto animate-pulse">
-        <div className="flex justify-between items-start">
-          <div className="space-y-2">
-            <Skeleton className="h-8 w-48" />
-            <Skeleton className="h-4 w-64" />
+      <div className="p-4 sm:p-8 flex flex-col gap-8 max-w-[1400px] mx-auto">
+        <div className="flex flex-col md:flex-row justify-between items-start gap-4">
+          <div className="flex flex-col gap-2">
+            <div className="h-7 w-36 bg-zinc-200 rounded animate-pulse" />
+            <div className="h-4 w-72 bg-zinc-100 rounded animate-pulse" />
           </div>
-          <Skeleton className="h-12 w-80 rounded-xl" />
+          <div className="h-12 w-full md:w-96 bg-zinc-100 rounded-xl animate-pulse" />
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-          {[1, 2, 3].map(i => <Skeleton key={i} className="h-32 rounded-xl" />)}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+          {[1,2,3].map(i => (
+            <div key={i} className="p-4 rounded-xl border border-zinc-200 bg-white flex flex-col gap-3 animate-pulse">
+              <div className="flex justify-between items-start">
+                <div className="flex flex-col gap-2">
+                  <div className="h-3 w-32 bg-zinc-100 rounded" />
+                  <div className="h-7 w-12 bg-zinc-200 rounded" />
+                </div>
+                <div className="w-9 h-9 bg-zinc-100 rounded-lg" />
+              </div>
+            </div>
+          ))}
         </div>
-        <Skeleton className="h-[500px] w-full rounded-xl" />
+        <div className="rounded-xl border border-zinc-200 bg-white overflow-hidden animate-pulse">
+          <div className="bg-stone-50 border-b border-zinc-200 px-6 py-4 grid grid-cols-4 gap-4">
+            {['Applicant','Submitted','Status','Actions'].map(h => (
+              <div key={h} className="h-3 w-16 bg-zinc-200 rounded" />
+            ))}
+          </div>
+          {[1,2,3,4,5,6,7,8].map(i => (
+            <div key={i} className="px-6 py-4 border-b border-zinc-100 grid grid-cols-4 gap-4 items-center">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-zinc-100 rounded-full shrink-0" />
+                <div className="flex flex-col gap-1.5">
+                  <div className="h-3 w-24 bg-zinc-200 rounded" />
+                  <div className="h-2.5 w-32 bg-zinc-100 rounded" />
+                </div>
+              </div>
+              <div className="h-3 w-20 bg-zinc-100 rounded" />
+              <div className="flex items-center gap-2">
+                <div className="w-2.5 h-2.5 bg-zinc-200 rounded-full" />
+                <div className="h-3 w-14 bg-zinc-100 rounded" />
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="w-6 h-6 bg-zinc-100 rounded-full" />
+                <div className="w-6 h-6 bg-zinc-100 rounded-full" />
+                <div className="w-6 h-6 bg-zinc-100 rounded-full" />
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     )
   }

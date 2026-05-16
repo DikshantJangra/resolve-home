@@ -127,16 +127,26 @@ export function useAdminStats() {
     queryFn: async () => {
       if (!users || !engineers || !bookings) return null
 
-      const totalHomeowners = users.filter((u: any) => u.role === 'user').length
+      const totalHomeowners = users.filter((u: any) =>
+        u.role === 'user' || u.role === 'Hire a professional' || u.role === 'customer'
+      ).length
       const totalEngineers = engineers.length
-      const totalRevenue = bookings.reduce((sum: number, b: any) => sum + (b.price || b.totalAmount || 0), 0)
-      const completedJobs = bookings.filter((b: any) => b.status === 'completed').length
+      const totalRevenue = bookings.reduce((sum: number, b: any) =>
+        sum + (b.totalPrice || b.totalAmount || b.price || 0), 0
+      )
+      const completedJobs = bookings.filter((b: any) =>
+        b.status?.toLowerCase() === 'completed'
+      ).length
+      const averageRating = engineers.length > 0
+        ? (engineers.reduce((sum: number, e: any) => sum + (e.engineerProfile?.rating || e.rating || 0), 0) / engineers.length).toFixed(1)
+        : '0'
 
       return {
         totalRevenue,
         totalHomeowners,
         totalEngineers,
         completedJobs,
+        averageRating,
       }
     },
     enabled: !!users && !!engineers && !!bookings,
@@ -298,17 +308,25 @@ export function useAdminPendingEngineerById(id: string) {
 // --- Admin Bookings ---
 
 function normalizeBooking(b: any) {
+  const customer = b.customer || b.customerDetails
+  const engineer = b.engineer || b.engineers?.[0]
+
   return {
     ...b,
-    serviceName: b.serviceName || b.service?.name || b.service?.title || '',
-    serviceCategory: b.serviceCategory || b.service?.category || b.service?.name || '',
+    serviceName: b.service?.name || b.serviceName || '',
+    serviceCategory: b.service?.categoryName || b.service?.category || b.serviceCategory || b.service?.name || '',
     isEmergency: b.isEmergency ?? b.priority?.toLowerCase() === 'emergency',
-    customerName: b.customerName || b.customerDetails?.name || b.customerDetails?.fullName || 'Customer',
-    customerAvatar: b.customerAvatar || b.customerDetails?.avatar || b.customerDetails?.image || b.customerDetails?.profileImage || '',
-    customerAddress: b.customerAddress || b.location?.address || b.address || b.customerDetails?.address || 'N/A',
-    engineerName: b.engineerName || b.engineer?.name || b.engineer?.user?.name || 'Unassigned',
-    engineerAvatar: b.engineerAvatar || b.engineer?.image || b.engineer?.user?.image || '',
-    engineerAddress: b.engineerAddress || b.engineer?.location?.address || b.engineer?.engineerProfile?.location?.address || 'Resolv Platform Partner',
+    // Customer
+    customerName: customer?.name || b.customerDetails?.name || 'N/A',
+    customerAvatar: customer?.image || b.customerDetails?.image || '',
+    customerAddress: b.location ? `${b.location.streetAddress || ''}, ${b.location.city || ''}, ${b.location.state || ''}`.replace(/^,\s*|,\s*$/g, '') : 'N/A',
+    customerPhone: customer?.phone || b.customerDetails?.phone || '',
+    // Engineer
+    engineerName: engineer?.name || 'Unassigned',
+    engineerAvatar: engineer?.image || '',
+    engineerAddress: engineer?.location ? `${engineer.location.city || ''}, ${engineer.location.state || ''}` : '',
+    engineerPhone: engineer?.phone || '',
+    engineerSpecialty: engineer?.specialty || engineer?.category || 'Pro Partner',
     notes: b.notes || b.issueDetails || 'No specific instructions provided.',
   }
 }
@@ -505,12 +523,53 @@ export function useHealthCheck() {
 }
 
 // --- Notifications ---
+export function useAdminInvite() {
+  return useMutation({
+    mutationFn: async (data: { email: string; role?: string; redirectUrl?: string }) => {
+      const response = await apiClient.post('/api/admin/invite', data)
+      return response.data
+    }
+  })
+}
+
+export function useNotifications() {
+  return useQuery({
+    queryKey: ['admin-notifications'],
+    queryFn: async () => {
+      const response = await apiClient.get(ENDPOINTS.NOTIFICATIONS.BASE)
+      return response.data.data || []
+    }
+  })
+}
+
+export function useMarkNotificationRead() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const response = await apiClient.put(ENDPOINTS.NOTIFICATIONS.READ(id))
+      return response.data
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['admin-notifications'] })
+  })
+}
+
+export function useMarkAllNotificationsRead() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async () => {
+      const response = await apiClient.put(ENDPOINTS.NOTIFICATIONS.READ_ALL)
+      return response.data
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['admin-notifications'] })
+  })
+}
+
 export function useNotificationSettings() {
   return useQuery({
     queryKey: ['notification-settings'],
     queryFn: async () => {
       const response = await apiClient.get(ENDPOINTS.NOTIFICATIONS.SETTINGS)
-      return response.data.data || null
+      return response.data.data?.settings || response.data.data || null
     }
   })
 }
