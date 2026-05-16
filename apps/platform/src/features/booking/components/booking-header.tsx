@@ -15,8 +15,8 @@ export const BookingHeader = ({
 
   const stepTitle = React.useMemo(() => {
     switch (currentStep) {
-      case 1: return 'Select Priority'
-      case 2: return 'Select Service'
+      case 1: return 'Select Service'
+      case 2: return 'Select Priority'
       case 3: return 'Describe the issue'
       case 4: return 'Where are you?'
       case 5: return 'Review and checkout'
@@ -28,8 +28,8 @@ export const BookingHeader = ({
 
   const stepDescription = React.useMemo(() => {
     switch (currentStep) {
-      case 1: return 'How quickly do you need our professional?'
-      case 2: return 'What service do you need help with?'
+      case 1: return 'What service do you need help with?'
+      case 2: return 'How quickly do you need our professional?'
       case 3: return 'Be as detailed as possible to help the person coming to prepare.'
       case 4: return 'Provide the location where the Pro will be working.'
       case 5: return 'Review your request and proceed to check out'

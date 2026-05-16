@@ -12,6 +12,7 @@ import {
   HiOutlineCreditCard, 
   HiOutlineCog 
 } from 'react-icons/hi'
+import { useEngineerLocationTracker } from '@/hooks/api-hooks'
 
 const engineerSidebarItems = [
   { label: 'Jobs Feed', icon: HiOutlineBriefcase, href: '/engineer' },
@@ -28,6 +29,7 @@ export default function EngineerLayout({
   children: React.ReactNode
 }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
+  useEngineerLocationTracker(true)
 
   return (
     <div className="flex min-h-screen bg-slate-50 overflow-x-hidden">

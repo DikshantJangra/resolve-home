@@ -5,7 +5,7 @@ import { Sidebar } from "@/components/layout/sidebar"
 import { Navbar } from "@/components/layout/navbar"
 import { cn } from "@resolve/ui"
 import { BookingWizardModal } from '@/features/booking/components/booking-wizard-modal'
-import { useUserProfile } from '@/hooks/api-hooks'
+import { useUserProfile, useEngineerLocationTracker } from '@/hooks/api-hooks'
 import { useRouter } from 'next/navigation'
 
 export default function DashboardLayout({
@@ -15,6 +15,8 @@ export default function DashboardLayout({
 }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const { data: user, isPending } = useUserProfile()
+  const isEngineer = user?.user?.role === 'worker'
+  useEngineerLocationTracker(isEngineer)
   const router = useRouter()
 
   useEffect(() => {

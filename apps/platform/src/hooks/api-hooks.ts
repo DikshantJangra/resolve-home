@@ -1,5 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { apiClient, ENDPOINTS } from "@resolve/api"
+import { useEffect as useReactEffect } from 'react'
+import { toast } from 'sonner'
 
 // --- Auth Session ---
 
@@ -252,6 +254,32 @@ export function useUpdateGuarantor() {
 }
 
 // --- Engineer Bookings ---
+
+export function useEngineerLocationTracker(enabled = false) {
+  useReactEffect(() => {
+    if (!enabled) return
+    if (!navigator.geolocation) return
+
+    const sendLocation = () => {
+      navigator.geolocation.getCurrentPosition(
+        async (pos) => {
+          try {
+            await apiClient.put(ENDPOINTS.ENGINEER.LOCATION, {
+              latitude: pos.coords.latitude,
+              longitude: pos.coords.longitude,
+            })
+            toast.info('📍 Location updated')
+          } catch { }
+        },
+        () => { }
+      )
+    }
+
+    sendLocation()
+    const interval = setInterval(sendLocation, 3 * 60 * 1000)
+    return () => clearInterval(interval)
+  }, [enabled])
+}
 
 export function useEngineerDashboard(enabled = false) {
   return useQuery({

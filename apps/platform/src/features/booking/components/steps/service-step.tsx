@@ -82,7 +82,7 @@ export const ServiceStep = () => {
       <div className="p-5 mt-auto">
         <button
           disabled={!categoryId}
-          onClick={() => setStep(3)}
+          onClick={() => setStep(2)}
           className={`w-full h-11 px-6 py-3 bg-blue-700 rounded-xl flex justify-between items-center transition-all ${
             !categoryId ? 'opacity-40 cursor-not-allowed' : 'hover:bg-blue-800'
           }`}

@@ -48,7 +48,7 @@ export const PriorityStep = () => {
         return
       }
     }
-    setStep(2)
+    setStep(3)
   }
 
   const standardLocked = !hasActiveSubscription && !subLoading

@@ -33,9 +33,9 @@ export const BookingWizard = () => {
   const renderStep = () => {
     switch (currentStep) {
       case 1:
-        return <PriorityStep />
-      case 2:
         return <ServiceStep />
+      case 2:
+        return <PriorityStep />
       case 3:
         return <IssueDetailsStep />
       case 4:
@@ -49,7 +49,7 @@ export const BookingWizard = () => {
       case 8:
         return <FinalSuccessStep />
       default:
-        return <PriorityStep />
+        return <ServiceStep />
     }
   }
 

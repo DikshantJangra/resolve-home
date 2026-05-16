@@ -175,7 +175,7 @@ export const Membership = () => {
                 show: { opacity: 1, y: 0 }
               }}
               className={cn(
-                "pricing-card relative flex flex-col min-w-[300px] md:min-w-0 p-8 rounded-xl border transition-all duration-300 hover:shadow-xl snap-center",
+                "pricing-card relative flex flex-col min-w-[280px] sm:min-w-[300px] md:min-w-0 p-5 sm:p-8 rounded-xl border transition-all duration-300 hover:shadow-xl snap-center",
                 plan.dark
                   ? "bg-[radial-gradient(ellipse_115.97%_115.97%_at_82.00%_18.00%,_#4A2208_0%,_#1E1220_45%,_#111318_100%)] border-transparent"
                   : "bg-stone-50 border-zinc-300"
@@ -199,10 +199,10 @@ export const Membership = () => {
                     <h3 className={cn("text-2xl font-semibold font-plus-jakarta leading-8", plan.dark ? "text-neutral-50" : "text-neutral-700")}>
                       {plan.name}
                     </h3>
-                    <p className={cn("text-sm font-normal leading-5 h-10", plan.dark ? "text-neutral-50/80" : "text-zinc-600")}>
+                    <p className={cn("text-sm font-normal leading-5 min-h-10", plan.dark ? "text-neutral-50/80" : "text-zinc-600")}>
                       {plan.subtitle}
                     </p>
-                    <span className={cn("inline-block text-xs font-bold px-2.5 py-1 rounded-full mt-1", plan.dark ? "bg-orange-600/20 text-orange-400" : "bg-blue-50 text-blue-700")}>
+                    <span className={cn("inline-flex items-center text-xs font-bold px-2.5 py-1 rounded-full mt-1 whitespace-nowrap", plan.dark ? "bg-orange-600/20 text-orange-400" : "bg-blue-50 text-blue-700")}>
                       {plan.callout}
                     </span>
                   </div>
