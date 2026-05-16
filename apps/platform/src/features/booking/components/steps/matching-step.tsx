@@ -16,7 +16,7 @@ type Phase = 'creating' | 'searching' | 'done' | 'error'
 export const MatchingStep = () => {
   const {
     setStep, priority, serviceId, issueDetails, location, photos,
-    setAvailableEngineers, setBookingId, isOpen,
+    setAvailableEngineers, setBookingId, isOpen, clearActiveDraft,
   } = useBookingStore()
 
   const { mutateAsync: createBooking } = useCreateBooking()
@@ -100,6 +100,7 @@ export const MatchingStep = () => {
         setBookingData(data)
         setBookingId(bid)
         setLocalBookingId(bid)
+        clearActiveDraft() // remove draft now that booking is created
 
         if (data?.data?.availableEngineers?.length > 0) {
           setAvailableEngineers(data.data.availableEngineers)
@@ -116,6 +117,7 @@ export const MatchingStep = () => {
           setBookingData(responseData)
           setBookingId(bid)
           setLocalBookingId(bid)
+          clearActiveDraft()
           setAvailableEngineers([])
           setPhase('done')
           return

@@ -45,6 +45,7 @@ interface BookingState {
   bookingId: string | null
   isOpen: boolean
   drafts: BookingDraft[]
+  activeDraftId: string | null  // tracks which draft is being resumed
 
   // Actions
   setIsOpen: (isOpen: boolean) => void
@@ -66,6 +67,7 @@ interface BookingState {
   saveDraft: () => void
   resumeDraft: (draft: BookingDraft) => void
   deleteDraft: (id: string) => void
+  clearActiveDraft: () => void
   resetBooking: () => void
 }
 
@@ -87,6 +89,7 @@ export const useBookingStore = create<BookingState>()(
       bookingId: null,
       isOpen: false,
       drafts: [],
+      activeDraftId: null,
 
       setIsOpen: (isOpen) => set({ isOpen }),
       setStep: (step) => set({ currentStep: step }),
@@ -109,10 +112,9 @@ export const useBookingStore = create<BookingState>()(
 
       saveDraft: () => {
         const s = get()
-        // Only save if user has made meaningful progress (past step 1)
         if (s.currentStep <= 1 && !s.priority && !s.serviceId) return
         const draft: BookingDraft = {
-          id: crypto.randomUUID(),
+          id: s.activeDraftId || crypto.randomUUID(),
           savedAt: new Date().toISOString(),
           currentStep: s.currentStep,
           priority: s.priority,
@@ -125,12 +127,18 @@ export const useBookingStore = create<BookingState>()(
           scheduledDate: s.scheduledDate,
           scheduledTime: s.scheduledTime,
         }
-        // Keep max 5 drafts, newest first
-        set((state) => ({ drafts: [draft, ...state.drafts].slice(0, 5) }))
+        set((state) => {
+          const exists = state.drafts.some((d) => d.id === draft.id)
+          const updated = exists
+            ? state.drafts.map((d) => d.id === draft.id ? draft : d)
+            : [draft, ...state.drafts].slice(0, 5)
+          return { drafts: updated, activeDraftId: draft.id }
+        })
       },
 
       resumeDraft: (draft: BookingDraft) => {
         set({
+          activeDraftId: draft.id,
           currentStep: draft.currentStep,
           priority: draft.priority,
           serviceType: draft.serviceType,
@@ -149,7 +157,19 @@ export const useBookingStore = create<BookingState>()(
       },
 
       deleteDraft: (id: string) => {
-        set((state) => ({ drafts: state.drafts.filter((d) => d.id !== id) }))
+        set((state) => ({
+          drafts: state.drafts.filter((d) => d.id !== id),
+          activeDraftId: state.activeDraftId === id ? null : state.activeDraftId,
+        }))
+      },
+
+      clearActiveDraft: () => {
+        const s = get()
+        if (!s.activeDraftId) return
+        set((state) => ({
+          drafts: state.drafts.filter((d) => d.id !== state.activeDraftId),
+          activeDraftId: null,
+        }))
       },
 
       resetBooking: () =>
@@ -167,6 +187,7 @@ export const useBookingStore = create<BookingState>()(
           availableEngineers: [],
           bookingId: null,
           isOpen: false,
+          activeDraftId: null,
         }),
     }),
     {
