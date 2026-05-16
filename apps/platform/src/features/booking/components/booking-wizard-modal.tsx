@@ -6,7 +6,7 @@ import { BookingWizard } from './booking-wizard'
 import { useBookingStore } from '@/store/booking-store'
 
 export function BookingWizardModal() {
-  const { isOpen, setIsOpen, resetBooking } = useBookingStore()
+  const { isOpen, resetBooking, saveDraft, currentStep, bookingId } = useBookingStore()
 
   React.useEffect(() => {
     if (isOpen) {
@@ -21,6 +21,14 @@ export function BookingWizardModal() {
     }
   }, [isOpen])
 
+  const handleClose = () => {
+    // Save as draft if user is mid-flow and hasn't completed a booking
+    if (currentStep > 1 && !bookingId) {
+      saveDraft()
+    }
+    resetBooking()
+  }
+
   if (!isOpen) return null
 
   return (
@@ -31,17 +39,16 @@ export function BookingWizardModal() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            onClick={() => resetBooking()}
+            onClick={handleClose}
             className="absolute inset-0 hidden md:block"
           />
-
           <motion.div
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
             className="relative w-full h-full md:h-auto md:max-w-[669px] max-h-full overflow-y-auto pointer-events-auto md:rounded-2xl"
           >
-            <BookingWizard />
+            <BookingWizard onClose={handleClose} />
           </motion.div>
         </div>
       )}

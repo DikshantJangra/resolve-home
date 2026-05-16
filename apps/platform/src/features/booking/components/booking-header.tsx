@@ -8,10 +8,16 @@ interface BookingHeaderProps {
   title?: string
 }
 
-export const BookingHeader = ({ 
-  title = 'Book a service'
-}: { title?: string }) => {
+export const BookingHeader = ({
+  title = 'Book a service',
+  onClose,
+}: { title?: string; onClose?: () => void }) => {
   const { currentStep, resetBooking, setStep } = useBookingStore()
+
+  const handleClose = () => {
+    if (onClose) onClose()
+    else resetBooking()
+  }
 
   const stepTitle = React.useMemo(() => {
     switch (currentStep) {
@@ -20,7 +26,7 @@ export const BookingHeader = ({
       case 3: return 'Describe the issue'
       case 4: return 'Where are you?'
       case 5: return 'Review and checkout'
-      case 6:
+      case 6: return 'Finding Pro Partner'
       case 7: return 'Professional matched'
       default: return 'Book a service'
     }
@@ -33,7 +39,7 @@ export const BookingHeader = ({
       case 3: return 'Be as detailed as possible to help the person coming to prepare.'
       case 4: return 'Provide the location where the Pro will be working.'
       case 5: return 'Review your request and proceed to check out'
-      case 6:
+      case 6: return 'We are searching for the best Pro Partner near you.'
       case 7: return 'A professional has been matched with you, check below for professional\'s detail and contact them.'
       default: return ''
     }
@@ -57,7 +63,7 @@ export const BookingHeader = ({
           </button>
         ) : (
           <button
-            onClick={() => resetBooking()}
+            onClick={handleClose}
             className="flex items-center justify-center w-8 h-8 rounded-full hover:bg-zinc-100 transition-colors text-neutral-600 hover:text-neutral-900"
             aria-label="Close"
           >
@@ -83,9 +89,8 @@ export const BookingHeader = ({
             {Array.from({ length: 5 }).map((_, index) => (
               <div
                 key={index}
-                className={`flex-1 h-1.5 rounded-[100px] transition-all duration-300 ${
-                  index + 1 <= currentStep ? 'bg-blue-700' : 'bg-zinc-300'
-                }`}
+                className={`flex-1 h-1.5 rounded-[100px] transition-all duration-300 ${index + 1 <= currentStep ? 'bg-blue-700' : 'bg-zinc-300'
+                  }`}
               />
             ))}
           </div>

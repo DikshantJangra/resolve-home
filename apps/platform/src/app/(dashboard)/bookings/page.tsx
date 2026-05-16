@@ -1,13 +1,14 @@
 'use client'
 
 import React, { useState } from 'react'
-import { HiOutlineSearch, HiOutlinePlus } from 'react-icons/hi'
+import { HiOutlineSearch, HiOutlinePlus, HiOutlineClock, HiOutlineTrash } from 'react-icons/hi'
 import { useBookingStore } from '@/store/booking-store'
 import { Input } from "@resolve/ui"
 import { cn } from "@resolve/ui"
 import { BookingRequestCard } from '@/features/dashboard/components/booking-request-card'
 import { useUserBookings, useUserProfile } from '@/hooks/api-hooks'
 import { Skeleton } from "@resolve/ui"
+import { formatDistanceToNow } from 'date-fns'
 
 const tabs: { label: string; value: string }[] = [
   { label: 'All', value: 'All' },
@@ -15,6 +16,7 @@ const tabs: { label: string; value: string }[] = [
   { label: 'Upcoming', value: 'CONFIRMED' },
   { label: 'Completed', value: 'COMPLETED' },
   { label: 'Cancelled', value: 'CANCELLED' },
+  { label: 'Drafts', value: 'DRAFTS' },
 ]
 
 function BookNewCard() {
@@ -34,11 +36,79 @@ function BookNewCard() {
   )
 }
 
+function DraftCard({ draft }: { draft: any }) {
+  const { resumeDraft, deleteDraft } = useBookingStore()
+
+  const stepLabel = (step: number) => {
+    switch (step) {
+      case 1: return 'Service selection'
+      case 2: return 'Priority selection'
+      case 3: return 'Issue details'
+      case 4: return 'Location'
+      case 5: return 'Review'
+      default: return `Step ${step}`
+    }
+  }
+
+  return (
+    <div className="bg-white rounded-2xl border border-dashed border-amber-300 p-4 flex flex-col gap-4">
+      <div className="flex items-start justify-between gap-2">
+        <div className="flex items-center gap-2">
+          <div className="w-8 h-8 bg-amber-50 rounded-full flex items-center justify-center shrink-0">
+            <HiOutlineClock className="w-4 h-4 text-amber-600" />
+          </div>
+          <div className="flex flex-col">
+            <span className="text-sm font-semibold text-neutral-700">Draft Booking</span>
+            <span className="text-xs text-zinc-400">
+              Saved {formatDistanceToNow(new Date(draft.savedAt), { addSuffix: true })}
+            </span>
+          </div>
+        </div>
+        <button
+          onClick={() => deleteDraft(draft.id)}
+          className="p-1.5 hover:bg-red-50 rounded-lg text-zinc-400 hover:text-red-500 transition-colors"
+        >
+          <HiOutlineTrash className="w-4 h-4" />
+        </button>
+      </div>
+
+      <div className="flex flex-col gap-1.5 text-xs text-zinc-500">
+        <div className="flex justify-between">
+          <span>Stopped at</span>
+          <span className="font-medium text-zinc-700">{stepLabel(draft.currentStep)}</span>
+        </div>
+        {draft.priority && (
+          <div className="flex justify-between">
+            <span>Priority</span>
+            <span className={cn("font-medium", draft.priority === 'Emergency' ? 'text-red-600' : 'text-blue-700')}>
+              {draft.priority}
+            </span>
+          </div>
+        )}
+        {draft.issueDetails && (
+          <div className="flex justify-between gap-4">
+            <span className="shrink-0">Issue</span>
+            <span className="font-medium text-zinc-700 text-right truncate max-w-[160px]">{draft.issueDetails}</span>
+          </div>
+        )}
+      </div>
+
+      <button
+        onClick={() => resumeDraft(draft)}
+        className="w-full py-2.5 bg-blue-700 hover:bg-blue-800 text-white text-sm font-medium rounded-xl transition-colors"
+      >
+        Resume Booking
+      </button>
+    </div>
+  )
+}
+
 export default function BookingsPage() {
   const [activeTab, setActiveTab] = useState<string>('All')
   const [searchQuery, setSearchQuery] = useState('')
   const { data: bookings, isPending: isBookingsPending } = useUserBookings()
   const { data: userProfile, isPending: isUserPending } = useUserProfile()
+  const drafts = useBookingStore((s) => s.drafts)
 
   const isWorker = userProfile?.user?.role === 'worker'
   const isVerified = !!(
@@ -70,8 +140,8 @@ export default function BookingsPage() {
     if (activeTab === 'COMPLETED') matchesTab = status === 'COMPLETED'
     if (activeTab === 'CANCELLED') matchesTab = status === 'CANCELLED'
 
-    const matchesSearch = 
-      booking.id.toLowerCase().includes(searchQuery.toLowerCase()) || 
+    const matchesSearch =
+      booking.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
       booking.service?.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       booking.address?.toLowerCase().includes(searchQuery.toLowerCase())
     return matchesTab && matchesSearch
@@ -86,9 +156,9 @@ export default function BookingsPage() {
           <h1 className="text-neutral-700 text-xl md:text-2xl font-bold font-['Plus_Jakarta_Sans'] leading-8">Bookings</h1>
           <p className="text-zinc-500 text-sm md:text-base font-normal leading-6">Track and manage all your assigned jobs here.</p>
         </div>
-        
+
         <div className="relative w-full md:w-96 group">
-          <Input 
+          <Input
             placeholder="Search booking"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
@@ -103,9 +173,11 @@ export default function BookingsPage() {
         <div className="border-b border-zinc-200">
           <div className="flex overflow-x-auto no-scrollbar">
             {tabs.map((tab) => {
-              const count = tab.value === 'All' 
+              const count = tab.value === 'All'
                 ? bookings?.length || 0
-                : bookings?.filter((b: any) => {
+                : tab.value === 'DRAFTS'
+                  ? drafts.length
+                  : bookings?.filter((b: any) => {
                     const status = b.status?.toUpperCase()
                     if (tab.value === 'CONFIRMED') return ['PENDING', 'CONFIRMED'].includes(status)
                     return status === tab.value
@@ -140,9 +212,19 @@ export default function BookingsPage() {
         {/* List of Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
           {/* Book New Service Card — only for customers */}
-          {!isWorker && <BookNewCard />}
+          {!isWorker && activeTab !== 'DRAFTS' && <BookNewCard />}
 
-          {filteredBookings.length > 0 ? (
+          {activeTab === 'DRAFTS' ? (
+            drafts.length > 0 ? (
+              drafts.map((draft) => <DraftCard key={draft.id} draft={draft} />)
+            ) : (
+              <div className="sm:col-span-2 xl:col-span-3 py-16 flex flex-col items-center justify-center text-zinc-500 gap-3 bg-white rounded-2xl border border-dashed border-zinc-200">
+                <HiOutlineClock className="w-8 h-8 text-zinc-300" />
+                <p className="text-sm font-medium">No draft bookings</p>
+                <p className="text-xs text-zinc-400">Bookings you start but don't finish will appear here</p>
+              </div>
+            )
+          ) : filteredBookings.length > 0 ? (
             filteredBookings.map((booking: any) => (
               <BookingRequestCard
                 key={booking.id}

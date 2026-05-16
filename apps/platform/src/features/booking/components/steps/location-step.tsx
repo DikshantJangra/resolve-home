@@ -1,12 +1,14 @@
 'use client'
 
-import React, { useState, useEffect, useMemo } from 'react'
-import { HiOutlineLocationMarker, HiChevronDown, HiOutlineHome, HiOutlineLightningBolt } from 'react-icons/hi'
+import React, { useState, useEffect, useMemo, useRef } from 'react'
+import { HiOutlineLocationMarker, HiChevronDown, HiOutlineHome, HiOutlineLightningBolt, HiOutlineMap } from 'react-icons/hi'
 import { useBookingStore } from '@/store/booking-store'
 import { Button, Input, Label, cn } from "@resolve/ui"
 import { useUserProfile } from '@/hooks/api-hooks'
 import { toast } from 'sonner'
 import { Country, State, City } from 'country-state-city'
+import maplibregl from 'maplibre-gl'
+import 'maplibre-gl/dist/maplibre-gl.css'
 
 export const LocationStep = () => {
   const { location, setLocation, setStep, priority } = useBookingStore()
@@ -101,6 +103,22 @@ export const LocationStep = () => {
       return
     }
 
+    // Check permission state first
+    navigator.permissions?.query({ name: 'geolocation' as PermissionName }).then(result => {
+      if (result.state === 'denied') {
+        toast.error('Location access is blocked. Please enable it in your browser settings.', {
+          action: {
+            label: 'How to enable',
+            onClick: () => window.open('https://support.google.com/chrome/answer/142065', '_blank')
+          }
+        })
+        return
+      }
+      startLocating()
+    }).catch(() => startLocating())
+  }
+
+  const startLocating = () => {
     setIsLocating(true)
     navigator.geolocation.getCurrentPosition(
       async (position) => {
@@ -160,6 +178,92 @@ export const LocationStep = () => {
   }
 
   const [isLocating, setIsLocating] = useState(false)
+  const [showMap, setShowMap] = useState(false)
+  const mapContainerRef = useRef<HTMLDivElement>(null)
+  const mapRef = useRef<maplibregl.Map | null>(null)
+  const markerRef = useRef<maplibregl.Marker | null>(null)
+  const [currentGPS, setCurrentGPS] = useState<[number, number] | null>(null)
+
+  // Get current GPS for map default center
+  useEffect(() => {
+    if (!navigator.geolocation) return
+    navigator.geolocation.getCurrentPosition(
+      (pos) => setCurrentGPS([pos.coords.longitude, pos.coords.latitude]),
+      () => {}
+    )
+  }, [])
+
+  // Init map when shown
+  useEffect(() => {
+    if (!showMap || !mapContainerRef.current || mapRef.current) return
+
+    // Priority: saved coords → current GPS → Lagos default
+    const center: [number, number] =
+      (formData.longitude && formData.latitude)
+        ? [formData.longitude, formData.latitude]
+        : currentGPS
+        ? currentGPS
+        : [3.3792, 6.5244]
+
+    const map = new maplibregl.Map({
+      container: mapContainerRef.current,
+      style: 'https://tiles.openfreemap.org/styles/liberty',
+      center,
+      zoom: 14,
+    })
+
+    const marker = new maplibregl.Marker({ draggable: true, color: '#1d4ed8' })
+      .setLngLat(center)
+      .addTo(map)
+
+    marker.on('dragend', async () => {
+      const { lng, lat } = marker.getLngLat()
+      setFormData(prev => ({ ...prev, latitude: lat, longitude: lng }))
+      // Reverse geocode
+      try {
+        const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`)
+        const data = await res.json()
+        if (data?.address) {
+          const { road, neighbourhood, suburb, city, town, village, state, country_code } = data.address
+          const detectedCC = (country_code || 'NG').toUpperCase()
+          const states = State.getStatesOfCountry(detectedCC)
+          const cleanState = (state || '').replace(/ State$/i, '')
+          const matched = states.find(s => s.name.toLowerCase().includes(cleanState.toLowerCase()) || cleanState.toLowerCase().includes(s.name.toLowerCase()))
+          const country = Country.getCountryByCode(detectedCC)
+          setFormData(prev => ({
+            ...prev,
+            country: country?.name || prev.country,
+            countryCode: detectedCC,
+            state: matched?.name || cleanState,
+            stateCode: matched?.isoCode || '',
+            city: (city || town || village || suburb || '').replace(/ (City|LGA)$/i, ''),
+            streetAddress: road || neighbourhood || prev.streetAddress,
+            latitude: lat,
+            longitude: lng,
+          }))
+          toast.success('Address updated from pin')
+        }
+      } catch {}
+    })
+
+    // Click to move marker
+    map.on('click', (e) => {
+      marker.setLngLat(e.lngLat)
+      marker.fire('dragend')
+    })
+
+    mapRef.current = map
+    markerRef.current = marker
+    return () => { map.remove(); mapRef.current = null; markerRef.current = null }
+  }, [showMap])
+
+  // Update marker when coords change externally
+  useEffect(() => {
+    if (markerRef.current && formData.latitude && formData.longitude) {
+      markerRef.current.setLngLat([formData.longitude, formData.latitude])
+      mapRef.current?.flyTo({ center: [formData.longitude, formData.latitude], zoom: 15 })
+    }
+  }, [formData.latitude, formData.longitude])
 
   const isFormValid = formData.state.trim() && formData.city.trim() && formData.streetAddress.trim() && formData.landmark.trim()
   const handleContinue = async () => {
@@ -188,6 +292,15 @@ export const LocationStep = () => {
       return;
     }
 
+    // 3. Validate date is in the future (standard bookings only)
+    if (!isEmergency) {
+      const bookingDateTime = new Date(`${scheduledDate}T${scheduledTime}`)
+      if (bookingDateTime <= new Date()) {
+        toast.error('Booking date must be in the future. Please select a future date and time.')
+        return
+      }
+    }
+
     setLocation(formData)
     setStep(5)
   }
@@ -211,14 +324,23 @@ export const LocationStep = () => {
           )}
 
           <div className="self-stretch flex flex-col justify-start items-start gap-2">
-            <button
-              onClick={handleUseGPS}
-              disabled={isLocating}
-              className="self-stretch inline-flex justify-center items-center gap-2 py-2 text-blue-700 text-sm font-medium underline hover:text-blue-800 transition-colors disabled:opacity-50"
-            >
-              <HiOutlineLocationMarker className={cn("w-5 h-5", isLocating && "animate-pulse")} />
-              {isLocating ? "Getting location..." : "Use my current GPS location"}
-            </button>
+            <div className="flex gap-3 w-full">
+              <button
+                onClick={handleUseGPS}
+                disabled={isLocating}
+                className="flex-1 inline-flex justify-center items-center gap-2 py-2.5 px-3 rounded-xl border border-blue-200 bg-blue-50 text-blue-700 text-sm font-medium hover:bg-blue-100 transition-colors disabled:opacity-50"
+              >
+                <HiOutlineLocationMarker className={cn("w-4 h-4 shrink-0", isLocating && "animate-pulse")} />
+                {isLocating ? "Getting..." : "Use GPS"}
+              </button>
+              <button
+                onClick={() => setShowMap(v => !v)}
+                className="flex-1 inline-flex justify-center items-center gap-2 py-2.5 px-3 rounded-xl border border-blue-200 bg-blue-50 text-blue-700 text-sm font-medium hover:bg-blue-100 transition-colors"
+              >
+                <HiOutlineMap className="w-4 h-4 shrink-0" />
+                {showMap ? 'Hide map' : 'Pick on map'}
+              </button>
+            </div>
 
             {(profile?.homeAddress || profile?.user?.homeAddress || profile?.bioAddress || profile?.address) && (
               <button
@@ -230,6 +352,19 @@ export const LocationStep = () => {
               </button>
             )}
           </div>
+
+          {/* Map picker */}
+          {showMap && (
+            <div className="w-full flex flex-col gap-2">
+              <p className="text-zinc-500 text-xs">Drag the pin or tap the map to set your exact location.</p>
+              <div ref={mapContainerRef} className="w-full h-52 rounded-xl overflow-hidden border border-zinc-200" />
+              {formData.latitude !== 0 && (
+                <p className="text-zinc-400 text-[10px]">
+                  📍 {formData.latitude.toFixed(5)}, {formData.longitude.toFixed(5)}
+                </p>
+              )}
+            </div>
+          )}
 
         <div className="w-full flex flex-col justify-start items-start gap-6">
           {/* Country */}
@@ -359,6 +494,7 @@ export const LocationStep = () => {
               <Input
                 type="date"
                 disabled={isEmergency}
+                min={new Date().toISOString().split('T')[0]}
                 value={useBookingStore.getState().scheduledDate || ''}
                 onChange={(e) => useBookingStore.getState().setScheduledDate(e.target.value)}
                 className="w-full px-4 py-3 rounded-lg outline outline-[1.50px] outline-offset-[-1.50px] outline-stone-300 border-none focus:outline-blue-700 text-zinc-600 text-sm font-normal font-['Inter'] leading-5 disabled:bg-zinc-50"

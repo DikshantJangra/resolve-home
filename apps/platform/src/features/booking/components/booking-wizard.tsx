@@ -17,7 +17,7 @@ const FinalSuccessStep = dynamic(() => import('./steps/final-success-step').then
 import { useSearchParams } from 'next/navigation'
 import { useEffect } from 'react'
 
-export const BookingWizard = () => {
+export const BookingWizard = ({ onClose }: { onClose?: () => void }) => {
   const { currentStep, setCategoryId, setServiceType } = useBookingStore()
   const searchParams = useSearchParams()
   const categoryIdParam = searchParams.get('categoryId')
@@ -55,7 +55,7 @@ export const BookingWizard = () => {
 
   return (
     <div className="w-full h-full md:max-w-[669px] md:max-h-[90vh] md:mx-auto bg-white flex flex-col shadow-2xl md:rounded-2xl relative z-[998]">
-      <BookingHeader />
+      <BookingHeader onClose={onClose} />
       <div className="flex-1 overflow-y-auto relative">
         {renderStep()}
       </div>
