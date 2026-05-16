@@ -7,7 +7,7 @@ import { useBookingStore } from '@/store/booking-store'
 
 export function BookingWizardModal() {
   const { isOpen, setIsOpen, resetBooking } = useBookingStore()
-  
+
   React.useEffect(() => {
     if (isOpen) {
       const originalBodyOverflow = document.body.style.overflow
@@ -39,7 +39,7 @@ export function BookingWizardModal() {
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
-            className="relative w-full h-full md:h-auto md:max-w-[669px] max-h-full overflow-y-auto pointer-events-auto"
+            className="relative w-full h-full md:h-auto md:max-w-[669px] max-h-full overflow-y-auto pointer-events-auto md:rounded-2xl"
           >
             <BookingWizard />
           </motion.div>
