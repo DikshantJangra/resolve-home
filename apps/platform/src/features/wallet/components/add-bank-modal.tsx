@@ -15,12 +15,21 @@ export const AddBankModal = ({ onClose, initialData }: AddBankModalProps) => {
   const { mutate: addBank, isPending: loading } = useAddBank()
   const { data: banks = [], isLoading: loadingBanks } = useNigerianBanks()
   
+  const src = initialData?.bankDetails || initialData
   const [formData, setFormData] = useState({
-    bankName: initialData?.bankName || initialData?.bank_name || '',
-    bankCode: initialData?.bankCode || initialData?.bank_code || '',
-    accountNumber: initialData?.accountNumber || initialData?.account_number || '',
-    accountName: initialData?.accountName || initialData?.account_name || ''
+    bankName: src?.bankName || src?.bank_name || '',
+    bankCode: src?.bankCode || src?.bank_code || '',
+    accountNumber: src?.accountNumber || src?.account_number || '',
+    accountName: src?.accountName || src?.account_name || ''
   })
+
+  // Once banks load, sync bankCode if we have a bankName but no bankCode
+  React.useEffect(() => {
+    if (banks.length > 0 && formData.bankName && !formData.bankCode) {
+      const matched = banks.find((b: any) => b.name === formData.bankName)
+      if (matched) setFormData(prev => ({ ...prev, bankCode: matched.code }))
+    }
+  }, [banks])
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -40,7 +49,12 @@ export const AddBankModal = ({ onClose, initialData }: AddBankModalProps) => {
         onClose()
       },
       onError: (err: any) => {
-        console.error('[AddBankModal] Failed to add bank:', err)
+        const msg = err?.response?.data?.error || err?.message || ''
+        if (msg.toLowerCase().includes('resolve') || msg.toLowerCase().includes('account name') || msg.toLowerCase().includes('parameters')) {
+          toast.error('Could not resolve account name. Please check your account number and try again.')
+        } else {
+          toast.error(msg || 'Failed to save bank details')
+        }
       }
     })
   }

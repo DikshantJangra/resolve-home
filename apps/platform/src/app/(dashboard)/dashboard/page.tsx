@@ -4,10 +4,32 @@ import React from 'react'
 import { HiOutlineCurrencyDollar, HiOutlineClipboardCheck, HiOutlineChatAlt, HiOutlineStar } from 'react-icons/hi'
 import { StatCard } from '@/features/dashboard/components/stat-card'
 import { RecentRequests } from '@/features/dashboard/components/recent-requests'
-import { useAuthSession, useUserProfile, useUserBookings } from '@/hooks/api-hooks'
-import { cn, FileUpload } from "@resolve/ui"
-import { createPortal } from 'react-dom'
+import { BookingRequestCard } from '@/features/dashboard/components/booking-request-card'
+import { useAuthSession, useUserProfile, useUserBookings, useEngineerDashboard } from '@/hooks/api-hooks'
+import { cn, FileUpload, Skeleton } from "@resolve/ui"
 import { useProfessionalSetupStore } from '@/store/professional-setup-store'
+import Link from 'next/link'
+
+function EngineerRecentRequests({ requests }: { requests: any[] }) {
+  if (!requests.length) {
+    return (
+      <div className="w-full p-5 bg-stone-50 rounded-xl flex flex-col gap-4 border border-zinc-200">
+        <h3 className="text-slate-900 text-sm font-semibold">Recent Requests</h3>
+        <p className="text-zinc-400 text-sm">No recent booking requests yet.</p>
+      </div>
+    )
+  }
+  return (
+    <div className="w-full p-5 bg-stone-50 rounded-xl flex flex-col gap-4 border border-zinc-200">
+      <h3 className="text-slate-900 text-sm font-semibold">Recent Requests</h3>
+      <div className="flex flex-wrap gap-5">
+        {requests.map((request: any) => (
+          <BookingRequestCard key={request.id} booking={request} isWorker={true} />
+        ))}
+      </div>
+    </div>
+  )
+}
 
 export default function DashboardPage() {
   const [mounted, setMounted] = React.useState(false)
@@ -23,21 +45,14 @@ export default function DashboardPage() {
   )
   const showVerificationOverlay = isEngineer && !isVerified
 
-  const { data: bookings, isPending: bookingsPending } = useUserBookings({ enabled: !showVerificationOverlay })
+  const { data: bookings, isPending: bookingsPending } = useUserBookings({ enabled: !showVerificationOverlay && !isEngineer })
+  const { data: engineerDashboard, isPending: engineerDashPending } = useEngineerDashboard(isEngineer)
   const [isUploaderOpen, setIsUploaderOpen] = React.useState(false)
   const updateField = useProfessionalSetupStore((state) => state.updateField)
 
   React.useEffect(() => {
     setMounted(true)
   }, [])
-
-  React.useEffect(() => {
-    if (user) {
-      console.log('Dashboard Debug - User:', user);
-      console.log('Dashboard Debug - Is Engineer:', isEngineer);
-      console.log('Dashboard Debug - Is Verified:', isVerified);
-    }
-  }, [user, isEngineer, isVerified]);
 
   React.useEffect(() => {
     if (showVerificationOverlay) {
@@ -60,7 +75,7 @@ export default function DashboardPage() {
 
   const status = (user as any)?.status
 
-  if (sessionPending || profilePending || (!!user && bookingsPending && !showVerificationOverlay)) {
+  if (sessionPending || profilePending || (!!user && bookingsPending && !showVerificationOverlay && !isEngineer) || (isEngineer && engineerDashPending)) {
     return (
       <div className="space-y-8 animate-pulse">
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
@@ -81,37 +96,43 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* Stats Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6 mb-10">
-          <StatCard
-            label="Total Bookings"
-            value={bookings?.length || 0}
-            change="+12%"
-            icon={HiOutlineClipboardCheck}
-          />
-          <StatCard
-            label="Messages"
-            value="4"
-            change="New"
-            icon={HiOutlineChatAlt}
-          />
-          <StatCard
-            label="Earnings"
-            value="₦0.00"
-            change="+0%"
-            icon={HiOutlineCurrencyDollar}
-          />
-          <StatCard
-            label="Rating"
-            value="4.8"
-            change="Top"
-            icon={HiOutlineStar}
-          />
-        </div>
+        {/* Stats Grid - engineers only */}
+        {isEngineer && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6 mb-10">
+            <StatCard
+              label="Completed Jobs"
+              value={engineerDashboard?.stats?.completedJobs ?? 0}
+              change={`${engineerDashboard?.stats?.activeRequests ?? 0} active`}
+              icon={HiOutlineClipboardCheck}
+            />
+            <StatCard
+              label="Active Requests"
+              value={engineerDashboard?.stats?.activeRequests ?? 0}
+              change="Pending"
+              icon={HiOutlineChatAlt}
+            />
+            <StatCard
+              label="Earnings"
+              value={`₦${(engineerDashboard?.stats?.totalEarnings ?? 0).toLocaleString()}`}
+              change="Total"
+              icon={HiOutlineCurrencyDollar}
+            />
+            <StatCard
+              label="Rating"
+              value={engineerDashboard?.stats?.avgRating ?? 0}
+              change={`${engineerDashboard?.stats?.totalReviews ?? 0} reviews`}
+              icon={HiOutlineStar}
+            />
+          </div>
+        )}
 
         {/* Main Content Area */}
         <div className="w-full">
-          <RecentRequests />
+          {isEngineer ? (
+            <EngineerRecentRequests requests={engineerDashboard?.recentRequests ?? []} />
+          ) : (
+            <RecentRequests />
+          )}
         </div>
       </div>
 

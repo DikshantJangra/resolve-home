@@ -151,20 +151,7 @@ export default function WalletPage() {
             onAction={() => isWorker ? setIsWithdrawModalOpen(true) : setIsFundingModalOpen(true)}
           />
           
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <WalletStatCard 
-              label="Total withdrawal" 
-              amount={wallet?.totalWithdrawals || 0} 
-              type="withdrawal" 
-            />
-            <WalletStatCard 
-              label={isWorker ? "Total earned" : "Total spent"} 
-              amount={isWorker ? (wallet?.totalDeposits || 0) : (wallet?.totalSpent || 0)} 
-              type={isWorker ? "earned" : "withdrawal"} 
-            />
-          </div>
-
-          <BankDetailsSection onAdd={handleOpenBankModal} />
+<BankDetailsSection onAdd={handleOpenBankModal} />
         </div>
 
         {/* Right Column: Transaction History */}

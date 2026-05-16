@@ -4,11 +4,12 @@ import React, { useState } from 'react'
 import {
   HiOutlineSearch, HiOutlineMenuAlt1, HiOutlineMenu, HiOutlineBadgeCheck,
   HiOutlineHome, HiOutlineChatAlt, HiOutlineUser, HiOutlineCreditCard,
-  HiOutlineCog, HiOutlineLockClosed, HiOutlineClipboardCheck, HiOutlinePlusCircle
+  HiOutlineCog, HiOutlineLockClosed, HiOutlineClipboardCheck, HiOutlinePlusCircle,
+  HiOutlineBell
 } from 'react-icons/hi'
 import { IoLogOutOutline, IoPerson } from 'react-icons/io5'
 import { Input } from '@resolve/ui'
-import { useUserProfile, useMySubscription } from '@/hooks/api-hooks'
+import { useUserProfile, useMySubscription, useNotifications, useMarkNotificationRead, useMarkAllNotificationsRead } from '@/hooks/api-hooks'
 import { motion, AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
 import Image from 'next/image'
@@ -16,6 +17,7 @@ import { cn, formatImageUrl } from '@resolve/ui'
 import { LogoutModal } from '@/features/auth/components/logout-modal'
 import { useBookingStore } from '@/store/booking-store'
 import { usePathname } from 'next/navigation'
+import { format } from 'date-fns'
 
 interface NavbarProps {
   onMenuClick?: () => void
@@ -34,10 +36,16 @@ const navItems = [
 export const Navbar = ({ onMenuClick }: NavbarProps) => {
   const { data: user } = useUserProfile()
   const { data: subscription } = useMySubscription()
+  const { data: notifications = [] } = useNotifications()
+  const { mutate: markRead } = useMarkNotificationRead()
+  const { mutate: markAllRead } = useMarkAllNotificationsRead()
   const pathname = usePathname()
   const [isMounted, setIsMounted] = React.useState(false)
   const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const [isNotifOpen, setIsNotifOpen] = useState(false)
   const [isLogoutOpen, setIsLogoutOpen] = useState(false)
+
+  const unreadCount = notifications.filter((n: any) => !n.isRead).length
 
   React.useEffect(() => { setIsMounted(true) }, [])
 
@@ -87,7 +95,7 @@ export const Navbar = ({ onMenuClick }: NavbarProps) => {
             <div className="hidden md:flex flex-col items-end">
               <span className="text-xs font-semibold text-zinc-700 leading-tight">{user?.user?.name}</span>
               <span className="text-[10px] text-zinc-400 uppercase tracking-wider">
-                {isEngineer ? 'Professional' : 'Customer'}
+                {isEngineer ? 'Pro Partner' : 'Home Owner'}
               </span>
             </div>
           )}
@@ -110,6 +118,85 @@ export const Navbar = ({ onMenuClick }: NavbarProps) => {
                 <HiOutlineBadgeCheck className="w-3.5 h-3.5 text-blue-700" />
               </div>
             )}
+          </div>
+
+          {/* Notification bell */}
+          <div className="relative">
+            <button
+              onClick={() => { setIsNotifOpen(!isNotifOpen); setIsMenuOpen(false) }}
+              className="relative flex h-9 w-9 md:h-10 md:w-10 items-center justify-center rounded-full border border-zinc-300 hover:bg-zinc-50 transition-all"
+            >
+              <HiOutlineBell className="h-4 w-4 md:h-5 md:w-5 text-zinc-600" />
+              {unreadCount > 0 && (
+                <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center">
+                  {unreadCount > 9 ? '9+' : unreadCount}
+                </span>
+              )}
+            </button>
+
+            <AnimatePresence>
+              {isNotifOpen && (
+                <>
+                  <motion.div
+                    initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                    className="fixed inset-0 top-16 z-[40]"
+                    onClick={() => setIsNotifOpen(false)}
+                  />
+                  <motion.div
+                    initial={{ opacity: 0, y: 8, scale: 0.97 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: 8, scale: 0.97 }}
+                    transition={{ duration: 0.15, ease: 'easeOut' }}
+                    className="absolute right-0 mt-2 w-80 rounded-2xl border border-zinc-200 bg-white shadow-xl z-[50] overflow-hidden"
+                  >
+                    <div className="px-4 py-3 bg-slate-50 border-b border-zinc-100 flex items-center justify-between">
+                      <span className="text-sm font-semibold text-neutral-700">Notifications</span>
+                      {unreadCount > 0 && (
+                        <button
+                          onClick={() => markAllRead()}
+                          className="text-xs text-blue-700 font-medium hover:underline"
+                        >
+                          Mark all read
+                        </button>
+                      )}
+                    </div>
+                    <div className="max-h-80 overflow-y-auto">
+                      {notifications.length === 0 ? (
+                        <div className="py-10 flex flex-col items-center gap-2 text-zinc-400">
+                          <HiOutlineBell className="w-8 h-8" />
+                          <p className="text-sm">No notifications yet</p>
+                        </div>
+                      ) : (
+                        notifications.slice(0, 20).map((n: any) => (
+                          <div
+                            key={n.id}
+                            onClick={() => { if (!n.isRead) markRead(n.id) }}
+                            className={cn(
+                              'px-4 py-3 border-b border-zinc-50 last:border-0 cursor-pointer hover:bg-zinc-50 transition-colors',
+                              !n.isRead && 'bg-blue-50/40'
+                            )}
+                          >
+                            <div className="flex items-start gap-2">
+                              {!n.isRead && <div className="w-1.5 h-1.5 bg-blue-700 rounded-full mt-1.5 shrink-0" />}
+                              <div className="flex-1 min-w-0">
+                                <p className={cn('text-xs leading-relaxed', !n.isRead ? 'text-neutral-700 font-medium' : 'text-zinc-500')}>
+                                  {n.message || n.title}
+                                </p>
+                                {n.createdAt && (
+                                  <p className="text-[10px] text-zinc-400 mt-0.5">
+                                    {format(new Date(n.createdAt), 'MMM d · h:mm a')}
+                                  </p>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </motion.div>
+                </>
+              )}
+            </AnimatePresence>
           </div>
 
           {/* Menu button */}
@@ -154,52 +241,25 @@ export const Navbar = ({ onMenuClick }: NavbarProps) => {
                         <p className="text-sm font-semibold text-zinc-900 truncate">{user?.user?.name || 'My Account'}</p>
                         <p className="text-xs text-zinc-500 truncate">{user?.user?.email}</p>
                         <span className="text-[10px] font-medium text-blue-700 uppercase tracking-wide">
-                          {isEngineer ? 'Professional' : 'Customer'}
+                          {isEngineer ? 'Pro Partner' : 'Home Owner'}
                         </span>
                       </div>
                     </div>
 
                     {/* Nav items */}
                     <div className="p-2">
-                      {filteredItems.map((item) => {
-                        const Icon = item.icon
-                        const isActive = pathname === item.href || (item.href !== '/dashboard' && pathname.startsWith(item.href))
-                        const isLocked = isEngineer && !isVerified && item.requiresVerification
-
-                        const content = (
-                          <div className={cn(
-                            'flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors',
-                            isActive ? 'bg-blue-50 text-blue-700' : 'text-zinc-700 hover:bg-zinc-50 hover:text-blue-700',
-                            isLocked && 'opacity-50 cursor-not-allowed'
-                          )}>
-                            <Icon className="w-4 h-4 shrink-0" />
-                            <span className="flex-1">{item.label}</span>
-                            {isLocked && <HiOutlineLockClosed className="w-3.5 h-3.5 text-zinc-400" />}
-                          </div>
-                        )
-
-                        if (isLocked) return <div key={item.href} title="Verification required">{content}</div>
-
-                        return (
-                          <Link key={item.href} href={item.href} onClick={() => setIsMenuOpen(false)}>
-                            {content}
-                          </Link>
-                        )
-                      })}
-
-                      {/* Book a service — customers only */}
-                      {isMounted && !isEngineer && (
-                        <button
-                          onClick={() => {
-                            setIsMenuOpen(false)
-                            useBookingStore.getState().setIsOpen(true)
-                          }}
-                          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-blue-700 hover:bg-blue-50 transition-colors"
-                        >
-                          <HiOutlinePlusCircle className="w-4 h-4 shrink-0" />
-                          Book a service
-                        </button>
-                      )}
+                      <Link href="/dashboard" onClick={() => setIsMenuOpen(false)}>
+                        <div className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors text-zinc-700 hover:bg-zinc-50 hover:text-blue-700">
+                          <HiOutlineHome className="w-4 h-4 shrink-0" />
+                          <span className="flex-1">Home</span>
+                        </div>
+                      </Link>
+                      <Link href="/profile" onClick={() => setIsMenuOpen(false)}>
+                        <div className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors text-zinc-700 hover:bg-zinc-50 hover:text-blue-700">
+                          <HiOutlineUser className="w-4 h-4 shrink-0" />
+                          <span className="flex-1">My Profile</span>
+                        </div>
+                      </Link>
 
                       <div className="h-px bg-zinc-100 mx-1 my-1" />
 

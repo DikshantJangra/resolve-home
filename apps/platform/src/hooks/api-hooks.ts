@@ -253,6 +253,17 @@ export function useUpdateGuarantor() {
 
 // --- Engineer Bookings ---
 
+export function useEngineerDashboard(enabled = false) {
+  return useQuery({
+    queryKey: ['engineer-dashboard'],
+    queryFn: async () => {
+      const response = await apiClient.get(ENDPOINTS.ENGINEER.DASHBOARD)
+      return response.data.data ?? null
+    },
+    enabled: enabled && typeof window !== 'undefined' && !!localStorage.getItem('auth_token')
+  })
+}
+
 export function useEngineerBookings(options: { enabled?: boolean } = {}) {
   return useQuery({
     queryKey: ['engineer-bookings'],
@@ -368,7 +379,8 @@ export function useWalletTransactions() {
     queryKey: ['wallet-transactions'],
     queryFn: async () => {
       const response = await apiClient.get(ENDPOINTS.WALLET.TRANSACTIONS)
-      return response.data.data?.transactions || []
+      // paginated response: data is the array directly
+      return response.data.data || []
     },
     enabled: typeof window !== 'undefined' && !!localStorage.getItem('auth_token')
   })
@@ -399,8 +411,10 @@ export function useBankAccount() {
     queryKey: ['wallet-bank-account'],
     queryFn: async () => {
       const response = await apiClient.get(ENDPOINTS.WALLET.BANK_ACCOUNT)
-      // The API might return the bank account directly in data.data or nested in bankAccount
-      return response.data.data?.bankAccount || response.data.data?.bankDetails || response.data.data || null
+      const d = response.data.data
+      // Handle { bankDetails: null }, { bankAccount: {...} }, or direct object
+      const result = d?.bankAccount || d?.bankDetails || (d && !d.bankAccount && !d.bankDetails ? d : null)
+      return result && Object.keys(result).length > 0 ? result : null
     },
     enabled: typeof window !== 'undefined' && !!localStorage.getItem('auth_token')
   })

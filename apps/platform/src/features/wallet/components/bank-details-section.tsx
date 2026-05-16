@@ -23,14 +23,22 @@ export const BankDetailsSection = ({ onAdd }: BankDetailsSectionProps) => {
     }
   }
 
-  const bank = banks; 
-  const hasBank = bank && (!Array.isArray(bank) || bank.length > 0) && (typeof bank === 'object' && Object.keys(bank).length > 0)
+  const bank = banks
+  const hasBank = !!(bank && typeof bank === 'object' && (bank.bankName || bank.bank_name || bank.accountNumber || bank.account_number))
 
   return (
     <div className="w-full bg-white rounded-[20px] flex flex-col gap-6 p-5 border border-zinc-100 shadow-sm">
-      <h3 className="text-slate-900 text-base font-semibold leading-6">
-        Saved Bank Accounts
-      </h3>
+      <div className="flex items-center justify-between">
+        <h3 className="text-slate-900 text-base font-semibold leading-6">Saved Bank Accounts</h3>
+        {hasBank && (
+          <button
+            onClick={() => onAdd()}
+            className="w-8 h-8 bg-blue-50 rounded-full flex items-center justify-center hover:bg-blue-100 transition-colors"
+          >
+            <HiOutlinePlus className="w-4 h-4 text-blue-700" />
+          </button>
+        )}
+      </div>
       
       <div className="flex flex-col gap-3">
         {isLoading ? (
@@ -60,15 +68,14 @@ export const BankDetailsSection = ({ onAdd }: BankDetailsSectionProps) => {
               </span>
               <button 
                 onClick={handleDelete}
-                className="p-2 text-zinc-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-all"
+                disabled={isDeleting}
+                className="p-2 text-zinc-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-all disabled:opacity-50"
               >
                 <HiOutlineTrash className="w-5 h-5" />
               </button>
             </div>
           </div>
-        ) : null}
-
-        {!bank && !isLoading && (
+        ) : (
           <button 
             onClick={() => onAdd()}
             className="w-full h-24 border-2 border-dashed border-zinc-200 rounded-xl flex flex-col items-center justify-center gap-2 group hover:border-blue-500 hover:bg-blue-50/30 transition-all"

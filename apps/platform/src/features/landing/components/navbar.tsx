@@ -182,7 +182,7 @@ export const Navbar = () => {
                               <p className="text-sm font-semibold text-zinc-900 truncate">{user?.name || 'My Account'}</p>
                               <p className="text-xs text-zinc-500 truncate">{user?.email}</p>
                               <span className="text-[10px] font-medium text-blue-700 uppercase tracking-wide">
-                                {isEngineer ? 'Professional' : 'Customer'}
+                                {isEngineer ? 'Pro Partner' : 'Home Owner'}
                               </span>
                             </div>
                           </div>

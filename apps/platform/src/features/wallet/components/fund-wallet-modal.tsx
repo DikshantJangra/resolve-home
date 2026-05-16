@@ -33,7 +33,7 @@ export const FundWalletModal = ({ onClose, onAddBank }: FundWalletModalProps) =>
       return
     }
 
-    initializeDeposit({ amount: numAmount, callbackURL: window.location.href }, {
+    initializeDeposit({ amount: numAmount, callbackURL: `${window.location.origin}/wallet/verify-deposit` }, {
       onSuccess: (data) => {
         toast.success('Redirecting to payment gateway...')
         if (data.authorizationUrl) {

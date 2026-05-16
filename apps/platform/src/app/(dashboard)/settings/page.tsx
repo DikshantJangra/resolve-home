@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react'
 import { SettingsSidebar } from '@/features/settings/components/settings-sidebar'
 import { Input } from "@resolve/ui"
 import { Button } from "@resolve/ui"
-import { useUserProfile, useAuthSession, useUpdateProfile, useUpdatePassword } from '@/hooks/api-hooks'
+import { useUserProfile, useAuthSession, useUpdateProfile, useUpdatePassword, useNotificationSettings, useUpdateNotificationSettings } from '@/hooks/api-hooks'
 import { Skeleton } from "@resolve/ui"
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -287,20 +287,28 @@ function SecuritySection() {
 }
 
 function NotificationsSection({ user }: { user: any }) {
-  const [items, setItems] = useState([
-    { id: 'updates', title: 'Booking updates', desc: 'Status changes, engineer arrival, job completion', active: true },
-    { id: 'messages', title: 'Messages from professionals', desc: 'New messages in your active bookings', active: true },
-    { id: 'push', title: 'Push notifications', desc: 'Receive push notifications on your device', active: true },
-    { id: 'sms', title: 'SMS alerts', desc: `Sent to ${user?.phone || 'your registered number'}`, active: true },
-    { id: 'digest', title: 'Weekly email digest', desc: 'A summary of your bookings and activity', active: true },
-    { id: 'promos', title: 'Promotions & offers', desc: 'Deals, discounts, and new service announcements', active: false },
-  ])
+  const { data: settings, isLoading } = useNotificationSettings()
+  const { mutate: updateSettings, isPending: isSaving } = useUpdateNotificationSettings()
 
-  const toggleItem = (id: string) => {
-    setItems(prev => prev.map(item => 
-      item.id === id ? { ...item, active: !item.active } : item
-    ))
-    toast.success('Notification preference updated!')
+  const items = [
+    { key: 'bookingUpdates' as const, title: 'Booking updates', desc: 'Status changes, engineer arrival, job completion' },
+    { key: 'messagesFromProfessionals' as const, title: 'Messages from professionals', desc: 'New messages in your active bookings' },
+    { key: 'pushNotifications' as const, title: 'Push notifications', desc: 'Receive push notifications on your device' },
+    { key: 'smsAlerts' as const, title: 'SMS alerts', desc: `Sent to ${user?.phone || 'your registered number'}` },
+    { key: 'weeklyEmailDigest' as const, title: 'Weekly email digest', desc: 'A summary of your bookings and activity' },
+    { key: 'promotionsAndOffers' as const, title: 'Promotions & offers', desc: 'Deals, discounts, and new service announcements' },
+  ]
+
+  const getValue = (key: string) => {
+    if (!settings) return true
+    return settings[key] !== false
+  }
+
+  const handleToggle = (key: string, current: boolean) => {
+    updateSettings({ [key]: !current }, {
+      onSuccess: () => toast.success('Notification preference updated!'),
+      onError: () => toast.error('Failed to update preference')
+    })
   }
 
   return (
@@ -311,29 +319,37 @@ function NotificationsSection({ user }: { user: any }) {
         </p>
       </div>
       <div className="px-5 md:px-8 py-2 space-y-1">
-        {items.map((item) => (
-          <div key={item.id} className="py-4 border-b border-zinc-200 last:border-0 flex justify-between items-center">
-            <div className="space-y-0.5">
-              <h3 className="text-neutral-700 text-sm font-semibold">{item.title}</h3>
-              <p className="text-zinc-600 text-xs font-normal">{item.desc}</p>
-            </div>
-            <button 
-              type="button"
-              onClick={() => toggleItem(item.id)}
-              className={cn(
-                "relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none",
-                item.active ? "bg-blue-700" : "bg-gray-200"
-              )}
-            >
-              <span
-                className={cn(
-                  "pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out",
-                  item.active ? "translate-x-5" : "translate-x-0"
-                )}
-              />
-            </button>
+        {isLoading ? (
+          <div className="py-8 flex justify-center">
+            <div className="w-6 h-6 border-2 border-blue-700 border-t-transparent rounded-full animate-spin" />
           </div>
-        ))}
+        ) : (
+          items.map((item) => {
+            const active = getValue(item.key)
+            return (
+              <div key={item.key} className="py-4 border-b border-zinc-200 last:border-0 flex justify-between items-center">
+                <div className="space-y-0.5">
+                  <h3 className="text-neutral-700 text-sm font-semibold">{item.title}</h3>
+                  <p className="text-zinc-600 text-xs font-normal">{item.desc}</p>
+                </div>
+                <button
+                  type="button"
+                  disabled={isSaving}
+                  onClick={() => handleToggle(item.key, active)}
+                  className={cn(
+                    "relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none disabled:opacity-60",
+                    active ? "bg-blue-700" : "bg-gray-200"
+                  )}
+                >
+                  <span className={cn(
+                    "pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out",
+                    active ? "translate-x-5" : "translate-x-0"
+                  )} />
+                </button>
+              </div>
+            )
+          })
+        )}
       </div>
     </div>
   )
