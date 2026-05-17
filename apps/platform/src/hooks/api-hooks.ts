@@ -735,14 +735,21 @@ export function useUpdateNotificationSettings() {
 export function useUploadFile() {
   return useMutation({
     mutationFn: async (file: File) => {
+      const isImage = file.type.startsWith('image/')
+      const isDoc = file.type.includes('pdf') || file.type.includes('word')
+      const uploadType = isImage ? 'image' : isDoc ? 'document' : 'any'
+
       const formData = new FormData()
       formData.append('file', file)
-      const response = await apiClient.post(ENDPOINTS.UPLOAD.BASE, formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      })
-      return response.data.data.file.url
+      const response = await apiClient.post(
+        `${ENDPOINTS.UPLOAD.BASE}?type=${uploadType}`,
+        formData,
+        {
+          headers: { 'Content-Type': 'multipart/form-data' },
+          timeout: 120000, // 2 min timeout for large files
+        }
+      )
+      return response.data.data?.file?.url || response.data.data?.url
     },
   })
 }
