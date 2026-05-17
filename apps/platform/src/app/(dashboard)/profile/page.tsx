@@ -36,9 +36,22 @@ export default function ProfilePage() {
   }
 
   const user = profile?.user || session?.user
+  
+  // Robust worker role check
+  const isWorker = user?.role === 'worker' || user?.role === 'Work as a Professional' || user?.role === 'engineer'
+
+  // Detailed console logging as requested by the user
+  console.log('--- PROFILE PAGE DEBUG ---', {
+    rawProfile: profile,
+    rawSession: session,
+    resolvedUser: user,
+    isWorker,
+    homeAddress: user?.homeAddress,
+    engineerProfile: profile?.engineerProfile
+  })
+
   const completedBookings = bookings?.filter((b: any) => b.status?.toLowerCase() === 'completed')?.length || 0
 
-  const isWorker = user?.role === 'worker'
   const tabs: TabType[] = isWorker
     ? ['Personal Info', 'My Services', 'Booking History', 'Reviews Given']
     : ['Personal Info', 'Booking History', 'Reviews Given']
@@ -62,9 +75,9 @@ export default function ProfilePage() {
   const renderTabContent = () => {
     switch (activeTab) {
       case 'Personal Info':
-        return <PersonalInfoTab {...profileData} />
+        return <PersonalInfoTab {...profileData} hasEngineerProfile={!!profile?.engineerProfile} />
       case 'My Services':
-        return <MyServicesTab engineerProfile={profile?.engineerProfile} />
+        return <MyServicesTab />
       case 'Booking History':
         return <BookingHistoryList />
       case 'Reviews Given':

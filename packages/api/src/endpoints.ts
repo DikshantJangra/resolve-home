@@ -61,6 +61,7 @@ export const ENDPOINTS = {
   // ─── Engineer ─────────────────────────────────────────────────────────────
   ENGINEER: {
     COMPLETE_PROFILE: '/api/engineer/complete-profile',
+    UPDATE_SERVICES: '/api/engineer/profile/services',
     DASHBOARD: '/api/engineer/dashboard',
     LOCATION: '/api/engineer/location',
     BOOKINGS: '/api/engineer/bookings',
