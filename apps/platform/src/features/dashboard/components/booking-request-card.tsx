@@ -21,15 +21,15 @@ export const BookingRequestCard = ({ booking, isWorker = true }: BookingRequestC
   const isUpcoming = ['PENDING', 'CONFIRMED'].includes(booking.status?.toUpperCase())
   const isInProgress = booking.status?.toUpperCase() === 'IN_PROGRESS'
 
-  // Determine which user info to show (Client for worker, Worker for client)
   const displayUser = isWorker ? booking.user : (booking.engineer || booking.engineers?.[0])
   const displayName = displayUser?.name || null
 
-  const categoryName = booking.service?.category?.name || 'Service'
+  const categoryName = booking.service?.category?.name || booking.service?.name || 'Service'
   const serviceName = booking.service?.name || 'Service details'
+  const href = isWorker ? `/engineer/jobs/${booking.id}` : `/bookings/${booking.id}`
 
   return (
-    <Link href={`/bookings/${booking.id}`} className="block group">
+    <Link href={href} className="block group">
       <div className="w-full md:w-96 p-3 bg-white rounded-2xl border border-zinc-100 flex flex-col justify-start items-start overflow-hidden shadow-sm transition-all hover:shadow-md hover:border-blue-200">
         <div className="self-stretch flex flex-col justify-start items-start gap-2.5">
           <div className="self-stretch flex flex-col justify-start items-start gap-2.5">

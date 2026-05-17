@@ -5,7 +5,7 @@ import { HiOutlineDotsHorizontal, HiOutlinePlus, HiOutlineBriefcase, HiOutlineLo
 import { cn } from "@resolve/ui"
 import { MessageActions } from './message-actions'
 import { QuotationModal } from './quotation-modal'
-import { useChatMessages, useUserProfile, useUserChats, useUploadFile } from '@/hooks/api-hooks'
+import { useChatMessages, useUserProfile, useUserChats, useUploadFile, useMarkChatRead } from '@/hooks/api-hooks'
 import { useSocket } from '@/components/providers/socket-provider'
 import { useChatStore } from '@/store/use-chat-store'
 import { format } from 'date-fns'
@@ -25,6 +25,7 @@ export const ChatWindow = ({ onBack }: ChatWindowProps) => {
   const [otherTyping, setOtherTyping] = useState(false)
   const [isUploading, setIsUploading] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const { mutateAsync: uploadFile } = useUploadFile()
 
   const { activeChatId } = useChatStore()
@@ -33,6 +34,7 @@ export const ChatWindow = ({ onBack }: ChatWindowProps) => {
   const { socket } = useSocket()
   const { data: userProfile } = useUserProfile()
   const { data: chats } = useUserChats()
+  const { mutate: markRead } = useMarkChatRead()
   const user = userProfile?.user
   const scrollRef = useRef<HTMLDivElement>(null)
 
@@ -47,11 +49,18 @@ export const ChatWindow = ({ onBack }: ChatWindowProps) => {
     if (initialMessages) setMessages(initialMessages)
   }, [initialMessages])
 
+  // Mark as read whenever active chat changes
+  useEffect(() => {
+    if (activeChatId) markRead(activeChatId)
+  }, [activeChatId])
+
   // Join chat room + listen for events when activeChatId changes
   useEffect(() => {
     if (!socket || !activeChatId) return
 
     socket.emit('join_chat', activeChatId)
+    // Mark messages as read when opening the chat
+    markRead(activeChatId)
 
     const handleNewMessage = (message: any) => {
       if (message.chatId === activeChatId) {
@@ -265,7 +274,9 @@ export const ChatWindow = ({ onBack }: ChatWindowProps) => {
                 isMe ? "bg-blue-700 text-white rounded-br-none" : "bg-white text-zinc-700 rounded-bl-none border border-zinc-100"
               )}>
                 {msg.mediaType === 'image' && msg.mediaUrl && (
-                  <img src={msg.mediaUrl} alt="attachment" className="max-w-[240px] w-full object-cover" />
+                  <a href={msg.mediaUrl} target="_blank" rel="noreferrer">
+                    <img src={msg.mediaUrl} alt="attachment" className="max-w-[240px] w-full object-cover rounded-t-2xl" />
+                  </a>
                 )}
                 {msg.mediaType === 'video' && msg.mediaUrl && (
                   <video src={msg.mediaUrl} controls className="max-w-[240px] w-full" />
@@ -276,10 +287,13 @@ export const ChatWindow = ({ onBack }: ChatWindowProps) => {
                     📎 {msg.message || 'Attachment'}
                   </a>
                 )}
-                {(msg.message || msg.content) && (
-                  <p className={cn("whitespace-pre-wrap px-3.5 py-2.5", msg.mediaUrl ? "pt-1" : "")}>
+                {(msg.message || msg.content) && msg.mediaType !== 'image' && msg.mediaType !== 'video' && !msg.mediaUrl && (
+                  <p className="whitespace-pre-wrap px-3.5 py-2.5">
                     {msg.message || msg.content}
                   </p>
+                )}
+                {msg.mediaType === 'image' && msg.mediaUrl && (msg.message || msg.content) && msg.message !== msg.mediaUrl && (
+                  <p className="whitespace-pre-wrap px-3.5 py-1 text-xs opacity-80">{msg.message || msg.content}</p>
                 )}
                 <p className={cn("text-[10px] px-3.5 pb-2 opacity-60", isMe ? "text-right" : "text-left")}>
                   {format(new Date(msg.createdAt || msg.timestamp || Date.now()), 'HH:mm')}

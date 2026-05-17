@@ -6,7 +6,7 @@ import { useBookingStore } from '@/store/booking-store'
 import { Input } from "@resolve/ui"
 import { cn } from "@resolve/ui"
 import { BookingRequestCard } from '@/features/dashboard/components/booking-request-card'
-import { useUserBookings, useUserProfile } from '@/hooks/api-hooks'
+import { useUserBookings, useUserProfile, useEngineerMyBookings } from '@/hooks/api-hooks'
 import { Skeleton } from "@resolve/ui"
 import { formatDistanceToNow } from 'date-fns'
 
@@ -106,11 +106,13 @@ function DraftCard({ draft }: { draft: any }) {
 export default function BookingsPage() {
   const [activeTab, setActiveTab] = useState<string>('All')
   const [searchQuery, setSearchQuery] = useState('')
-  const { data: bookings, isPending: isBookingsPending } = useUserBookings()
   const { data: userProfile, isPending: isUserPending } = useUserProfile()
+  const isWorker = userProfile?.user?.role === 'worker'
+  const { data: bookings, isPending: isBookingsPending } = useUserBookings({ enabled: !isWorker })
+  const { data: engineerBookings, isPending: isEngineerBookingsPending } = useEngineerMyBookings({ enabled: isWorker })
   const drafts = useBookingStore((s) => s.drafts)
 
-  const isWorker = userProfile?.user?.role === 'worker'
+  const allBookings = isWorker ? (engineerBookings || []) : (bookings || [])
   const isVerified = !!(
     (userProfile?.user as any)?.isVerified ||
     (userProfile?.user as any)?.status === 'verified' ||
@@ -119,7 +121,7 @@ export default function BookingsPage() {
   )
   const status = (userProfile?.user as any)?.status
 
-  if (isBookingsPending || isUserPending) {
+  if (isBookingsPending || isUserPending || isEngineerBookingsPending) {
     return (
       <div className="flex flex-col gap-8">
         <div className="h-20 bg-zinc-100 animate-pulse rounded-xl" />
@@ -132,17 +134,17 @@ export default function BookingsPage() {
     )
   }
 
-  const filteredBookings = bookings?.filter((booking: any) => {
+  const filteredBookings = allBookings?.filter((booking: any) => {
     const status = booking.status?.toUpperCase()
     let matchesTab = activeTab === 'All'
     if (activeTab === 'IN_PROGRESS') matchesTab = status === 'IN_PROGRESS'
-    if (activeTab === 'CONFIRMED') matchesTab = ['PENDING', 'CONFIRMED'].includes(status)
+    if (activeTab === 'CONFIRMED') matchesTab = ['PENDING', 'CONFIRMED', 'AWAITING_ENGINEER'].includes(status)
     if (activeTab === 'COMPLETED') matchesTab = status === 'COMPLETED'
     if (activeTab === 'CANCELLED') matchesTab = status === 'CANCELLED'
 
     const matchesSearch =
       booking.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      booking.service?.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      booking.service?.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       booking.address?.toLowerCase().includes(searchQuery.toLowerCase())
     return matchesTab && matchesSearch
   }) || []
@@ -154,7 +156,9 @@ export default function BookingsPage() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex flex-col">
           <h1 className="text-neutral-700 text-xl md:text-2xl font-bold font-['Plus_Jakarta_Sans'] leading-8">Bookings</h1>
-          <p className="text-zinc-500 text-sm md:text-base font-normal leading-6">Track and manage all your assigned jobs here.</p>
+          <p className="text-zinc-500 text-sm md:text-base font-normal leading-6">
+            {isWorker ? 'Track and manage all your assigned jobs here.' : 'View and manage all your service bookings.'}
+          </p>
         </div>
 
         <div className="relative w-full md:w-96 group">
@@ -174,12 +178,12 @@ export default function BookingsPage() {
           <div className="flex overflow-x-auto no-scrollbar">
             {tabs.map((tab) => {
               const count = tab.value === 'All'
-                ? bookings?.length || 0
+                ? allBookings?.length || 0
                 : tab.value === 'DRAFTS'
                   ? drafts.length
-                  : bookings?.filter((b: any) => {
+                  : allBookings?.filter((b: any) => {
                     const status = b.status?.toUpperCase()
-                    if (tab.value === 'CONFIRMED') return ['PENDING', 'CONFIRMED'].includes(status)
+                    if (tab.value === 'CONFIRMED') return ['PENDING', 'CONFIRMED', 'AWAITING_ENGINEER'].includes(status)
                     return status === tab.value
                   }).length || 0
 

@@ -63,7 +63,7 @@ export const ENDPOINTS = {
     DASHBOARD: '/api/engineer/dashboard',
     LOCATION: '/api/engineer/location',
     BOOKINGS: '/api/engineer/bookings',
-    MY_BOOKINGS: '/api/bookings/engineer/my-bookings',
+    MY_BOOKINGS: '/api/engineer/bookings',
     BOOKING_BY_ID: (id: string) => `/api/engineer/bookings/${id}`,
   },
 

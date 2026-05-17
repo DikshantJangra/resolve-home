@@ -572,6 +572,19 @@ export function useUserChats() {
   })
 }
 
+export function useMarkChatRead() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (chatId: string) => {
+      const response = await apiClient.put(ENDPOINTS.CHATS.READ(chatId))
+      return response.data
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['user-chats'] })
+    }
+  })
+}
+
 export function useChatMessages(chatId: string) {
   return useQuery({
     queryKey: ['chat-messages', chatId],
