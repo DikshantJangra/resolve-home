@@ -3,10 +3,10 @@
 import React from 'react'
 import Link from 'next/link'
 import { useParams } from 'next/navigation'
-import { 
-  HiOutlineChevronLeft, 
-  HiOutlineClock, 
-  HiOutlineStar, 
+import {
+  HiOutlineChevronLeft,
+  HiOutlineClock,
+  HiOutlineStar,
   HiOutlineBriefcase,
   HiOutlinePhone,
   HiOutlineChatAlt,
@@ -33,7 +33,9 @@ export default function BookingDetailsPage() {
   const { data: quotation } = useBookingQuotation(id as string)
   const queryClient = useQueryClient()
 
-  const engineer = !isLoading && booking ? (booking.engineers?.[0] || booking.engineer) : null
+  const engineer = !isLoading && booking
+    ? (booking.engineer || booking.engineers?.[0] || null)
+    : null
   const hasNoEngineer = !isLoading && !!booking && !engineer
 
   const { refetch: refetchEngineers, isFetching: isRefetchingEngineers } = useAvailableEngineers(
@@ -87,7 +89,7 @@ export default function BookingDetailsPage() {
   ]
 
   const customer = booking.user
-  
+
   const displayUser = isWorker ? customer : engineer
   const displayName = displayUser?.name || (isWorker ? 'Homeowner' : 'Professional')
   const displayImage = displayUser?.image ? formatImageUrl(displayUser.image) : `https://api.dicebear.com/7.x/avataaars/svg?seed=${displayName}`
@@ -97,14 +99,14 @@ export default function BookingDetailsPage() {
     <div className="flex flex-col gap-6 max-w-6xl mx-auto pb-10">
       {/* Breadcrumb */}
       <div className="flex flex-col gap-3">
-        <Link 
-          href="/bookings" 
+        <Link
+          href="/bookings"
           className="inline-flex items-center gap-1 text-zinc-600 hover:text-blue-700 transition-colors group"
         >
           <div className="w-5 h-5 flex items-center justify-center rotate-180">
-             <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-               <path d="M6 12L10 8L6 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-             </svg>
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M6 12L10 8L6 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
           </div>
           <span className="text-sm font-medium">Bookings details</span>
         </Link>
@@ -145,9 +147,9 @@ export default function BookingDetailsPage() {
         <div className="py-4 border-t border-b border-stone-50 flex flex-col md:flex-row items-center gap-10">
           {engineer && (
             <div className="flex items-center gap-3 shrink-0">
-              <img 
-                src={displayImage} 
-                alt={displayName} 
+              <img
+                src={displayImage}
+                alt={displayName}
                 className="w-10 h-10 rounded-2xl object-cover border-2 border-white shadow-sm"
               />
               <div className="flex flex-col">
@@ -163,36 +165,36 @@ export default function BookingDetailsPage() {
           )}
 
           <div className="flex-1 w-full min-w-0 overflow-x-auto no-scrollbar">
-             <div className="flex items-center justify-between min-w-[500px] px-2">
-               {statusSteps.map((step, idx) => (
-                 <React.Fragment key={idx}>
-                   <div className="flex flex-col items-center gap-2 relative">
-                     <div className={cn(
-                       "w-5 h-5 rounded-full flex items-center justify-center transition-colors duration-300",
-                       step.status === 'completed' ? "bg-blue-700" : step.status === 'current' ? "bg-blue-700" : "bg-zinc-200"
-                     )}>
-                       {step.status === 'completed' ? (
-                         <div className="w-2 h-2 bg-white rounded-full" />
-                       ) : (
-                         <div className="w-1.5 h-1.5 bg-white rounded-full opacity-40" />
-                       )}
-                     </div>
-                     <span className={cn(
-                       "text-[11px] font-medium whitespace-nowrap",
-                       step.status !== 'pending' ? "text-neutral-700" : "text-zinc-400"
-                     )}>
-                       {step.label}
-                     </span>
-                   </div>
-                   {idx < statusSteps.length - 1 && (
-                     <div className={cn(
-                       "flex-1 h-[2px] -mt-6 transition-colors duration-500",
-                       statusSteps[idx + 1].status !== 'pending' ? "bg-blue-700" : "bg-zinc-200"
-                     )} />
-                   )}
-                 </React.Fragment>
-               ))}
-             </div>
+            <div className="flex items-center justify-between min-w-[500px] px-2">
+              {statusSteps.map((step, idx) => (
+                <React.Fragment key={idx}>
+                  <div className="flex flex-col items-center gap-2 relative">
+                    <div className={cn(
+                      "w-5 h-5 rounded-full flex items-center justify-center transition-colors duration-300",
+                      step.status === 'completed' ? "bg-blue-700" : step.status === 'current' ? "bg-blue-700" : "bg-zinc-200"
+                    )}>
+                      {step.status === 'completed' ? (
+                        <div className="w-2 h-2 bg-white rounded-full" />
+                      ) : (
+                        <div className="w-1.5 h-1.5 bg-white rounded-full opacity-40" />
+                      )}
+                    </div>
+                    <span className={cn(
+                      "text-[11px] font-medium whitespace-nowrap",
+                      step.status !== 'pending' ? "text-neutral-700" : "text-zinc-400"
+                    )}>
+                      {step.label}
+                    </span>
+                  </div>
+                  {idx < statusSteps.length - 1 && (
+                    <div className={cn(
+                      "flex-1 h-[2px] -mt-6 transition-colors duration-500",
+                      statusSteps[idx + 1].status !== 'pending' ? "bg-blue-700" : "bg-zinc-200"
+                    )} />
+                  )}
+                </React.Fragment>
+              ))}
+            </div>
           </div>
         </div>
 
@@ -200,10 +202,10 @@ export default function BookingDetailsPage() {
         <div className="flex flex-col gap-2">
           <div className="flex items-center gap-2">
             <div className="w-3.5 h-3.5 text-blue-700">
-               <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
-                 <path d="M8 4V8L10 10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                 <circle cx="8" cy="8" r="6" stroke="currentColor" strokeWidth="1.5"/>
-               </svg>
+              <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
+                <path d="M8 4V8L10 10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                <circle cx="8" cy="8" r="6" stroke="currentColor" strokeWidth="1.5" />
+              </svg>
             </div>
             <span className="text-neutral-700 text-xs">
               {booking.scheduledDate && booking.scheduledTime
@@ -261,9 +263,9 @@ export default function BookingDetailsPage() {
             <div className="p-6 bg-stone-50 rounded-2xl flex flex-col gap-8 border border-zinc-100 shadow-sm">
               {/* User Profile Header */}
               <div className="flex items-center gap-4">
-                <img 
-                  src={displayImage} 
-                  alt={displayName} 
+                <img
+                  src={displayImage}
+                  alt={displayName}
                   className="w-20 h-20 rounded-full object-cover border-4 border-white shadow-md"
                 />
                 <div className="flex flex-col gap-2">
@@ -295,16 +297,16 @@ export default function BookingDetailsPage() {
               {/* Contact Buttons */}
               <div className="flex gap-4">
                 {engineer?.phone && (
-                  <Link 
-                    href={`tel:${engineer.phone}`} 
+                  <Link
+                    href={`tel:${engineer.phone}`}
                     className="flex-1 h-11 px-6 py-3 rounded-xl outline outline-1 outline-offset-[-1px] outline-blue-700 flex justify-center items-center gap-2.5 transition-all hover:bg-blue-50 active:scale-[0.98]"
                   >
                     <HiOutlinePhone className="w-5 h-5 text-blue-700" />
                     <div className="justify-start text-blue-700 text-sm font-medium leading-5">Call Pro Partner</div>
                   </Link>
                 )}
-                <Link 
-                  href={`/chats?bookingId=${booking.id}`} 
+                <Link
+                  href={`/chats?bookingId=${booking.id}`}
                   className="flex-1 h-11 px-6 py-3 bg-blue-700 rounded-xl flex justify-center items-center gap-2.5 transition-all shadow-md active:scale-[0.98] hover:bg-blue-800"
                 >
                   <HiOutlineChatAlt className="w-5 h-5 text-white" />

@@ -145,7 +145,8 @@ export function useBookingDetail(id: string) {
     queryKey: ['booking-detail', id],
     queryFn: async () => {
       const response = await apiClient.get(ENDPOINTS.BOOKINGS.BY_ID(id))
-      return response.data.data
+      const data = response.data.data || response.data
+      return data?.booking || data
     },
     enabled: !!id && typeof window !== 'undefined' && !!localStorage.getItem('auth_token')
   })
