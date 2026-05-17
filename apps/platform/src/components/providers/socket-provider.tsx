@@ -22,15 +22,20 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
   const { data: user } = useUserProfile()
 
   useEffect(() => {
-    if (!user?.id) return
+    if (!user?.user?.id && !user?.id) return
 
-    const socketInstance = io(process.env.NEXT_PUBLIC_API_URL!, {
+    const userId = user?.user?.id || user?.id
+    const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null
+
+    const socketInstance = io(process.env.NEXT_PUBLIC_API_URL || 'https://resolvhome.onrender.com', {
       transports: ['websocket'],
+      auth: { token },
     })
 
     socketInstance.on('connect', () => {
       setIsConnected(true)
-      socketInstance.emit('join', user.id)
+      // Identify this user to the server
+      socketInstance.emit('join', userId)
     })
 
     socketInstance.on('disconnect', () => {
@@ -42,7 +47,7 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
     return () => {
       socketInstance.disconnect()
     }
-  }, [user?.id])
+  }, [user?.user?.id, user?.id])
 
   return (
     <SocketContext.Provider value={{ socket, isConnected }}>
