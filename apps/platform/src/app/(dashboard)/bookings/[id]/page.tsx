@@ -319,6 +319,30 @@ export default function BookingDetailsPage() {
                 <QuotationView quotation={quotation.quotation} />
               )}
 
+              {/* Engineer Reviews */}
+              <div className="flex flex-col gap-3">
+                <h4 className="text-sm font-semibold text-neutral-700">Reviews</h4>
+                {engineer?.reviews?.length > 0 ? (
+                  <div className="flex flex-col gap-3 max-h-64 overflow-y-auto pr-1 no-scrollbar">
+                    {engineer.reviews.map((r: any, i: number) => (
+                      <div key={i} className="p-3 bg-white rounded-xl border border-zinc-100 flex flex-col gap-1.5">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-semibold text-neutral-700">{r.customerName || 'Customer'}</span>
+                          <div className="flex items-center gap-0.5">
+                            {[1, 2, 3, 4, 5].map(s => (
+                              <HiOutlineStar key={s} className={cn('w-3 h-3', s <= r.rating ? 'text-amber-500 fill-amber-500' : 'text-zinc-200')} />
+                            ))}
+                          </div>
+                        </div>
+                        {r.comment && <p className="text-xs text-zinc-500 leading-relaxed">{r.comment}</p>}
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-xs text-zinc-400 py-3 text-center bg-stone-50 rounded-xl border border-dashed border-zinc-200">No reviews yet</p>
+                )}
+              </div>
+
               {/* Review Section (if completed booking) */}
               {booking.status === 'completed' && !booking.review && engineer && (
                 <ReviewForm bookingId={booking.id} />
