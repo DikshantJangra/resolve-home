@@ -296,17 +296,8 @@ export default function BookingDetailsPage() {
 
               {/* Contact Buttons */}
               <div className="flex gap-4">
-                {engineer?.phone && (
-                  <Link
-                    href={`tel:${engineer.phone}`}
-                    className="flex-1 h-11 px-6 py-3 rounded-xl outline outline-1 outline-offset-[-1px] outline-blue-700 flex justify-center items-center gap-2.5 transition-all hover:bg-blue-50 active:scale-[0.98]"
-                  >
-                    <HiOutlinePhone className="w-5 h-5 text-blue-700" />
-                    <div className="justify-start text-blue-700 text-sm font-medium leading-5">Call Pro Partner</div>
-                  </Link>
-                )}
                 <Link
-                  href={`/chats?bookingId=${booking.id}`}
+                  href={`/messages?bookingId=${booking.id}`}
                   className="flex-1 h-11 px-6 py-3 bg-blue-700 rounded-xl flex justify-center items-center gap-2.5 transition-all shadow-md active:scale-[0.98] hover:bg-blue-800"
                 >
                   <HiOutlineChatAlt className="w-5 h-5 text-white" />
