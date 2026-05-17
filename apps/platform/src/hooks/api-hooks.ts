@@ -258,6 +258,20 @@ export function useUpdateEngineerProfile() {
   })
 }
 
+// Lightweight hook — only updates category + assignedServices without re-triggering full wizard validation
+export function useUpdateEngineerServices() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (data: { category: string; assignedServices: string[] }) => {
+      const response = await apiClient.patch(ENDPOINTS.ENGINEER.UPDATE_SERVICES, data)
+      return response.data
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['user-profile'] })
+    }
+  })
+}
+
 export function useResendGuarantorVerification() {
   return useMutation({
     mutationFn: async () => {
@@ -329,11 +343,14 @@ export function useEngineerDashboard(enabled = false) {
   })
 }
 
-export function useEngineerBookings(options: { enabled?: boolean } = {}) {
+export function useEngineerBookings(options: { enabled?: boolean; filter?: string; page?: number; limit?: number } = {}) {
+  const { filter, page = 1, limit = 20 } = options
   return useQuery({
-    queryKey: ['engineer-bookings'],
+    queryKey: ['engineer-bookings', filter, page, limit],
     queryFn: async () => {
-      const response = await apiClient.get(ENDPOINTS.ENGINEER.BOOKINGS)
+      const params: Record<string, string | number> = { page, limit }
+      if (filter) params.filter = filter
+      const response = await apiClient.get(ENDPOINTS.ENGINEER.BOOKINGS, { params })
       return response.data.data?.bookings || []
     },
     enabled: (typeof window !== 'undefined' && !!localStorage.getItem('auth_token')) && (options.enabled !== false)

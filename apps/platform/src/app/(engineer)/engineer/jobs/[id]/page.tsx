@@ -4,10 +4,10 @@ import React from 'react'
 import Link from 'next/link'
 import { useParams, useRouter } from 'next/navigation'
 import { format } from 'date-fns'
-import { 
-  HiOutlineChevronLeft, 
-  HiOutlineClock, 
-  HiOutlineLocationMarker, 
+import {
+  HiOutlineChevronLeft,
+  HiOutlineClock,
+  HiOutlineLocationMarker,
   HiOutlineBriefcase,
   HiOutlineUser,
   HiOutlineChatAlt,
@@ -19,6 +19,8 @@ import { useEngineerBookingDetail, useAcceptJob, useRejectJob, useCompleteJob, u
 import { cn } from "@resolve/ui"
 import { ProfessionalSetupWizard } from '@/features/professional-setup/components/professional-setup-wizard'
 import { createPortal } from 'react-dom'
+import { Map } from '@/components/ui/map'
+import type { MapMarker } from '@/components/ui/map'
 
 export default function JobDetailsPage() {
   const [mounted, setMounted] = React.useState(false)
@@ -42,6 +44,20 @@ export default function JobDetailsPage() {
 
   const [isSetupOpen, setIsSetupOpen] = React.useState(false)
   const showVerificationOverlay = !isVerified
+
+  const [engineerCoords, setEngineerCoords] = React.useState<[number, number] | null>(null)
+  const jobIsActive = job ? ['confirmed', 'in-progress'].includes(job.status) : false
+
+  React.useEffect(() => {
+    if (!jobIsActive) return
+    if (!navigator.geolocation) return
+    const watchId = navigator.geolocation.watchPosition(
+      (pos) => setEngineerCoords([pos.coords.longitude, pos.coords.latitude]),
+      () => {},
+      { enableHighAccuracy: true }
+    )
+    return () => navigator.geolocation.clearWatch(watchId)
+  }, [jobIsActive])
   const isPending = isSessionPending || isProfilePending || (!!user && !showVerificationOverlay && isJobPending)
 
   if (isPending) {
@@ -190,7 +206,7 @@ export default function JobDetailsPage() {
             <div className="flex justify-between items-center border-b border-zinc-100 pb-4">
               <h3 className="text-lg font-bold text-neutral-800">Customer Details</h3>
               {job.status === 'in-progress' && (
-                <Button 
+                <Button
                   onClick={handleComplete}
                   disabled={isCompleting}
                   className="bg-emerald-600 hover:bg-emerald-700 text-white"
@@ -199,7 +215,7 @@ export default function JobDetailsPage() {
                 </Button>
               )}
             </div>
-            
+
             <div className="flex items-center gap-4">
               <div className="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center">
                 <HiOutlineUser className="w-8 h-8 text-blue-700" />
@@ -209,6 +225,9 @@ export default function JobDetailsPage() {
                 <p className="text-sm text-zinc-500">Member since 2024</p>
               </div>
             </div>
+
+            {/* Live Map */}
+            <JobLocationMap job={job} engineerCoords={engineerCoords} />
 
             <div className="flex gap-4 pt-4">
               <Button className="flex-1 h-12 bg-blue-700 hover:bg-blue-800">
@@ -237,6 +256,59 @@ export default function JobDetailsPage() {
         </div>,
         document.body
       )}
+    </div>
+  )
+}
+
+function JobLocationMap({ job, engineerCoords }: { job: any; engineerCoords: [number, number] | null }) {
+  const customerLat = job.customerDetails?.latitude ?? job.location?.latitude ?? job.address?.latitude
+  const customerLng = job.customerDetails?.longitude ?? job.location?.longitude ?? job.address?.longitude
+  const hasCustomerLocation = customerLat != null && customerLng != null
+
+  const markers: MapMarker[] = []
+  if (hasCustomerLocation) {
+    markers.push({ lngLat: [customerLng, customerLat], color: '#dc2626', label: 'Customer Location' })
+  }
+  if (engineerCoords) {
+    markers.push({ lngLat: engineerCoords, color: '#1d4ed8', label: 'Your Location' })
+  }
+
+  const center: [number, number] = engineerCoords ?? (hasCustomerLocation ? [customerLng, customerLat] : [3.3792, 6.5244])
+
+  if (!hasCustomerLocation && !engineerCoords) {
+    return (
+      <div className="w-full h-56 rounded-xl bg-zinc-50 border border-zinc-200 flex items-center justify-center">
+        <p className="text-sm text-zinc-400">Location data unavailable</p>
+      </div>
+    )
+  }
+
+  return (
+    <div className="flex flex-col gap-2">
+      <div className="flex items-center justify-between">
+        <p className="text-sm font-semibold text-neutral-800">Live Location</p>
+        <div className="flex items-center gap-3 text-xs text-zinc-500">
+          {hasCustomerLocation && (
+            <span className="flex items-center gap-1">
+              <span className="w-2 h-2 rounded-full bg-red-600 inline-block" />
+              Customer
+            </span>
+          )}
+          {engineerCoords && (
+            <span className="flex items-center gap-1">
+              <span className="w-2 h-2 rounded-full bg-blue-700 inline-block" />
+              You
+            </span>
+          )}
+        </div>
+      </div>
+      <div className="w-full h-64 rounded-xl overflow-hidden border border-zinc-200">
+        <Map
+          viewport={{ center, zoom: 13, bearing: 0, pitch: 0 }}
+          markers={markers}
+          className="w-full h-full"
+        />
+      </div>
     </div>
   )
 }

@@ -1,5 +1,5 @@
 'use client'
-import React, { useState, useMemo } from 'react'
+import React, { useState, useMemo, useEffect } from 'react'
 import { Button, Input, Label, Textarea } from "@resolve/ui"
 import { useUpdateBioAddress, useUpdateEngineerLocation } from '@/hooks/api-hooks'
 import { toast } from 'sonner'
@@ -18,6 +18,7 @@ interface PersonalInfoTabProps {
   longitude?: number
   bio: string
   role?: string
+  hasEngineerProfile?: boolean
 }
 
 const selectClass = "w-full h-10 px-3 rounded-md border border-zinc-200 text-sm text-neutral-700 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
@@ -33,7 +34,8 @@ export const PersonalInfoTab = ({
   latitude: initialLatitude,
   longitude: initialLongitude,
   bio: initialBio,
-  role
+  role,
+  hasEngineerProfile = false,
 }: PersonalInfoTabProps) => {
   const [isEditing, setIsEditing] = useState(false)
   const [isLocating, setIsLocating] = useState(false)
@@ -49,6 +51,27 @@ export const PersonalInfoTab = ({
 
   const updateMutation = useUpdateBioAddress()
   const updateLocationMutation = useUpdateEngineerLocation()
+
+  console.log('--- PERSONAL INFO TAB RENDER ---', {
+    props: { initialCountry, initialState, initialCity, initialAddress, initialBio, initialLatitude, initialLongitude, role, hasEngineerProfile },
+    formData,
+    isEditing
+  })
+
+  // Sync form state when profile data is refetched (e.g. after a successful save)
+  useEffect(() => {
+    if (!isEditing) {
+      setFormData({
+        country: initialCountry || '',
+        state: initialState || '',
+        city: initialCity || '',
+        homeAddress: initialAddress || '',
+        bio: initialBio || '',
+        latitude: initialLatitude || undefined,
+        longitude: initialLongitude || undefined,
+      })
+    }
+  }, [initialCountry, initialState, initialCity, initialAddress, initialBio, initialLatitude, initialLongitude])
 
   const countries = useMemo(() => Country.getAllCountries(), [])
   const states = useMemo(
@@ -149,6 +172,22 @@ export const PersonalInfoTab = ({
   }
 
   const handleSave = async () => {
+    const isWorker = role === 'worker' || role === 'Work as a Professional' || role === 'engineer'
+    
+    console.log('--- PERSONAL INFO TAB SAVE ---', {
+      bio: formData.bio,
+      homeAddress: {
+        country: formData.country,
+        state: formData.state,
+        city: formData.city,
+        street: formData.homeAddress,
+        latitude: formData.latitude,
+        longitude: formData.longitude,
+      },
+      isWorker,
+      hasEngineerProfile
+    })
+
     try {
       // Save bio and address info to user profile
       await updateMutation.mutateAsync({
@@ -163,8 +202,12 @@ export const PersonalInfoTab = ({
         }
       })
 
-      // If pro/worker, also push live location to pro profile endpoint
-      if (role === 'worker' && formData.latitude !== undefined && formData.longitude !== undefined) {
+      // If pro/worker AND has an existing engineer record, also sync live GPS coordinates
+      if (isWorker && hasEngineerProfile && formData.latitude !== undefined && formData.longitude !== undefined) {
+        console.log('--- SYNCING LIVE ENGINEER LOCATION ---', {
+          latitude: formData.latitude,
+          longitude: formData.longitude
+        })
         await updateLocationMutation.mutateAsync({
           latitude: formData.latitude,
           longitude: formData.longitude

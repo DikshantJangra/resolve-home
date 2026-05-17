@@ -15,7 +15,8 @@ export default function DashboardLayout({
 }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const { data: user, isPending } = useUserProfile()
-  const isEngineer = user?.user?.role === 'worker'
+  // Only track location when the user IS a worker AND has a completed engineer profile in the DB
+  const isEngineer = user?.user?.role === 'worker' && !!user?.engineerProfile
   useEngineerLocationTracker(isEngineer)
   const router = useRouter()
 

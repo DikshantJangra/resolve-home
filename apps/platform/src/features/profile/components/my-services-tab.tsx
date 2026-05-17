@@ -1,43 +1,44 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { useCategories, useServices, useUpdateEngineerProfile } from '@/hooks/api-hooks'
+import { useUserProfile, useCategories, useServices, useUpdateEngineerServices } from '@/hooks/api-hooks'
 import { Button, Label, LoadingSpinner } from "@resolve/ui"
 import { cn } from "@resolve/ui"
 import { toast } from 'sonner'
-import { HiOutlineCheckCircle, HiOutlineBriefcase } from 'react-icons/hi'
+import { HiOutlineCheckCircle, HiOutlineBriefcase, HiOutlineExclamationCircle } from 'react-icons/hi'
 
-interface MyServicesTabProps {
-  engineerProfile: any
-}
+export const MyServicesTab = () => {
+  // Fetch profile directly inside the tab — don't rely on stale parent prop
+  const { data: profile, isLoading: profileLoading } = useUserProfile()
+  const engineerProfile = profile?.engineerProfile ?? null
 
-export const MyServicesTab = ({ engineerProfile }: MyServicesTabProps) => {
   const { data: categories = [], isLoading: loadingCategories } = useCategories()
   const [selectedCategory, setSelectedCategory] = useState<string>('')
   const [selectedServices, setSelectedServices] = useState<string[]>([])
-  
-  const { data: services = [], isLoading: loadingServices } = useServices(selectedCategory)
-  const { mutate: updateProfile, isPending } = useUpdateEngineerProfile()
+  const [initialized, setInitialized] = useState(false)
 
-  // Pre-populate state from existing profile
+  const { data: services = [], isLoading: loadingServices } = useServices(selectedCategory)
+  const { mutate: updateServices, isPending } = useUpdateEngineerServices()
+
+  // Pre-populate once engineer profile loads
   useEffect(() => {
-    console.log('[MyServicesTab] engineerProfile received in props:', engineerProfile)
-    if (engineerProfile) {
+    if (engineerProfile && !initialized) {
       const categoryId = engineerProfile.category || engineerProfile.categoryId || ''
-      const servicesArray = Array.isArray(engineerProfile.assignedServices) 
-        ? engineerProfile.assignedServices 
+      const servicesArray = Array.isArray(engineerProfile.assignedServices)
+        ? engineerProfile.assignedServices
         : (engineerProfile.assignedServices ? [engineerProfile.assignedServices] : [])
-      
-      console.log('[MyServicesTab] Pre-populating categoryId:', categoryId)
-      console.log('[MyServicesTab] Pre-populating servicesArray:', servicesArray)
-      
+
+      console.log('[MyServicesTab] Engineer profile loaded:', engineerProfile)
+      console.log('[MyServicesTab] categoryId:', categoryId, '| services:', servicesArray)
+
       setSelectedCategory(categoryId)
       setSelectedServices(servicesArray)
+      setInitialized(true)
     }
-  }, [engineerProfile])
+  }, [engineerProfile, initialized])
 
   const handleServiceToggle = (serviceId: string) => {
-    setSelectedServices(prev => 
+    setSelectedServices(prev =>
       prev.includes(serviceId)
         ? prev.filter(id => id !== serviceId)
         : [...prev, serviceId]
@@ -49,50 +50,50 @@ export const MyServicesTab = ({ engineerProfile }: MyServicesTabProps) => {
       toast.error('Please select a primary category')
       return
     }
-
     if (selectedServices.length === 0) {
       toast.error('Please select at least one specific service')
       return
     }
-
-    // Assemble the complete profile data as a payload base, replacing updated category and assignedServices
-    const payload = {
-      primarySpecialty: engineerProfile?.primarySpecialty || 'Professional Technician',
-      category: selectedCategory,
-      assignedServices: selectedServices,
-      yearsOfExperience: engineerProfile?.yearsOfExperience || '1',
-      idType: engineerProfile?.idType || 'BVN',
-      idNumber: engineerProfile?.idNumber || '',
-      idDocument: engineerProfile?.idDocument || '',
-      bankDetails: {
-        accountName: engineerProfile?.bankDetails?.accountName || '',
-        bankName: engineerProfile?.bankDetails?.bankName || '',
-        bankCode: engineerProfile?.bankDetails?.bankCode || '',
-        accountNumber: engineerProfile?.bankDetails?.accountNumber || '',
-      },
-      location: {
-        country: engineerProfile?.location?.country || 'Nigeria',
-        state: engineerProfile?.location?.state || '',
-        city: engineerProfile?.location?.city || '',
-        streetAddress: engineerProfile?.location?.streetAddress || '',
-        nearestLandmark: engineerProfile?.location?.nearestLandmark || '',
-      },
-      guarantorName: engineerProfile?.guarantor?.name || engineerProfile?.guarantorName || '',
-      guarantorEmail: engineerProfile?.guarantor?.email || engineerProfile?.guarantorEmail || '',
-      guarantorPhone: engineerProfile?.guarantor?.phone || engineerProfile?.guarantorPhone || '',
-      guarantorRelationship: engineerProfile?.guarantor?.relationship || engineerProfile?.guarantorRelationship || '',
-      guarantorWorkPlace: engineerProfile?.guarantor?.workPlace || engineerProfile?.guarantorWorkPlace || '',
-    }
-
-    updateProfile(payload, {
-      onSuccess: () => {
-        toast.success("Services updated successfully!")
-      },
-      onError: (err: any) => {
-        console.error('[MyServicesTab] Save failed:', err)
-        toast.error("Failed to update services. Please try again.")
+    updateServices(
+      { category: selectedCategory, assignedServices: selectedServices },
+      {
+        onSuccess: () => toast.success('Services updated successfully!'),
+        onError: (err: any) => {
+          console.error('[MyServicesTab] Save failed:', err)
+          toast.error(err?.response?.data?.error || 'Failed to update services. Please try again.')
+        }
       }
-    })
+    )
+  }
+
+  // Loading state
+  if (profileLoading) {
+    return (
+      <div className="space-y-4 max-w-3xl animate-pulse">
+        <div className="h-6 w-48 bg-zinc-200 rounded" />
+        <div className="h-12 w-full bg-zinc-100 rounded-lg" />
+        <div className="grid grid-cols-2 gap-3">
+          {[1,2,3,4].map(i => <div key={i} className="h-16 bg-zinc-100 rounded-xl" />)}
+        </div>
+      </div>
+    )
+  }
+
+  // No engineer profile found
+  if (!engineerProfile) {
+    return (
+      <div className="flex flex-col items-center justify-center py-12 gap-4 text-center max-w-md mx-auto">
+        <div className="w-14 h-14 rounded-2xl bg-amber-50 border border-amber-100 flex items-center justify-center">
+          <HiOutlineExclamationCircle className="w-7 h-7 text-amber-500" />
+        </div>
+        <div className="space-y-1">
+          <h4 className="text-sm font-bold text-zinc-800">Setup wizard not completed</h4>
+          <p className="text-xs text-zinc-500 leading-relaxed">
+            You don't have an engineer profile yet. Complete the Pro Partner setup wizard first, then come back here to manage your services.
+          </p>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -103,7 +104,7 @@ export const MyServicesTab = ({ engineerProfile }: MyServicesTabProps) => {
           My Provided Services
         </h3>
         <p className="text-zinc-500 text-xs sm:text-sm">
-          Select your primary trade category and specify all sub-services you offer. Customers will search and match with you based on these selections.
+          Select your primary trade category and the specific sub-services you offer. Customers match with you based on these selections.
         </p>
       </div>
 
@@ -118,7 +119,7 @@ export const MyServicesTab = ({ engineerProfile }: MyServicesTabProps) => {
             value={selectedCategory}
             onChange={(e) => {
               setSelectedCategory(e.target.value)
-              setSelectedServices([]) // Clear sub-services when category changes to prevent cross-category mismatch
+              setSelectedServices([])
             }}
           >
             <option value="">Select your primary category</option>
@@ -135,14 +136,14 @@ export const MyServicesTab = ({ engineerProfile }: MyServicesTabProps) => {
           <div className="flex justify-between items-baseline">
             <Label className="text-zinc-700 font-semibold text-sm">Offered Services <span className="text-red-500">*</span></Label>
             {selectedServices.length > 0 && (
-              <span className="text-xs font-semibold text-blue-700 bg-blue-50 px-2.5 py-0.5 rounded-full transition-all">
+              <span className="text-xs font-semibold text-blue-700 bg-blue-50 px-2.5 py-0.5 rounded-full">
                 {selectedServices.length} selected
               </span>
             )}
           </div>
-          
+
           {loadingServices ? (
-            <div className="flex items-center gap-2 text-zinc-500 text-sm py-8 animate-pulse justify-center border border-zinc-200 border-dashed rounded-xl bg-zinc-50/50">
+            <div className="flex items-center gap-2 text-zinc-500 text-sm py-8 justify-center border border-zinc-200 border-dashed rounded-xl bg-zinc-50/50">
               <LoadingSpinner className="w-5 h-5 text-blue-700" />
               <span>Loading services...</span>
             </div>
@@ -153,7 +154,7 @@ export const MyServicesTab = ({ engineerProfile }: MyServicesTabProps) => {
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-1 max-h-72 overflow-y-auto border border-zinc-200 rounded-xl bg-zinc-50/30">
               {services.map((service: any) => {
-                const isSelected = selectedServices.includes(service.id);
+                const isSelected = selectedServices.includes(service.id)
                 return (
                   <button
                     key={service.id}
@@ -170,7 +171,11 @@ export const MyServicesTab = ({ engineerProfile }: MyServicesTabProps) => {
                       "w-5 h-5 rounded-md border flex items-center justify-center shrink-0 mt-0.5 transition-all",
                       isSelected ? "bg-blue-700 border-blue-700 text-white" : "border-zinc-300"
                     )}>
-                      {isSelected && <svg className="w-3.5 h-3.5 stroke-[3px]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>}
+                      {isSelected && (
+                        <svg className="w-3.5 h-3.5 stroke-[3px]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                        </svg>
+                      )}
                     </div>
                     <div className="flex flex-col gap-0.5">
                       <p className="text-xs font-semibold text-zinc-800">{service.name}</p>
@@ -179,7 +184,7 @@ export const MyServicesTab = ({ engineerProfile }: MyServicesTabProps) => {
                       )}
                     </div>
                   </button>
-                );
+                )
               })}
             </div>
           )}
