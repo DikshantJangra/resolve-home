@@ -21,9 +21,18 @@ export const MyServicesTab = ({ engineerProfile }: MyServicesTabProps) => {
 
   // Pre-populate state from existing profile
   useEffect(() => {
+    console.log('[MyServicesTab] engineerProfile received in props:', engineerProfile)
     if (engineerProfile) {
-      setSelectedCategory(engineerProfile.category || '')
-      setSelectedServices(engineerProfile.assignedServices || [])
+      const categoryId = engineerProfile.category || engineerProfile.categoryId || ''
+      const servicesArray = Array.isArray(engineerProfile.assignedServices) 
+        ? engineerProfile.assignedServices 
+        : (engineerProfile.assignedServices ? [engineerProfile.assignedServices] : [])
+      
+      console.log('[MyServicesTab] Pre-populating categoryId:', categoryId)
+      console.log('[MyServicesTab] Pre-populating servicesArray:', servicesArray)
+      
+      setSelectedCategory(categoryId)
+      setSelectedServices(servicesArray)
     }
   }, [engineerProfile])
 

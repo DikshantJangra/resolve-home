@@ -65,11 +65,13 @@ export function useServices(categoryId?: string) {
   return useQuery({
     queryKey: ['services', categoryId],
     queryFn: async () => {
+      if (!categoryId) return []
       const response = await apiClient.get(ENDPOINTS.SERVICES.BASE, {
         params: { categoryId }
       })
       return response.data.data?.services || []
-    }
+    },
+    enabled: !!categoryId
   })
 }
 
