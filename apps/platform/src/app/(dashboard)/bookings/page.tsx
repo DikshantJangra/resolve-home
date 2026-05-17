@@ -106,10 +106,10 @@ function DraftCard({ draft }: { draft: any }) {
 export default function BookingsPage() {
   const [activeTab, setActiveTab] = useState<string>('All')
   const [searchQuery, setSearchQuery] = useState('')
-  const { data: userProfile, isPending: isUserPending } = useUserProfile()
+  const { data: userProfile, isLoading: isUserLoading } = useUserProfile()
   const isWorker = userProfile?.user?.role === 'worker'
-  const { data: bookings, isPending: isBookingsPending } = useUserBookings({ enabled: !isWorker })
-  const { data: engineerBookings, isPending: isEngineerBookingsPending } = useEngineerMyBookings({ enabled: isWorker })
+  const { data: bookings, isLoading: isBookingsLoading } = useUserBookings({ enabled: !isWorker })
+  const { data: engineerBookings, isLoading: isEngineerBookingsLoading } = useEngineerMyBookings({ enabled: isWorker })
   const drafts = useBookingStore((s) => s.drafts)
 
   const allBookings = isWorker ? (engineerBookings || []) : (bookings || [])
@@ -121,7 +121,7 @@ export default function BookingsPage() {
   )
   const status = (userProfile?.user as any)?.status
 
-  if (isBookingsPending || isUserPending || isEngineerBookingsPending) {
+  if (isBookingsLoading || isUserLoading || isEngineerBookingsLoading) {
     return (
       <div className="flex flex-col gap-8">
         <div className="h-20 bg-zinc-100 animate-pulse rounded-xl" />
@@ -155,7 +155,9 @@ export default function BookingsPage() {
       {/* Header Section */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex flex-col">
-          <h1 className="text-neutral-700 text-xl md:text-2xl font-bold font-['Plus_Jakarta_Sans'] leading-8">Bookings</h1>
+          <h1 className="text-neutral-700 text-xl md:text-2xl font-bold font-['Plus_Jakarta_Sans'] leading-8">
+            {isWorker ? 'Booking Requests' : 'Bookings'}
+          </h1>
           <p className="text-zinc-500 text-sm md:text-base font-normal leading-6">
             {isWorker ? 'Track and manage all your assigned jobs here.' : 'View and manage all your service bookings.'}
           </p>

@@ -24,25 +24,31 @@ export default function JobDetailsPage() {
   const [mounted, setMounted] = React.useState(false)
   const { id } = useParams()
   const router = useRouter()
-  const { data: session, isPending: isSessionPending } = useAuthSession()
+  const { data: session, isLoading: isSessionLoading } = useAuthSession()
   
   React.useEffect(() => {
     setMounted(true)
   }, [])
-  const { data: userProfile, isPending: isProfilePending } = useUserProfile()
+  const { data: userProfile, isLoading: isProfileLoading } = useUserProfile()
 
   const user = userProfile?.user || session?.user
-  const isVerified = (user as any)?.isVerified || (user as any)?.status === 'verified'
+  const isVerified = !!(
+    (user as any)?.isVerified || 
+    (user as any)?.status === 'verified' ||
+    userProfile?.engineerProfile?.isVerified ||
+    userProfile?.engineerProfile?.verificationStatus === 'approved'
+  )
   const status = (user as any)?.status
 
-  const { data: job, isPending: isJobPending, error } = useEngineerBookingDetail(id as string, { enabled: !!isVerified })
+  const { data: jobResponse, isLoading: isJobLoading, error } = useEngineerBookingDetail(id as string, { enabled: !!isVerified })
+  const job = jobResponse?.booking || jobResponse
   const { mutate: acceptJob, isPending: isAccepting } = useAcceptJob()
   const { mutate: rejectJob, isPending: isRejecting } = useRejectJob()
   const { mutate: completeJob, isPending: isCompleting } = useCompleteJob()
 
   const [isSetupOpen, setIsSetupOpen] = React.useState(false)
   const showVerificationOverlay = !isVerified
-  const isPending = isSessionPending || isProfilePending || (!!user && !showVerificationOverlay && isJobPending)
+  const isPending = isSessionLoading || isProfileLoading || (!!user && !showVerificationOverlay && isJobLoading)
 
   if (isPending) {
     return (

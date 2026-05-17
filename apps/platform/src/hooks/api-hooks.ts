@@ -308,8 +308,10 @@ export function useEngineerMyBookings(options: { enabled?: boolean } = {}) {
   return useQuery({
     queryKey: ['engineer-my-bookings'],
     queryFn: async () => {
-      const response = await apiClient.get(ENDPOINTS.ENGINEER.MY_BOOKINGS)
-      return response.data.data?.bookings || []
+      const response = await apiClient.get(ENDPOINTS.ENGINEER.MY_BOOKINGS, {
+        params: { page: 1, limit: 10, filter: 'requests' }
+      })
+      return response.data.data?.bookings || response.data.data || []
     },
     enabled: (typeof window !== 'undefined' && !!localStorage.getItem('auth_token')) && (options.enabled !== false)
   })
