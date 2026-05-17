@@ -3,21 +3,20 @@
 import React, { useState } from 'react'
 import { ProfileSummaryCard } from '@/components/shared/profile-summary-card'
 import { PersonalInfoTab } from '@/features/profile/components/personal-info-tab'
+import { MyServicesTab } from '@/features/profile/components/my-services-tab'
 import { BookingHistoryList } from '@/features/profile/components/booking-history-list'
 import { ReviewsGivenList } from '@/features/profile/components/reviews-given-list'
 import { useAuthSession, useUserProfile, useUserBookings } from '@/hooks/api-hooks'
 import { format } from 'date-fns'
 import { Skeleton, formatImageUrl } from "@resolve/ui"
 import { getDicebearUrl } from '@/lib/constants'
-type TabType = 'Personal Info' | 'Booking History' | 'Reviews Given'
+type TabType = 'Personal Info' | 'My Services' | 'Booking History' | 'Reviews Given'
 
 export default function ProfilePage() {
   const [activeTab, setActiveTab] = useState<TabType>('Personal Info')
   const { data: session, isPending: sessionPending } = useAuthSession()
   const { data: profile, isPending: profilePending } = useUserProfile()
   const { data: bookings } = useUserBookings()
-
-  const tabs: TabType[] = ['Personal Info', 'Booking History', 'Reviews Given']
 
   const isDataPending = sessionPending || profilePending
 
@@ -39,6 +38,11 @@ export default function ProfilePage() {
   const user = profile?.user || session?.user
   const completedBookings = bookings?.filter((b: any) => b.status?.toLowerCase() === 'completed')?.length || 0
 
+  const isWorker = user?.role === 'worker'
+  const tabs: TabType[] = isWorker
+    ? ['Personal Info', 'My Services', 'Booking History', 'Reviews Given']
+    : ['Personal Info', 'Booking History', 'Reviews Given']
+
   const profileData = {
     fullName: user?.name || 'User',
     email: user?.email || '',
@@ -59,6 +63,8 @@ export default function ProfilePage() {
     switch (activeTab) {
       case 'Personal Info':
         return <PersonalInfoTab {...profileData} />
+      case 'My Services':
+        return <MyServicesTab engineerProfile={profile?.engineerProfile} />
       case 'Booking History':
         return <BookingHistoryList />
       case 'Reviews Given':

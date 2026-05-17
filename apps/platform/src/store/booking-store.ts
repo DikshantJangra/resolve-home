@@ -54,6 +54,7 @@ interface BookingState {
   setServiceType: (type: string) => void
   setCategoryId: (id: string | null) => void
   toggleServiceId: (id: string) => void
+  setServiceId: (id: string) => void
   setIssueDetails: (details: string) => void
   setPhotos: (photos: string[]) => void
   addPhoto: (photo: string) => void
@@ -101,6 +102,7 @@ export const useBookingStore = create<BookingState>()(
           ? state.serviceIds.filter((s) => s !== id)
           : [...state.serviceIds, id],
       })),
+      setServiceId: (id) => set({ serviceIds: [id] }),
       setIssueDetails: (issueDetails) => set({ issueDetails }),
       setPhotos: (photos) => set({ photos }),
       addPhoto: (photo) => set((state) => ({ photos: [...state.photos, photo] })),

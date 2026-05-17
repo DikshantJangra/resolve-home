@@ -19,7 +19,7 @@ export const IssueDetailsStep = () => {
     setStep,
     categoryId,
     serviceIds,
-    toggleServiceId,
+    setServiceId,
   } = useBookingStore()
 
   const [isServiceDropdownOpen, setIsServiceDropdownOpen] = useState(false)
@@ -69,10 +69,10 @@ export const IssueDetailsStep = () => {
   return (
     <div className="flex flex-col h-full bg-white">
       <div className="flex-1 px-5 pt-10 space-y-8 overflow-y-auto no-scrollbar">
-        {/* Service Selection (multi-select) */}
+        {/* Service Selection (single-select) */}
         <div className="space-y-1.5">
           <Label className="flex gap-0.5 text-zinc-600 text-sm font-medium font-['Inter'] leading-5">
-            Select Services <span className="text-red-600">*</span>
+            Select Service <span className="text-red-600">*</span>
           </Label>
           <div className="relative">
             <button
@@ -81,8 +81,8 @@ export const IssueDetailsStep = () => {
             >
               <span className={cn("text-sm", selectedCount > 0 ? "text-zinc-600" : "text-zinc-400")}>
                 {selectedCount > 0
-                  ? `${selectedCount} service${selectedCount > 1 ? 's' : ''} selected`
-                  : "Choose services"}
+                  ? services?.find((s: any) => s.id === serviceIds[0])?.name || 'Service selected'
+                  : "Choose a service"}
               </span>
               <HiOutlineChevronDown className={cn("w-5 h-5 text-zinc-400 transition-transform", isServiceDropdownOpen && "rotate-180")} />
             </button>
@@ -93,21 +93,21 @@ export const IssueDetailsStep = () => {
                   <div className="px-4 py-2 text-sm text-zinc-500">Loading services...</div>
                 ) : services && services.length > 0 ? (
                   services.map((service: any) => {
-                    const isSelected = serviceIds.includes(service.id)
+                    const isSelected = serviceIds[0] === service.id
                     return (
                       <button
                         key={service.id}
-                        onClick={() => toggleServiceId(service.id)}
+                        onClick={() => { setServiceId(service.id); setIsServiceDropdownOpen(false) }}
                         className="w-full px-4 py-2.5 text-left text-sm hover:bg-slate-50 flex items-center justify-between"
                       >
                         <span className={cn(isSelected ? "text-blue-700 font-medium" : "text-zinc-700")}>
                           {service.name}
                         </span>
                         <div className={cn(
-                          "w-4 h-4 rounded border flex items-center justify-center flex-shrink-0",
-                          isSelected ? "bg-blue-700 border-blue-700" : "border-zinc-300"
+                          "w-4 h-4 rounded-full border flex items-center justify-center shrink-0",
+                          isSelected ? "border-blue-700" : "border-zinc-300"
                         )}>
-                          {isSelected && <HiOutlineCheck className="w-3 h-3 text-white" />}
+                          {isSelected && <div className="w-2 h-2 rounded-full bg-blue-700" />}
                         </div>
                       </button>
                     )
@@ -118,21 +118,6 @@ export const IssueDetailsStep = () => {
               </div>
             )}
           </div>
-          {selectedCount > 0 && (
-            <div className="flex flex-wrap gap-1.5 mt-2">
-              {services?.filter((s: any) => serviceIds.includes(s.id)).map((s: any) => (
-                <span
-                  key={s.id}
-                  className="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-50 text-blue-700 text-xs rounded-full border border-blue-100"
-                >
-                  {s.name}
-                  <button onClick={() => toggleServiceId(s.id)} className="hover:text-blue-900">
-                    ×
-                  </button>
-                </span>
-              ))}
-            </div>
-          )}
         </div>
 
         {/* Issue Details */}
