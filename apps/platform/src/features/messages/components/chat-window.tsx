@@ -201,7 +201,9 @@ export const ChatWindow = ({ onBack }: ChatWindowProps) => {
           <div className="flex flex-col gap-0.5">
             <h3 className="text-base font-medium text-neutral-700">{otherUser?.name || 'User'}</h3>
             <p className="text-xs text-zinc-500">
-              {otherTyping ? <span className="text-blue-600 animate-pulse">typing...</span> : 'Booking chat'}
+              {otherTyping
+                ? <span className="text-blue-600 animate-pulse">typing...</span>
+                : otherUser?.email || 'Booking chat'}
             </p>
           </div>
         </div>
