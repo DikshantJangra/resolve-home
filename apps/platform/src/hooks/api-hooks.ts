@@ -362,7 +362,7 @@ export function useEngineerMyBookings(options: { enabled?: boolean } = {}) {
     queryKey: ['engineer-my-bookings'],
     queryFn: async () => {
       const response = await apiClient.get(ENDPOINTS.ENGINEER.MY_BOOKINGS, {
-        params: { page: 1, limit: 10, filter: 'requests' }
+        params: { page: 1, limit: 50 }
       })
       return response.data.data?.bookings || response.data.data || []
     },
@@ -375,7 +375,10 @@ export function useEngineerBookingDetail(id: string, options: { enabled?: boolea
     queryKey: ['engineer-booking-detail', id],
     queryFn: async () => {
       const response = await apiClient.get(ENDPOINTS.ENGINEER.BOOKING_BY_ID(id))
-      return response.data.data
+      // Return the full data so no fields are silently dropped
+      const raw = response.data
+      console.log('[useEngineerBookingDetail] raw response:', JSON.stringify(raw, null, 2))
+      return raw.data ?? raw
     },
     enabled: !!id && (typeof window !== 'undefined' && !!localStorage.getItem('auth_token')) && (options.enabled !== false)
   })
@@ -423,6 +426,34 @@ export function useCompleteJob() {
     onSuccess: (_, bookingId) => {
       queryClient.invalidateQueries({ queryKey: ['engineer-booking-detail', bookingId] })
       queryClient.invalidateQueries({ queryKey: ['engineer-bookings'] })
+    }
+  })
+}
+
+export function useUpdateJobStatus() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ bookingId, status }: { bookingId: string; status: 'on_the_way' | 'arrived' | 'in-progress' }) => {
+      const response = await apiClient.put(ENDPOINTS.ENGINEER.BOOKING_BY_ID(bookingId) + '/status', { status })
+      return response.data
+    },
+    onSuccess: (_, { bookingId }) => {
+      queryClient.invalidateQueries({ queryKey: ['engineer-booking-detail', bookingId] })
+      queryClient.invalidateQueries({ queryKey: ['engineer-bookings'] })
+    }
+  })
+}
+
+export function useCreateQuotation() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (payload: any) => {
+      const response = await apiClient.post(ENDPOINTS.QUOTATIONS.BASE, payload)
+      return response.data
+    },
+    onSuccess: (_, { bookingId }) => {
+      queryClient.invalidateQueries({ queryKey: ['quotation', bookingId] })
+      queryClient.invalidateQueries({ queryKey: ['engineer-booking-detail', bookingId] })
     }
   })
 }
@@ -604,19 +635,6 @@ export function useRejectQuotation() {
   })
 }
 
-export function useCreateQuotation() {
-  const queryClient = useQueryClient()
-  return useMutation({
-    mutationFn: async (data: any) => {
-      const response = await apiClient.post(ENDPOINTS.QUOTATIONS.BASE, data)
-      return response.data
-    },
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: ['quotation', variables.bookingId] })
-      // Also trigger a message or update the chat implicitly handled by backend
-    }
-  })
-}
 
 // --- Chats ---
 

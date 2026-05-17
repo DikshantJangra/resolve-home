@@ -10,13 +10,12 @@ import { useUserBookings, useUserProfile, useEngineerMyBookings } from '@/hooks/
 import { Skeleton } from "@resolve/ui"
 import { formatDistanceToNow } from 'date-fns'
 
-const tabs: { label: string; value: string }[] = [
+const baseTabs: { label: string; value: string }[] = [
   { label: 'All', value: 'All' },
   { label: 'Active', value: 'IN_PROGRESS' },
   { label: 'Upcoming', value: 'CONFIRMED' },
   { label: 'Completed', value: 'COMPLETED' },
   { label: 'Cancelled', value: 'CANCELLED' },
-  { label: 'Drafts', value: 'DRAFTS' },
 ]
 
 function BookNewCard() {
@@ -111,6 +110,7 @@ export default function BookingsPage() {
   const { data: bookings, isLoading: isBookingsLoading } = useUserBookings({ enabled: !isWorker })
   const { data: engineerBookings, isLoading: isEngineerBookingsLoading } = useEngineerMyBookings({ enabled: isWorker })
   const drafts = useBookingStore((s) => s.drafts)
+  const tabs = isWorker ? baseTabs : [...baseTabs, { label: 'Drafts', value: 'DRAFTS' }]
 
   const allBookings = isWorker ? (engineerBookings || []) : (bookings || [])
   const isVerified = !!(
@@ -243,7 +243,9 @@ export default function BookingsPage() {
               <div className="w-12 h-12 bg-zinc-100 rounded-full flex items-center justify-center">
                 <HiOutlineSearch className="w-6 h-6" />
               </div>
-              <p className="text-sm font-medium">No bookings found</p>
+              <p className="text-sm font-medium">
+                {isWorker ? 'No booking requests found' : 'No bookings found'}
+              </p>
               <p className="text-xs text-zinc-400">Try adjusting your search or filters</p>
             </div>
           )}

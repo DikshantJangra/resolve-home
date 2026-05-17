@@ -58,6 +58,13 @@ export const ProfessionalSetupWizard = ({ onComplete, initialStep }: { onComplet
     userProfile?.engineerProfile?.approvedAt
   )
 
+  // Auto-dismiss overlay when account is already verified
+  React.useEffect(() => {
+    if (isAccountVerified) {
+      onComplete()
+    }
+  }, [isAccountVerified, onComplete])
+
   const handleResendVerification = () => {
     resendVerification(undefined, {
       onSuccess: () => {

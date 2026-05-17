@@ -159,9 +159,9 @@ export default function BookingDetailsPage() {
   const customer = booking.user
 
   const displayUser = isWorker ? customer : engineer
-  const displayName = displayUser?.name || (isWorker ? 'Homeowner' : 'Professional')
+  const displayName = displayUser?.name || (isWorker ? 'Homeowner' : 'Pro Partner')
   const displayImage = displayUser?.image ? formatImageUrl(displayUser.image) : `https://api.dicebear.com/7.x/avataaars/svg?seed=${displayName}`
-  const userRole = isWorker ? 'Homeowner' : (engineer?.role || 'Professional')
+  const userRole = isWorker ? 'Homeowner' : (engineer?.role || 'Pro Partner')
 
   return (
     <div className="flex flex-col gap-6 max-w-6xl mx-auto pb-10">

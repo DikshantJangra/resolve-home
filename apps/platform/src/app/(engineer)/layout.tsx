@@ -5,24 +5,9 @@ import { Sidebar } from "@/components/layout/sidebar"
 import { Navbar } from "@/components/layout/navbar"
 import { cn } from "@resolve/ui"
 import { 
-  HiOutlineBriefcase, 
-  HiOutlineClipboardList, 
-  HiOutlineChatAlt, 
-  HiOutlineUser, 
-  HiOutlineCreditCard, 
-  HiOutlineCog,
   HiOutlineLocationMarker
 } from 'react-icons/hi'
 import { useEngineerLocationTracker } from '@/hooks/api-hooks'
-
-const engineerSidebarItems = [
-  { label: 'Jobs Feed', icon: HiOutlineBriefcase, href: '/engineer' },
-  { label: 'Active Jobs', icon: HiOutlineClipboardList, href: '/engineer/jobs', requiresVerification: true },
-  { label: 'Messages', icon: HiOutlineChatAlt, href: '/messages', requiresVerification: true },
-  { label: 'Earnings', icon: HiOutlineCreditCard, href: '/wallet', requiresVerification: true },
-  { label: 'My Profile', icon: HiOutlineUser, href: '/profile' },
-  { label: 'Settings', icon: HiOutlineCog, href: '/settings' },
-]
 
 function LocationPermissionModal({ onAllow, onDismiss }: { onAllow: () => void, onDismiss: () => void }) {
   return (
@@ -103,10 +88,10 @@ export default function EngineerLayout({ children }: { children: React.ReactNode
       )}
 
       <div className={cn(
-        "fixed inset-y-0 left-0 z-[100] transform transition-transform duration-300 ease-in-out lg:sticky lg:top-0 lg:h-screen lg:translate-x-0 lg:z-[100]",
-        isSidebarOpen ? "translate-x-0 pointer-events-auto" : "-translate-x-full pointer-events-none"
+        "fixed inset-y-0 left-0 z-[1001] transform transition-transform duration-300 ease-in-out lg:sticky lg:top-0 lg:h-screen lg:translate-x-0 lg:z-[1001]",
+        isSidebarOpen ? "translate-x-0 pointer-events-auto" : "-translate-x-full pointer-events-none lg:translate-x-0 lg:pointer-events-auto"
       )}>
-        <Sidebar onClose={() => setIsSidebarOpen(false)} items={engineerSidebarItems} />
+        <Sidebar onClose={() => setIsSidebarOpen(false)} />
       </div>
 
       <div className="flex-1 flex flex-col min-w-0">

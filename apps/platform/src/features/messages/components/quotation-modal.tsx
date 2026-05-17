@@ -25,6 +25,8 @@ export const QuotationModal = ({ isOpen, onClose, bookingId }: QuotationModalPro
     { id: '1', name: '', price: '0', quantity: '1' }
   ])
 
+  const { mutate: createQuotation, isPending } = useCreateQuotation()
+
   if (!isOpen) return null
 
   const addItem = () => {
@@ -40,8 +42,6 @@ export const QuotationModal = ({ isOpen, onClose, bookingId }: QuotationModalPro
     newItems[index] = { ...newItems[index], [field]: value }
     setItems(newItems)
   }
-
-  const { mutate: createQuotation, isPending } = useCreateQuotation()
 
   const totalAmount = (Number(laborFee) || 0) + items.reduce((acc, item) => {
     return acc + (Number(item.price) || 0) * (Number(item.quantity) || 0)

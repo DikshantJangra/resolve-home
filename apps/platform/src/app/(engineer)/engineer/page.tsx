@@ -19,10 +19,14 @@ export default function EngineerDashboardPage() {
     (user as any)?.isVerified || 
     (user as any)?.status === 'verified' || 
     userProfile?.engineerProfile?.verificationStatus === 'approved' ||
-    userProfile?.engineerProfile?.isVerified
+    userProfile?.engineerProfile?.isVerified ||
+    userProfile?.engineerProfile?.approvedAt
   )
 
-  const showVerificationOverlay = !isVerified
+  // Explicit open/close flag so onComplete() actually dismisses the overlay
+  const [isSetupOpen, setIsSetupOpen] = React.useState(true)
+  // Don't flash overlay while profile data is still loading
+  const showVerificationOverlay = !isProfilePending && !isVerified && isSetupOpen
   const { data: bookings, isPending: isBookingsPending, error } = useEngineerBookings({ enabled: !!isVerified })
   const isPending = isSessionPending || isProfilePending || (!!user && !showVerificationOverlay && isBookingsPending)
 
@@ -113,11 +117,7 @@ export default function EngineerDashboardPage() {
       {showVerificationOverlay && mounted && createPortal(
         <div className="fixed inset-0 z-[1000] flex items-start justify-center sm:pt-10 sm:pb-20 overflow-y-auto bg-white/10 backdrop-blur-md">
           <div className="w-full max-w-2xl px-4 animate-in fade-in slide-in-from-bottom-8 duration-500">
-            {userProfile?.engineerProfile ? (
-              <ProfessionalSetupWizard onComplete={() => {}} initialStep={4} />
-            ) : (
-              <ProfessionalSetupWizard onComplete={() => {}} />
-            )}
+            <ProfessionalSetupWizard onComplete={() => setIsSetupOpen(false)} />
           </div>
         </div>,
         document.body

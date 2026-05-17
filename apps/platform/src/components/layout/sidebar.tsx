@@ -37,12 +37,21 @@ const defaultSidebarItems: SidebarItem[] = [
   { label: 'Settings', icon: HiOutlineCog, href: '/settings' },
 ]
 
+const engineerSidebarItems: SidebarItem[] = [
+  { label: 'Home', icon: HiOutlineHome, href: '/dashboard' },
+  { label: 'Booking Requests', icon: HiOutlineClipboardCheck, href: '/bookings', requiresVerification: true },
+  { label: 'Messages', icon: HiOutlineChatAlt, href: '/messages', requiresVerification: true },
+  { label: 'Earnings', icon: HiOutlineCreditCard, href: '/wallet', requiresVerification: true },
+  { label: 'My Profile', icon: HiOutlineUser, href: '/profile' },
+  { label: 'Settings', icon: HiOutlineCog, href: '/settings' },
+]
+
 interface SidebarProps {
   onClose?: () => void
   items?: SidebarItem[]
 }
 
-export const Sidebar = ({ onClose, items = defaultSidebarItems }: SidebarProps) => {
+export const Sidebar = ({ onClose, items }: SidebarProps) => {
   const pathname = usePathname()
   const [isMounted, setIsMounted] = React.useState(false)
   const { data: userProfile, isLoading: isLoadingUser } = useUserProfile()
@@ -59,6 +68,8 @@ export const Sidebar = ({ onClose, items = defaultSidebarItems }: SidebarProps) 
     userProfile?.engineerProfile?.isVerified ||
     userProfile?.engineerProfile?.approvedAt
   )
+
+  const displayItems = items || (isEngineer ? engineerSidebarItems : defaultSidebarItems)
 
   React.useEffect(() => {
     if (userProfile) {
@@ -94,7 +105,7 @@ export const Sidebar = ({ onClose, items = defaultSidebarItems }: SidebarProps) 
       {/* Navigation Items */}
       <nav className="flex-1 px-3 py-4 flex flex-col">
         <div className="flex flex-col gap-0.5">
-          {items.filter(item => !(item.hideForEngineers && isEngineer)).map((item) => {
+          {displayItems.filter(item => !(item.hideForEngineers && isEngineer)).map((item) => {
             const Icon = item.icon
             const isActive = pathname === item.href || (item.href !== '/dashboard' && item.href !== '/engineer' && pathname.startsWith(item.href))
             const isLocked = isEngineer && !isVerified && item.requiresVerification
