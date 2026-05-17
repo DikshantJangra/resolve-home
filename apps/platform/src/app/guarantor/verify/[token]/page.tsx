@@ -3,6 +3,7 @@
 import React from 'react'
 import { apiClient, ENDPOINTS } from '@resolve/api'
 import { HiOutlineCheckCircle, HiOutlineXCircle, HiOutlineUser, HiOutlineMail, HiOutlineBriefcase } from 'react-icons/hi'
+import { LoadingSpinner } from '@resolve/ui'
 
 interface VerifyResult {
   success: boolean
@@ -44,7 +45,7 @@ export default function GuarantorVerifyPage({ params }: { params: Promise<{ toke
     return (
       <div className="min-h-screen bg-zinc-50 flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
-          <div className="w-12 h-12 border-4 border-blue-700 border-t-transparent rounded-full animate-spin" />
+          <LoadingSpinner className="w-12 h-12 text-blue-700" />
           <p className="text-zinc-500 text-sm font-medium">Verifying your identity...</p>
         </div>
       </div>

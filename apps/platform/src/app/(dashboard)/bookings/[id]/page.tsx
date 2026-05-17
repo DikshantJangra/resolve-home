@@ -17,9 +17,9 @@ import { BookingProgressTracker } from '@/features/booking/components/booking-pr
 import { ReviewCard } from '@/features/booking/components/review-card'
 import { ReviewForm } from '@/features/booking/components/review-form'
 import { QuotationView } from '@/features/booking/components/quotation-view'
-import { Map, type MapViewport } from '@/components/ui/map'
-import { Button, cn, formatImageUrl } from "@resolve/ui"
-import { useBookingDetail, useCancelBooking, useBookingQuotation, useUserProfile, useAvailableEngineers } from '@/hooks/api-hooks'
+import { Map, type MapViewport, type MapMarker } from '@/components/ui/map'
+import { Button, cn, formatImageUrl, LoadingSpinner } from "@resolve/ui"
+import { useBookingDetail, useCancelBooking, useBookingQuotation, useUserProfile, useAvailableEngineers, useEngineerLocation } from '@/hooks/api-hooks'
 import { useQueryClient } from '@tanstack/react-query'
 import { format } from 'date-fns'
 import { toast } from 'sonner'
@@ -54,6 +54,9 @@ export default function BookingDetailsPage() {
 
   const isWorker = userProfile?.user?.role === 'worker'
 
+  const trackingActive = !!engineer && ['confirmed', 'on_the_way', 'arrived', 'in_progress'].includes(booking?.status ?? '')
+  const { data: engineerLocation } = useEngineerLocation(id as string, !isLoading && !!booking && trackingActive)
+
   const [mapViewport, setMapViewport] = React.useState<MapViewport>({
     center: [-3.4, 6.4],
     zoom: 12,
@@ -61,10 +64,78 @@ export default function BookingDetailsPage() {
     pitch: 0,
   })
 
+  React.useEffect(() => {
+    if (engineerLocation?.latitude && engineerLocation?.longitude) {
+      setMapViewport(v => ({
+        ...v,
+        center: [engineerLocation.longitude!, engineerLocation.latitude!],
+        zoom: 15,
+      }))
+    } else if (booking?.location?.longitude && booking?.location?.latitude) {
+      setMapViewport(v => ({
+        ...v,
+        center: [booking.location.longitude, booking.location.latitude],
+        zoom: 14,
+      }))
+    }
+  }, [engineerLocation, booking])
+
+  const mapMarkers = React.useMemo<MapMarker[]>(() => {
+    const markers: MapMarker[] = []
+    if (booking?.location?.latitude && booking?.location?.longitude) {
+      markers.push({ lngLat: [booking.location.longitude, booking.location.latitude], color: '#ef4444', label: 'Your location' })
+    }
+    if (engineerLocation?.latitude && engineerLocation?.longitude) {
+      markers.push({ lngLat: [engineerLocation.longitude, engineerLocation.latitude], color: '#1d4ed8', label: 'Pro Partner' })
+    }
+    return markers
+  }, [booking, engineerLocation])
+
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="w-8 h-8 border-4 border-blue-700 border-t-transparent rounded-full animate-spin" />
+      <div className="flex flex-col gap-6 max-w-6xl mx-auto pb-10 animate-pulse">
+        {/* Breadcrumb Skeleton */}
+        <div className="h-5 w-32 bg-zinc-200 rounded" />
+
+        {/* Main Status Card Skeleton */}
+        <div className="bg-white rounded-2xl border border-zinc-200 p-5 flex flex-col gap-5 shadow-sm">
+          <div className="flex flex-col md:flex-row justify-between items-start gap-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-zinc-200 rounded-xl shrink-0" />
+              <div className="space-y-2">
+                <div className="h-5 w-48 bg-zinc-200 rounded" />
+                <div className="h-4 w-72 bg-zinc-200 rounded" />
+              </div>
+            </div>
+            <div className="h-8 w-24 bg-zinc-200 rounded-full" />
+          </div>
+          <div className="h-2 bg-zinc-150 rounded-full w-full mt-4" />
+          <div className="flex justify-between items-center py-2">
+            {[1, 2, 3, 4, 5].map(i => (
+              <div key={i} className="h-4 w-16 bg-zinc-200 rounded" />
+            ))}
+          </div>
+        </div>
+
+        {/* Two Column Layout Skeleton */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="bg-white rounded-2xl border border-zinc-200 p-5 space-y-4">
+            <div className="h-6 w-32 bg-zinc-200 rounded" />
+            <div className="space-y-3">
+              <div className="h-4 w-full bg-zinc-100 rounded" />
+              <div className="h-4 w-full bg-zinc-100 rounded" />
+              <div className="h-4 w-2/3 bg-zinc-100 rounded" />
+            </div>
+          </div>
+          <div className="bg-white rounded-2xl border border-zinc-200 p-5 space-y-4">
+            <div className="h-6 w-32 bg-zinc-200 rounded" />
+            <div className="space-y-3">
+              <div className="h-4 w-full bg-zinc-100 rounded" />
+              <div className="h-4 w-full bg-zinc-100 rounded" />
+              <div className="h-4 w-2/3 bg-zinc-100 rounded" />
+            </div>
+          </div>
+        </div>
       </div>
     )
   }
@@ -226,10 +297,19 @@ export default function BookingDetailsPage() {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         {/* Map Visualization */}
         <div className="lg:col-span-5 h-[520px] rounded-2xl relative overflow-hidden shadow-sm border border-zinc-100">
-          <Map viewport={mapViewport} onViewportChange={setMapViewport} />
+          <Map viewport={mapViewport} onViewportChange={setMapViewport} markers={mapMarkers} />
           <div className="absolute top-3 left-3 z-10 px-3 py-1.5 bg-white/95 backdrop-blur-md rounded-xl shadow-lg border border-zinc-100 flex items-center gap-2">
-            <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-ping" />
-            <span className="text-[10px] font-bold text-blue-700 uppercase tracking-tight">Active Tracking</span>
+            {trackingActive ? (
+              <>
+                <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-ping" />
+                <span className="text-[10px] font-bold text-blue-700 uppercase tracking-tight">Live Tracking</span>
+              </>
+            ) : (
+              <>
+                <div className="w-1.5 h-1.5 bg-zinc-400 rounded-full" />
+                <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-tight">Map View</span>
+              </>
+            )}
           </div>
         </div>
 

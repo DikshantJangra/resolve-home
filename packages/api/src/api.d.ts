@@ -1485,10 +1485,7 @@ export interface paths {
             cookie?: never;
         };
         get?: never;
-        /**
-         * Update engineer location
-         * @description Update engineer GPS location. Engineer app should send location updates periodically (e.g., every 5 min  when the engineer is online only ) when online or during active bookings for accurate ETA calculation.
-         */
+        /** Update engineer location */
         put: {
             parameters: {
                 query?: never;
@@ -1499,15 +1496,9 @@ export interface paths {
             requestBody: {
                 content: {
                     "application/json": {
-                        /**
-                         * @description GPS latitude (-90 to 90)
-                         * @example 6.5833
-                         */
+                        /** @example 6.5244 */
                         latitude: number;
-                        /**
-                         * @description GPS longitude (-180 to 180)
-                         * @example 3.35
-                         */
+                        /** @example 3.3792 */
                         longitude: number;
                     };
                 };
@@ -1518,65 +1509,28 @@ export interface paths {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content: {
-                        "application/json": {
-                            /** @example true */
-                            success?: boolean;
-                            /** @example Location updated successfully */
-                            message?: string;
-                            data?: {
-                                location?: {
-                                    /** @example 6.5833 */
-                                    latitude?: number;
-                                    /** @example 3.35 */
-                                    longitude?: number;
-                                };
-                                /** Format: date-time */
-                                lastActiveAt?: string;
-                            };
-                        };
-                    };
+                    content?: never;
                 };
                 /** @description Invalid coordinates */
                 400: {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content: {
-                        "application/json": {
-                            /** @example false */
-                            success?: boolean;
-                            error?: string & (unknown | unknown | unknown);
-                        };
-                    };
+                    content?: never;
                 };
                 /** @description Unauthorized */
                 401: {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content: {
-                        "application/json": {
-                            /** @example false */
-                            success?: boolean;
-                            /** @example Unauthorized - Please sign in */
-                            error?: string;
-                        };
-                    };
+                    content?: never;
                 };
                 /** @description Only engineers can update location */
                 403: {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content: {
-                        "application/json": {
-                            /** @example false */
-                            success?: boolean;
-                            /** @example Only engineers can update location */
-                            error?: string;
-                        };
-                    };
+                    content?: never;
                 };
             };
         };
@@ -5636,577 +5590,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/engineer/complete-profile": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Complete engineer profile (Engineer)
-         * @description Submit professional profile, location, and payment details for verification. Creates or updates engineer profile.
-         */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody: {
-                content: {
-                    "application/json": {
-                        /**
-                         * @description Primary area of expertise
-                         * @example Electrical Installation
-                         */
-                        primarySpecialty: string;
-                        /**
-                         * @description Professional category
-                         * @example Electrician
-                         */
-                        category: string;
-                        /**
-                         * @description Years of professional experience
-                         * @example 4-7
-                         * @enum {string}
-                         */
-                        yearsOfExperience: "1-3" | "4-7" | "8-12" | "13+";
-                        /**
-                         * @description Type of identification document
-                         * @example NIN
-                         * @enum {string}
-                         */
-                        idType: "NIN" | "BVN" | "Passport" | "Driver License";
-                        /**
-                         * @description Identification number
-                         * @example 12345678901
-                         */
-                        idNumber: string;
-                        /**
-                         * @description URL to uploaded ID document (upload via /api/upload first)
-                         * @example /uploads/engineer123_id_document.pdf
-                         */
-                        idDocument: string;
-                        location: {
-                            /** @example Lagos */
-                            state: string;
-                            /** @example Ikeja */
-                            city: string;
-                            /** @example 15 Mobolaji Bank, Anthony Way */
-                            streetAddress: string;
-                            /** @example Near Ikeja Mall */
-                            nearestLandmark: string;
-                            /**
-                             * @description GPS latitude (optional)
-                             * @example 6.5833
-                             */
-                            latitude?: number;
-                            /**
-                             * @description GPS longitude (optional)
-                             * @example 3.35
-                             */
-                            longitude?: number;
-                        };
-                        bankDetails: {
-                            /** @example John Doe */
-                            accountName: string;
-                            /** @example GTBank PLC */
-                            bankName: string;
-                            /** @example 0123456789 */
-                            accountNumber: string;
-                        };
-                    };
-                };
-            };
-            responses: {
-                /** @description Profile updated successfully */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            /** @example true */
-                            success?: boolean;
-                            /** @example Profile updated successfully. Awaiting admin verification. */
-                            message?: string;
-                            data?: {
-                                engineer?: Record<string, never>;
-                            };
-                        };
-                    };
-                };
-                /** @description Profile created successfully */
-                201: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            /** @example true */
-                            success?: boolean;
-                            /** @example Profile submitted successfully. Awaiting admin verification. */
-                            message?: string;
-                            data?: {
-                                engineer?: {
-                                    id?: string;
-                                    userId?: string;
-                                    name?: string;
-                                    email?: string;
-                                    phone?: string;
-                                    primarySpecialty?: string;
-                                    category?: string;
-                                    yearsOfExperience?: string;
-                                    idType?: string;
-                                    idNumber?: string;
-                                    idDocument?: string;
-                                    location?: Record<string, never>;
-                                    bankDetails?: Record<string, never>;
-                                    /** @example pending */
-                                    verificationStatus?: string;
-                                    /** @example false */
-                                    isVerified?: boolean;
-                                    /** @example false */
-                                    isActive?: boolean;
-                                    /** Format: date-time */
-                                    createdAt?: string;
-                                };
-                            };
-                        };
-                    };
-                };
-                /** @description Invalid input */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Unauthorized */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/engineer/bookings": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get engineer bookings with filters (Engineer)
-         * @description Get list of bookings assigned to engineer with filters: requests (awaiting response), active (in progress), upcoming (future confirmed), completed, cancelled.
-         */
-        get: {
-            parameters: {
-                query?: {
-                    /** @description Page number */
-                    page?: number;
-                    /** @description Items per page */
-                    limit?: number;
-                    /** @description Filter bookings: requests (awaiting_engineer), active (confirmed/in-progress), upcoming (future confirmed), completed, cancelled */
-                    filter?: "requests" | "active" | "upcoming" | "completed" | "cancelled";
-                };
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Engineer bookings retrieved */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            /** @example true */
-                            success?: boolean;
-                            data?: {
-                                id?: string;
-                                customerId?: string;
-                                serviceId?: string;
-                                service?: Record<string, never>;
-                                engineerId?: string;
-                                scheduledDate?: string;
-                                scheduledTime?: string;
-                                priority?: string;
-                                issueDetails?: string;
-                                photos?: string[];
-                                location?: Record<string, never>;
-                                customerDetails?: Record<string, never>;
-                                status?: string;
-                                totalPrice?: number;
-                                /** Format: date-time */
-                                createdAt?: string;
-                                /** Format: date-time */
-                                updatedAt?: string;
-                            }[];
-                            pagination?: {
-                                page?: number;
-                                limit?: number;
-                                total?: number;
-                                totalPages?: number;
-                            };
-                        };
-                    };
-                };
-                /** @description Invalid filter */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Unauthorized */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Only engineers can view bookings */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/engineer/bookings/{id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get booking details (Engineer)
-         * @description Get detailed booking information including customer details, location, service, quotation, review, ETA, and progress timeline.
-         */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    /** @description Booking ID */
-                    id: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Booking details retrieved */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            /** @example true */
-                            success?: boolean;
-                            data?: {
-                                booking?: {
-                                    id?: string;
-                                    customerId?: string;
-                                    serviceId?: string;
-                                    /** @description Service details */
-                                    service?: Record<string, never>;
-                                    engineerId?: string;
-                                    engineer?: {
-                                        id?: string;
-                                        name?: string;
-                                        image?: string;
-                                        rating?: number;
-                                        completedJobs?: number;
-                                        isVerified?: boolean;
-                                    };
-                                    scheduledDate?: string;
-                                    scheduledTime?: string;
-                                    priority?: string;
-                                    issueDetails?: string;
-                                    photos?: string[];
-                                    location?: {
-                                        state?: string;
-                                        city?: string;
-                                        streetAddress?: string;
-                                        nearestLandmark?: string;
-                                        latitude?: number;
-                                        longitude?: number;
-                                    };
-                                    customerDetails?: {
-                                        name?: string;
-                                        email?: string;
-                                        phone?: string;
-                                    };
-                                    status?: string;
-                                    totalPrice?: number;
-                                    /** @description Quotation if exists */
-                                    quotation?: Record<string, never> | null;
-                                    /** @description Review if exists */
-                                    review?: Record<string, never> | null;
-                                    /** @example 20 - 30 mins */
-                                    eta?: string | null;
-                                    timeline?: {
-                                        /** @example Pro Matched */
-                                        step?: string;
-                                        /** @enum {string} */
-                                        status?: "completed" | "pending";
-                                        /** Format: date-time */
-                                        timestamp?: string | null;
-                                    }[];
-                                    /** Format: date-time */
-                                    createdAt?: string;
-                                    /** Format: date-time */
-                                    updatedAt?: string;
-                                };
-                            };
-                        };
-                    };
-                };
-                /** @description Unauthorized */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Only engineers can view booking details */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Booking not found or not assigned to you */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/admin/engineer-verifications/pending": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get pending engineer verifications (Admin)
-         * @description Get list of engineers awaiting verification with pagination.
-         */
-        get: {
-            parameters: {
-                query?: {
-                    /** @description Page number */
-                    page?: number;
-                    /** @description Items per page */
-                    limit?: number;
-                };
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Pending verifications retrieved */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            /** @example true */
-                            success?: boolean;
-                            data?: {
-                                id?: string;
-                                userId?: string;
-                                name?: string;
-                                email?: string;
-                                phone?: string;
-                                primarySpecialty?: string;
-                                category?: string;
-                                yearsOfExperience?: string;
-                                idType?: string;
-                                idNumber?: string;
-                                idDocument?: string;
-                                location?: Record<string, never>;
-                                bankDetails?: Record<string, never>;
-                                /** @example pending */
-                                verificationStatus?: string;
-                                /** Format: date-time */
-                                createdAt?: string;
-                            }[];
-                            pagination?: {
-                                page?: number;
-                                limit?: number;
-                                total?: number;
-                                totalPages?: number;
-                            };
-                        };
-                    };
-                };
-                /** @description Unauthorized */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Forbidden - Admin access required */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/admin/engineer-verifications/{id}/verify": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        /**
-         * Verify engineer (Admin)
-         * @description Approve or reject engineer verification, assign services, and activate account.
-         */
-        put: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    /** @description Engineer ID */
-                    id: string;
-                };
-                cookie?: never;
-            };
-            requestBody: {
-                content: {
-                    "application/json": {
-                        /**
-                         * @description Verify and activate engineer account
-                         * @example true
-                         */
-                        isVerified?: boolean;
-                        /**
-                         * @description Verification status
-                         * @example approved
-                         * @enum {string}
-                         */
-                        verificationStatus?: "pending" | "approved" | "rejected";
-                        /**
-                         * @description Array of service IDs to assign to engineer
-                         * @example [
-                         *       "service-123",
-                         *       "service-456"
-                         *     ]
-                         */
-                        assignedServices?: string[];
-                    };
-                };
-            };
-            responses: {
-                /** @description Engineer verification updated */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            /** @example true */
-                            success?: boolean;
-                            /** @example Engineer verification updated successfully */
-                            message?: string;
-                            data?: {
-                                engineer?: Record<string, never>;
-                            };
-                        };
-                    };
-                };
-                /** @description Invalid input */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Unauthorized */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Forbidden - Admin access required */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Engineer not found */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-            };
-        };
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/notifications": {
         parameters: {
             query?: never;
@@ -7054,10 +6437,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /**
-         * Get engineer dashboard (Engineer only)
-         * @description Get dashboard statistics and data for the authenticated engineer including earnings, completed jobs, active requests, ratings, and service breakdown.
-         */
+        /** Get engineer dashboard */
         get: {
             parameters: {
                 query?: never;
@@ -7072,100 +6452,10 @@ export interface paths {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content: {
-                        "application/json": {
-                            /** @example true */
-                            success?: boolean;
-                            data?: {
-                                stats?: {
-                                    /**
-                                     * @description Total earnings from completed jobs (₦)
-                                     * @example 124300
-                                     */
-                                    totalEarnings?: number;
-                                    /**
-                                     * @description Number of completed bookings
-                                     * @example 25
-                                     */
-                                    completedJobs?: number;
-                                    /**
-                                     * @description Number of awaiting_engineer bookings
-                                     * @example 3
-                                     */
-                                    activeRequests?: number;
-                                    /**
-                                     * @description Average rating from reviews
-                                     * @example 4.8
-                                     */
-                                    avgRating?: number;
-                                    /**
-                                     * @description Total number of reviews
-                                     * @example 20
-                                     */
-                                    totalReviews?: number;
-                                };
-                                /** @description List of recent awaiting_engineer bookings (last 10) */
-                                recentRequests?: {
-                                    id?: string;
-                                    customerId?: string;
-                                    serviceId?: string;
-                                    /** @description Service details */
-                                    service?: Record<string, never>;
-                                    scheduledDate?: string;
-                                    scheduledTime?: string;
-                                    /** @enum {string} */
-                                    priority?: "emergency" | "standard";
-                                    issueDetails?: string;
-                                    location?: Record<string, never>;
-                                    customerDetails?: Record<string, never>;
-                                    /** @example awaiting_engineer */
-                                    status?: string;
-                                    /** Format: date-time */
-                                    createdAt?: string;
-                                }[];
-                                /** @description Completed jobs grouped by service category */
-                                serviceBreakdown?: {
-                                    categoryId?: string;
-                                    /** @example Electrical */
-                                    categoryName?: string;
-                                    /**
-                                     * @description Number of completed jobs in this category
-                                     * @example 15
-                                     */
-                                    count?: number;
-                                    /**
-                                     * @description Percentage of total completed jobs
-                                     * @example 60
-                                     */
-                                    percentage?: number;
-                                    services?: {
-                                        serviceId?: string;
-                                        /** @example Wiring Installation */
-                                        serviceName?: string;
-                                        /** @example 8 */
-                                        count?: number;
-                                    }[];
-                                }[];
-                            };
-                        };
-                    };
+                    content?: never;
                 };
                 /** @description Unauthorized */
                 401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Only engineers can access this dashboard */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Engineer profile not found */
-                404: {
                     headers: {
                         [name: string]: unknown;
                     };
@@ -8030,23 +7320,136 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/admin/engineers": {
+    "/api/engineer/complete-profile": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** Get all engineers */
+        get?: never;
+        put?: never;
+        /** Complete engineer profile */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /** @example Electrical Installation */
+                        primarySpecialty: string;
+                        /** @example Electrician */
+                        category: string;
+                        /**
+                         * @example 4-7
+                         * @enum {string}
+                         */
+                        yearsOfExperience: "1-3" | "4-7" | "8-12" | "13+";
+                        /**
+                         * @description Production: BVN only. Test: BVN, NIN, Passport
+                         * @example BVN
+                         * @enum {string}
+                         */
+                        idType: "BVN" | "NIN" | "Passport";
+                        /** @example 22222222222 */
+                        idNumber: string;
+                        /** @description URL to uploaded ID document */
+                        idDocument: string;
+                        location: {
+                            /** @example Lagos */
+                            state: string;
+                            /** @example Ikeja */
+                            city: string;
+                            /** @example 123 Main Street */
+                            streetAddress: string;
+                            /** @example Near City Mall */
+                            nearestLandmark: string;
+                            /** @example 6.5244 */
+                            latitude?: number;
+                            /** @example 3.3792 */
+                            longitude?: number;
+                        };
+                        bankDetails: {
+                            /** @example John Doe */
+                            accountName: string;
+                            /** @example Access Bank */
+                            bankName: string;
+                            /** @example 0123456789 */
+                            accountNumber: string;
+                        };
+                        guarantor?: {
+                            /** @example Jane Smith */
+                            name?: string;
+                            /** @example +2348012345678 */
+                            phone?: string;
+                            /** @example guarantor@example.com */
+                            email?: string;
+                            /** @example Friend */
+                            relationship?: string;
+                            /** @example ABC Company */
+                            placeOfWork?: string;
+                        };
+                    };
+                };
+            };
+            responses: {
+                /** @description Profile created successfully */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example true */
+                            success?: boolean;
+                            /** @example Profile submitted and ID verified successfully. Awaiting admin approval. */
+                            message?: string;
+                            data?: {
+                                engineer?: Record<string, never>;
+                            };
+                        };
+                    };
+                };
+                /** @description Bad request - Validation error */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/engineer/bookings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get engineer bookings */
         get: {
             parameters: {
                 query?: {
-                    /** @description Page number */
                     page?: number;
-                    /** @description Items per page */
                     limit?: number;
-                    /** @description Include inactive engineers */
-                    includeInactive?: boolean;
+                    filter?: "requests" | "active" | "upcoming" | "completed" | "cancelled";
                 };
                 header?: never;
                 path?: never;
@@ -8054,7 +7457,293 @@ export interface paths {
             };
             requestBody?: never;
             responses: {
-                /** @description List of engineers with pagination */
+                /** @description List of bookings */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Only engineers can view bookings */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/engineer/bookings/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get booking details */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Booking details */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Only engineers can view booking details */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Booking not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/guarantor/verify/{token}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Verify guarantor (Public) */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Verification token from email */
+                    token: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Guarantor verified successfully */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Invalid or expired token */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Token not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/engineer/guarantor": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Update guarantor information */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /** @example Jane Smith */
+                        guarantorName: string;
+                        /** @example guarantor@example.com */
+                        guarantorEmail: string;
+                        /** @example +2348012345678 */
+                        guarantorPhone?: string;
+                        /** @example Friend */
+                        relationship?: string;
+                        /** @example ABC Company */
+                        placeOfWork?: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Guarantor information updated and verification email sent */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Invalid input or cannot update after approval */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Engineer profile not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/engineer/guarantor/resend": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Resend guarantor verification email */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Verification email sent to guarantor */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description No guarantor information or already verified */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Engineer profile not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/engineers/pending": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get pending engineer verifications (Admin) */
+        get: {
+            parameters: {
+                query?: {
+                    /** @description Page number */
+                    page?: number;
+                    /** @description Items per page */
+                    limit?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description List of pending engineer verifications with guarantor information */
                 200: {
                     headers: {
                         [name: string]: unknown;
@@ -8065,32 +7754,50 @@ export interface paths {
                             success?: boolean;
                             data?: {
                                 id?: string;
+                                userId?: string;
                                 name?: string;
                                 email?: string;
                                 phone?: string;
-                                /** @description Array of service IDs */
-                                assignedServices?: string[];
-                                image?: string;
-                                isActive?: boolean;
-                                /** @description Online status (auto-tracked) */
-                                isOnline?: boolean;
-                                /**
-                                 * Format: date-time
-                                 * @description Last activity timestamp
-                                 */
-                                lastActivityAt?: string;
+                                primarySpecialty?: string;
+                                category?: string;
+                                yearsOfExperience?: string;
+                                /** @example BVN */
+                                idType?: string;
+                                idDocument?: string;
+                                /** @example pending */
+                                verificationStatus?: string;
                                 location?: {
-                                    latitude?: number | null;
-                                    longitude?: number | null;
+                                    state?: string;
+                                    city?: string;
+                                    streetAddress?: string;
+                                    nearestLandmark?: string;
                                 };
-                                /** @description Engineer rating (0-5) */
-                                rating?: number;
-                                /** @description Number of completed jobs */
-                                completedJobs?: number;
+                                bankDetails?: {
+                                    accountName?: string;
+                                    bankName?: string;
+                                    accountNumber?: string;
+                                    verified?: boolean;
+                                };
+                                guarantor?: {
+                                    /** @example John Doe */
+                                    name?: string;
+                                    /** @example +2348012345678 */
+                                    phone?: string;
+                                    /** @example guarantor@example.com */
+                                    email?: string;
+                                    /** @example Friend */
+                                    relationship?: string;
+                                    /** @example ABC Company */
+                                    placeOfWork?: string;
+                                };
+                                user?: {
+                                    id?: string;
+                                    name?: string;
+                                    email?: string;
+                                    phone?: string;
+                                };
                                 /** Format: date-time */
                                 createdAt?: string;
-                                /** Format: date-time */
-                                updatedAt?: string;
                             }[];
                             pagination?: {
                                 page?: number;
@@ -8106,57 +7813,58 @@ export interface paths {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content: {
-                        "application/json": {
-                            /** @example false */
-                            success?: boolean;
-                            /** @example Unauthorized - Please sign in */
-                            error?: string;
-                        };
-                    };
+                    content?: never;
                 };
                 /** @description Forbidden - Admin access required */
                 403: {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content: {
-                        "application/json": {
-                            /** @example false */
-                            success?: boolean;
-                            /** @example Forbidden - Admin access required */
-                            error?: string;
-                        };
-                    };
+                    content?: never;
                 };
             };
         };
         put?: never;
-        /** Create a new engineer */
-        post: {
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/engineers/{engineerId}/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Approve engineer verification (Admin) */
+        put: {
             parameters: {
                 query?: never;
                 header?: never;
-                path?: never;
+                path: {
+                    /** @description Engineer ID */
+                    engineerId: string;
+                };
                 cookie?: never;
             };
-            requestBody: {
+            requestBody?: {
                 content: {
                     "application/json": {
-                        name: string;
-                        /** Format: email */
-                        email: string;
-                        phone: string;
-                        /** @description Array of service IDs */
-                        assignedServices?: string[];
-                        /** @description Profile image URL */
-                        image?: string;
+                        /**
+                         * @description Optional approval note
+                         * @example Your registration has been approved. Welcome aboard!
+                         */
+                        note?: string;
                     };
                 };
             };
             responses: {
-                /** @description Engineer created successfully */
-                201: {
+                /** @description Engineer approved successfully */
+                200: {
                     headers: {
                         [name: string]: unknown;
                     };
@@ -8164,98 +7872,131 @@ export interface paths {
                         "application/json": {
                             /** @example true */
                             success?: boolean;
-                            /** @example Engineer created successfully */
-                            message?: string;
                             data?: {
-                                engineer?: {
-                                    id?: string;
-                                    name?: string;
-                                    email?: string;
-                                    phone?: string;
-                                    assignedServices?: string[];
-                                    image?: string;
-                                    isActive?: boolean;
-                                    /** Format: date-time */
-                                    createdAt?: string;
-                                    /** Format: date-time */
-                                    updatedAt?: string;
-                                };
+                                /** @example Engineer approved successfully */
+                                message?: string;
+                                engineerId?: string;
                             };
                         };
                     };
                 };
-                /** @description Invalid input */
+                /** @description Bad request - Engineer already processed */
                 400: {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content: {
-                        "application/json": {
-                            /** @example false */
-                            success?: boolean;
-                            /** @example Name, email, and phone are required */
-                            error?: string;
-                        };
-                    };
+                    content?: never;
                 };
                 /** @description Unauthorized */
                 401: {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content: {
-                        "application/json": {
-                            /** @example false */
-                            success?: boolean;
-                            /** @example Unauthorized - Please sign in */
-                            error?: string;
-                        };
-                    };
+                    content?: never;
                 };
                 /** @description Forbidden - Admin access required */
                 403: {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content: {
-                        "application/json": {
-                            /** @example false */
-                            success?: boolean;
-                            /** @example Forbidden - Admin access required */
-                            error?: string;
-                        };
-                    };
+                    content?: never;
                 };
-                /** @description One or more assigned services not found */
+                /** @description Engineer not found */
                 404: {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content: {
-                        "application/json": {
-                            /** @example false */
-                            success?: boolean;
-                            /** @example One or more assigned services not found */
-                            error?: string;
-                        };
+                    content?: never;
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/engineers/{engineerId}/reject": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Reject engineer verification (Admin) */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Engineer ID */
+                    engineerId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /**
+                         * @description Required rejection note explaining why the registration was rejected
+                         * @example Incomplete documentation. Please resubmit with valid ID proof.
+                         */
+                        note: string;
                     };
                 };
-                /** @description Engineer with this email already exists */
-                409: {
+            };
+            responses: {
+                /** @description Engineer rejected successfully */
+                200: {
                     headers: {
                         [name: string]: unknown;
                     };
                     content: {
                         "application/json": {
-                            /** @example false */
+                            /** @example true */
                             success?: boolean;
-                            /** @example Engineer with this email already exists */
-                            error?: string;
+                            data?: {
+                                /** @example Engineer registration rejected */
+                                message?: string;
+                                engineerId?: string;
+                                note?: string;
+                            };
                         };
                     };
                 };
+                /** @description Bad request - Missing note or engineer already processed */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Forbidden - Admin access required */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Engineer not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
             };
         };
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -8269,19 +8010,20 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Get engineer by ID */
+        /** Get engineer details (Admin) */
         get: {
             parameters: {
                 query?: never;
                 header?: never;
                 path: {
+                    /** @description Engineer ID */
                     id: string;
                 };
                 cookie?: never;
             };
             requestBody?: never;
             responses: {
-                /** @description Engineer details */
+                /** @description Enriched engineer profile with stats */
                 200: {
                     headers: {
                         [name: string]: unknown;
@@ -8293,17 +8035,41 @@ export interface paths {
                             data?: {
                                 engineer?: {
                                     id?: string;
+                                    userId?: string;
                                     name?: string;
                                     email?: string;
-                                    phone?: string;
-                                    /** @description Array of service IDs */
-                                    assignedServices?: string[];
-                                    image?: string;
+                                    phone?: string | null;
+                                    image?: string | null;
+                                    primarySpecialty?: string | null;
+                                    category?: string | null;
+                                    yearsOfExperience?: string | null;
+                                    idType?: string | null;
+                                    /** @example approved */
+                                    verificationStatus?: string;
+                                    isVerified?: boolean;
                                     isActive?: boolean;
+                                    adminNote?: string | null;
+                                    location?: Record<string, never> | null;
+                                    bankDetails?: Record<string, never> | null;
+                                    guarantor?: Record<string, never> | null;
+                                    guarantorVerification?: Record<string, never> | null;
+                                    /** @example 4.5 */
+                                    rating?: number;
+                                    /** @example 12 */
+                                    completedJobs?: number;
+                                    /** @example 15 */
+                                    totalBookings?: number;
+                                    /**
+                                     * @description Percentage
+                                     * @example 80
+                                     */
+                                    successRate?: number;
+                                    /** @example 45000 */
+                                    totalEarnings?: number;
+                                    /** Format: date-time */
+                                    joinedDate?: string;
                                     /** Format: date-time */
                                     createdAt?: string;
-                                    /** Format: date-time */
-                                    updatedAt?: string;
                                 };
                             };
                         };
@@ -8314,70 +8080,126 @@ export interface paths {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content: {
-                        "application/json": {
-                            /** @example false */
-                            success?: boolean;
-                            /** @example Unauthorized - Please sign in */
-                            error?: string;
-                        };
-                    };
+                    content?: never;
                 };
                 /** @description Forbidden - Admin access required */
                 403: {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content: {
-                        "application/json": {
-                            /** @example false */
-                            success?: boolean;
-                            /** @example Forbidden - Admin access required */
-                            error?: string;
-                        };
-                    };
+                    content?: never;
                 };
                 /** @description Engineer not found */
                 404: {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content: {
-                        "application/json": {
-                            /** @example false */
-                            success?: boolean;
-                            /** @example Engineer not found */
-                            error?: string;
-                        };
-                    };
+                    content?: never;
                 };
             };
         };
-        /** Update engineer */
-        put: {
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/subscriptions/my": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get my current subscription */
+        get: {
             parameters: {
                 query?: never;
                 header?: never;
-                path: {
-                    id: string;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Current subscription or null */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example true */
+                            success?: boolean;
+                            data?: {
+                                subscription?: {
+                                    id?: string;
+                                    /** @example basic */
+                                    planId?: string;
+                                    /** @example Basic */
+                                    planName?: string;
+                                    /** @example 7500 */
+                                    amount?: number;
+                                    /** @enum {string} */
+                                    status?: "active" | "past_due" | "cancelled" | "expired";
+                                    /** Format: date-time */
+                                    startDate?: string;
+                                    /** Format: date-time */
+                                    endDate?: string;
+                                    autoRenew?: boolean;
+                                } | null;
+                            };
+                        };
+                    };
                 };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/subscriptions/subscribe": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Subscribe to a plan */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
                 cookie?: never;
             };
             requestBody: {
                 content: {
                     "application/json": {
-                        name?: string;
-                        /** Format: email */
-                        email?: string;
-                        phone?: string;
-                        assignedServices?: string[];
-                        image?: string;
-                        isActive?: boolean;
+                        /**
+                         * @example basic
+                         * @enum {string}
+                         */
+                        planId: "basic" | "standard" | "premium";
                     };
                 };
             };
             responses: {
-                /** @description Engineer updated successfully */
+                /** @description Payment initialized - redirect user to authorizationUrl */
                 200: {
                     headers: {
                         [name: string]: unknown;
@@ -8386,22 +8208,196 @@ export interface paths {
                         "application/json": {
                             /** @example true */
                             success?: boolean;
-                            /** @example Engineer updated successfully */
-                            message?: string;
                             data?: {
-                                engineer?: {
-                                    id?: string;
-                                    name?: string;
-                                    email?: string;
-                                    phone?: string;
-                                    assignedServices?: string[];
-                                    image?: string;
-                                    isActive?: boolean;
-                                    /** Format: date-time */
-                                    createdAt?: string;
-                                    /** Format: date-time */
-                                    updatedAt?: string;
-                                };
+                                /** @description Paystack payment URL to redirect user to */
+                                authorizationUrl?: string;
+                                reference?: string;
+                                plan?: Record<string, never>;
+                            };
+                        };
+                    };
+                };
+                /** @description Invalid plan or already subscribed */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/subscriptions/verify/{reference}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Verify subscription payment and activate */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Paystack payment reference */
+                    reference: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Subscription activated successfully */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Payment verification failed */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Payment reference not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/subscriptions/change-plan": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Upgrade or downgrade subscription plan */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /**
+                         * @example premium
+                         * @enum {string}
+                         */
+                        planId: "basic" | "standard" | "premium";
+                    };
+                };
+            };
+            responses: {
+                /** @description Plan change payment initialized */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example true */
+                            success?: boolean;
+                            data?: {
+                                authorizationUrl?: string;
+                                reference?: string;
+                                currentPlan?: Record<string, never>;
+                                newPlan?: Record<string, never>;
+                                isUpgrade?: boolean;
+                            };
+                        };
+                    };
+                };
+                /** @description No active subscription or same plan selected */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/subscriptions/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Cancel subscription */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Subscription cancelled - access retained until end of billing period */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example true */
+                            success?: boolean;
+                            data?: {
+                                message?: string;
+                                /** Format: date-time */
+                                accessUntil?: string;
                             };
                         };
                     };
@@ -8411,72 +8407,50 @@ export interface paths {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content: {
-                        "application/json": {
-                            /** @example false */
-                            success?: boolean;
-                            /** @example Unauthorized - Please sign in */
-                            error?: string;
-                        };
-                    };
+                    content?: never;
                 };
-                /** @description Forbidden - Admin access required */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            /** @example false */
-                            success?: boolean;
-                            /** @example Forbidden - Admin access required */
-                            error?: string;
-                        };
-                    };
-                };
-                /** @description Engineer or service not found */
+                /** @description No active subscription */
                 404: {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content: {
-                        "application/json": {
-                            /** @example false */
-                            success?: boolean;
-                            error?: string & (unknown | unknown);
-                        };
-                    };
-                };
-                /** @description Engineer with this email already exists */
-                409: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            /** @example false */
-                            success?: boolean;
-                            /** @example Engineer with this email already exists */
-                            error?: string;
-                        };
-                    };
+                    content?: never;
                 };
             };
         };
         post?: never;
-        /** Soft delete engineer */
-        delete: {
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/subscriptions/auto-renew": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Toggle auto-renew */
+        put: {
             parameters: {
                 query?: never;
                 header?: never;
-                path: {
-                    id: string;
-                };
+                path?: never;
                 cookie?: never;
             };
-            requestBody?: never;
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /** @example true */
+                        autoRenew: boolean;
+                    };
+                };
+            };
             responses: {
-                /** @description Engineer deleted successfully (soft delete) */
+                /** @description Auto-renew updated */
                 200: {
                     headers: {
                         [name: string]: unknown;
@@ -8485,8 +8459,12 @@ export interface paths {
                         "application/json": {
                             /** @example true */
                             success?: boolean;
-                            /** @example Engineer deleted successfully */
-                            message?: string;
+                            data?: {
+                                /** @example true */
+                                autoRenew?: boolean;
+                                /** @example Auto-renew enabled */
+                                message?: string;
+                            };
                         };
                     };
                 };
@@ -8495,45 +8473,115 @@ export interface paths {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content: {
-                        "application/json": {
-                            /** @example false */
-                            success?: boolean;
-                            /** @example Unauthorized - Please sign in */
-                            error?: string;
-                        };
-                    };
+                    content?: never;
                 };
-                /** @description Forbidden - Admin access required */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            /** @example false */
-                            success?: boolean;
-                            /** @example Forbidden - Admin access required */
-                            error?: string;
-                        };
-                    };
-                };
-                /** @description Engineer not found */
+                /** @description No active subscription */
                 404: {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content: {
-                        "application/json": {
-                            /** @example false */
-                            success?: boolean;
-                            /** @example Engineer not found */
-                            error?: string;
-                        };
-                    };
+                    content?: never;
                 };
             };
         };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/subscriptions/history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get subscription history */
+        get: {
+            parameters: {
+                query?: {
+                    page?: number;
+                    limit?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Subscription history with pagination */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/subscriptions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get all subscriptions (Admin) */
+        get: {
+            parameters: {
+                query?: {
+                    page?: number;
+                    limit?: number;
+                    status?: "active" | "cancelled" | "expired" | "past_due" | "pending";
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description All subscriptions with user details */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Admin access required */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;

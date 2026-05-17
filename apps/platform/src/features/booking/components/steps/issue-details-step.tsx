@@ -4,35 +4,34 @@ import React, { useState } from 'react'
 import { HiOutlinePlus, HiOutlineTrash } from 'react-icons/hi'
 import { HiOutlineChevronDown, HiOutlineCheck } from 'react-icons/hi2'
 import { useBookingStore } from '@/store/booking-store'
-import { Textarea, Label, cn } from "@resolve/ui"
+import { Textarea, Label, LoadingSpinner, cn } from "@resolve/ui"
 import { useServices } from '@/hooks/api-hooks'
 import { apiClient, ENDPOINTS } from "@resolve/api"
 import { toast } from 'sonner'
 
 export const IssueDetailsStep = () => {
-  const { 
-    issueDetails, 
-    setIssueDetails, 
-    photos, 
-    addPhoto, 
-    removePhoto, 
+  const {
+    issueDetails,
+    setIssueDetails,
+    photos,
+    addPhoto,
+    removePhoto,
     setStep,
     categoryId,
-    serviceId,
-    setServiceId
+    serviceIds,
+    toggleServiceId,
   } = useBookingStore()
 
   const [isServiceDropdownOpen, setIsServiceDropdownOpen] = useState(false)
   const [isUploading, setIsUploading] = useState(false)
   const fileInputRef = React.useRef<HTMLInputElement>(null)
-  
+
   const { data: services, isLoading: isLoadingServices } = useServices(categoryId || undefined)
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || [])
     if (files.length === 0) return
-    
-    // Limit to 4 photos total
+
     if (photos.length + files.length > 4) {
       toast.error("You can only upload up to 4 photos")
       return
@@ -43,29 +42,20 @@ export const IssueDetailsStep = () => {
       for (const file of files) {
         const formData = new FormData()
         formData.append('file', file)
-        
-        console.log('Uploading file:', file.name)
-        
+
         const res = await apiClient.post(ENDPOINTS.UPLOAD.BASE, formData, {
           params: { type: 'image' },
           headers: { 'Content-Type': 'multipart/form-data' },
         })
-        
-        console.log('Upload response:', res.data)
-        
-        // Correct URL extraction based on backend response structure
+
         const url = res.data?.data?.file?.url || res.data?.data?.url || res.data?.url
-        
+
         if (url) {
-          console.log('Photo added:', url)
           addPhoto(url)
-        } else {
-          console.error('Failed to extract URL from response:', res.data)
         }
       }
       toast.success('Photos uploaded successfully')
     } catch (error: any) {
-      console.error('Upload error:', error)
       toast.error(error?.response?.data?.message || 'Upload failed, please try again')
     } finally {
       setIsUploading(false)
@@ -73,24 +63,26 @@ export const IssueDetailsStep = () => {
     }
   }
 
-  const selectedService = services?.find((s: any) => s.id === serviceId)
-  const isFormValid = issueDetails.trim().length >= 10 && photos.length > 0 && serviceId
+  const selectedCount = serviceIds.length
+  const isFormValid = issueDetails.trim().length >= 10 && photos.length > 0 && selectedCount > 0
 
   return (
     <div className="flex flex-col h-full bg-white">
       <div className="flex-1 px-5 pt-10 space-y-8 overflow-y-auto no-scrollbar">
-        {/* Service Selection */}
+        {/* Service Selection (multi-select) */}
         <div className="space-y-1.5">
           <Label className="flex gap-0.5 text-zinc-600 text-sm font-medium font-['Inter'] leading-5">
-            Select Service <span className="text-red-600">*</span>
+            Select Services <span className="text-red-600">*</span>
           </Label>
           <div className="relative">
             <button
               onClick={() => setIsServiceDropdownOpen(!isServiceDropdownOpen)}
               className="w-full h-12 px-4 bg-white border border-stone-300 rounded-lg flex items-center justify-between hover:border-zinc-400 transition-colors"
             >
-              <span className={cn("text-sm", selectedService ? "text-zinc-600" : "text-zinc-400")}>
-                {selectedService ? selectedService.name : "Choose a specific service"}
+              <span className={cn("text-sm", selectedCount > 0 ? "text-zinc-600" : "text-zinc-400")}>
+                {selectedCount > 0
+                  ? `${selectedCount} service${selectedCount > 1 ? 's' : ''} selected`
+                  : "Choose services"}
               </span>
               <HiOutlineChevronDown className={cn("w-5 h-5 text-zinc-400 transition-transform", isServiceDropdownOpen && "rotate-180")} />
             </button>
@@ -100,27 +92,47 @@ export const IssueDetailsStep = () => {
                 {isLoadingServices ? (
                   <div className="px-4 py-2 text-sm text-zinc-500">Loading services...</div>
                 ) : services && services.length > 0 ? (
-                  services.map((service: any) => (
-                    <button
-                      key={service.id}
-                      onClick={() => {
-                        setServiceId(service.id)
-                        setIsServiceDropdownOpen(false)
-                      }}
-                      className="w-full px-4 py-2.5 text-left text-sm hover:bg-slate-50 flex items-center justify-between"
-                    >
-                      <span className={cn(service.id === serviceId ? "text-blue-700 font-medium" : "text-zinc-700")}>
-                        {service.name}
-                      </span>
-                      {service.id === serviceId && <HiOutlineCheck className="w-4 h-4 text-blue-700" />}
-                    </button>
-                  ))
+                  services.map((service: any) => {
+                    const isSelected = serviceIds.includes(service.id)
+                    return (
+                      <button
+                        key={service.id}
+                        onClick={() => toggleServiceId(service.id)}
+                        className="w-full px-4 py-2.5 text-left text-sm hover:bg-slate-50 flex items-center justify-between"
+                      >
+                        <span className={cn(isSelected ? "text-blue-700 font-medium" : "text-zinc-700")}>
+                          {service.name}
+                        </span>
+                        <div className={cn(
+                          "w-4 h-4 rounded border flex items-center justify-center flex-shrink-0",
+                          isSelected ? "bg-blue-700 border-blue-700" : "border-zinc-300"
+                        )}>
+                          {isSelected && <HiOutlineCheck className="w-3 h-3 text-white" />}
+                        </div>
+                      </button>
+                    )
+                  })
                 ) : (
                   <div className="px-4 py-2 text-sm text-zinc-500">No specific services available for this category</div>
                 )}
               </div>
             )}
           </div>
+          {selectedCount > 0 && (
+            <div className="flex flex-wrap gap-1.5 mt-2">
+              {services?.filter((s: any) => serviceIds.includes(s.id)).map((s: any) => (
+                <span
+                  key={s.id}
+                  className="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-50 text-blue-700 text-xs rounded-full border border-blue-100"
+                >
+                  {s.name}
+                  <button onClick={() => toggleServiceId(s.id)} className="hover:text-blue-900">
+                    ×
+                  </button>
+                </span>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Issue Details */}
@@ -148,16 +160,16 @@ export const IssueDetailsStep = () => {
               </Label>
               <span className="text-red-600 text-sm font-medium font-['Inter'] leading-5">*</span>
             </div>
-            
+
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
               {photos.map((photo, index) => (
                 <div key={index} className="relative aspect-square rounded-xl overflow-hidden border border-zinc-200 group">
-                  <img 
-                    src={photo} 
+                  <img
+                    src={photo}
                     alt={`Upload ${index + 1}`}
                     className="w-full h-full object-cover"
                   />
-                  <button 
+                  <button
                     onClick={() => removePhoto(index)}
                     className="absolute top-1 right-1 w-6 h-6 bg-white/80 backdrop-blur-sm rounded-full flex items-center justify-center text-red-600 hover:bg-white hover:scale-110 transition-all shadow-sm"
                   >
@@ -177,13 +189,13 @@ export const IssueDetailsStep = () => {
               className="hidden"
               onChange={handleFileChange}
             />
-            <button 
+            <button
               onClick={() => fileInputRef.current?.click()}
               disabled={isUploading || photos.length >= 4}
               className="inline-flex justify-start items-center gap-1 group disabled:opacity-50"
             >
               {isUploading ? (
-                <div className="w-5 h-5 border-2 border-blue-700 border-t-transparent rounded-full animate-spin" />
+                <LoadingSpinner className="w-5 h-5 text-blue-700" />
               ) : (
                 <HiOutlinePlus className="w-5 h-5 text-blue-700 group-hover:scale-110 transition-transform" />
               )}

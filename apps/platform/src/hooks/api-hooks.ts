@@ -115,7 +115,18 @@ export function useUpdatePassword() {
 export function useUpdateBioAddress() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: async (data: { bio?: string; homeAddress?: { street?: string; city?: string; state?: string; country?: string; postalCode?: string } | null }) => {
+    mutationFn: async (data: { 
+      bio?: string; 
+      homeAddress?: { 
+        street?: string; 
+        city?: string; 
+        state?: string; 
+        country?: string; 
+        postalCode?: string;
+        latitude?: number;
+        longitude?: number;
+      } | null 
+    }) => {
       const response = await apiClient.put(ENDPOINTS.USER.BIO_ADDRESS, data)
       return response.data
     },
@@ -188,6 +199,7 @@ export function useCancelBooking() {
     onSuccess: (_, bookingId) => {
       queryClient.invalidateQueries({ queryKey: ['booking-detail', bookingId] })
       queryClient.invalidateQueries({ queryKey: ['user-bookings'] })
+      queryClient.invalidateQueries({ queryKey: ['user-chats'] })
     }
   })
 }
@@ -202,6 +214,19 @@ export function useAvailableEngineers(bookingId: string) {
       return response.data.data
     },
     enabled: !!bookingId
+  })
+}
+
+export function useEngineerLocation(bookingId: string, enabled: boolean) {
+  return useQuery({
+    queryKey: ['engineer-location', bookingId],
+    queryFn: async () => {
+      const response = await apiClient.get(ENDPOINTS.BOOKINGS.ENGINEER_LOCATION(bookingId))
+      return response.data.data as { latitude: number | null; longitude: number | null; lastActiveAt: string | null }
+    },
+    enabled: !!bookingId && enabled,
+    refetchInterval: 10000,
+    staleTime: 0,
   })
 }
 
@@ -282,6 +307,15 @@ export function useEngineerLocationTracker(enabled = false) {
   }, [enabled])
 }
 
+export function useUpdateEngineerLocation() {
+  return useMutation({
+    mutationFn: async ({ latitude, longitude }: { latitude: number, longitude: number }) => {
+      const response = await apiClient.put(ENDPOINTS.ENGINEER.LOCATION, { latitude, longitude })
+      return response.data
+    }
+  })
+}
+
 export function useEngineerDashboard(enabled = false) {
   return useQuery({
     queryKey: ['engineer-dashboard'],
@@ -338,6 +372,8 @@ export function useAcceptJob() {
     onSuccess: (_, bookingId) => {
       queryClient.invalidateQueries({ queryKey: ['engineer-booking-detail', bookingId] })
       queryClient.invalidateQueries({ queryKey: ['engineer-bookings'] })
+      queryClient.invalidateQueries({ queryKey: ['user-chats'] })
+      queryClient.invalidateQueries({ queryKey: ['booking-detail', bookingId] })
     }
   })
 }
@@ -352,6 +388,8 @@ export function useRejectJob() {
     onSuccess: (_, bookingId) => {
       queryClient.invalidateQueries({ queryKey: ['engineer-booking-detail', bookingId] })
       queryClient.invalidateQueries({ queryKey: ['engineer-bookings'] })
+      queryClient.invalidateQueries({ queryKey: ['user-chats'] })
+      queryClient.invalidateQueries({ queryKey: ['booking-detail', bookingId] })
     }
   })
 }

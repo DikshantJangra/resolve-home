@@ -57,3 +57,6 @@ logs
 # gstack (global install)
 .amazonq/rules/gstack.md
 .env*.local
+
+# local backend clone (not to be pushed)
+backend/

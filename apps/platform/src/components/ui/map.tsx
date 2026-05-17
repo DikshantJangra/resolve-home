@@ -11,16 +11,24 @@ export interface MapViewport {
   pitch: number
 }
 
+export interface MapMarker {
+  lngLat: [number, number]
+  color?: string
+  label?: string
+}
+
 interface MapProps {
   viewport: MapViewport
   onViewportChange?: (viewport: MapViewport) => void
+  markers?: MapMarker[]
   className?: string
 }
 
-export function Map({ viewport, onViewportChange, className }: MapProps) {
+export function Map({ viewport, onViewportChange, markers, className }: MapProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const mapRef = useRef<maplibregl.Map | null>(null)
   const isProgrammatic = useRef(false)
+  const markerRefs = useRef<maplibregl.Marker[]>([])
 
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return
@@ -63,6 +71,28 @@ export function Map({ viewport, onViewportChange, className }: MapProps) {
       pitch: viewport.pitch,
     })
   }, [viewport])
+
+  useEffect(() => {
+    const map = mapRef.current
+    if (!map) return
+
+    markerRefs.current.forEach(m => m.remove())
+    markerRefs.current = []
+
+    if (!markers?.length) return
+
+    const waitForMap = () => {
+      if (!map.isStyleLoaded()) { setTimeout(waitForMap, 100); return }
+      markers.forEach(({ lngLat, color, label }) => {
+        const el = document.createElement('div')
+        el.style.cssText = `width:14px;height:14px;border-radius:50%;background:${color ?? '#1d4ed8'};border:2px solid white;box-shadow:0 1px 4px rgba(0,0,0,0.4);`
+        if (label) el.title = label
+        const m = new maplibregl.Marker({ element: el }).setLngLat(lngLat).addTo(map)
+        markerRefs.current.push(m)
+      })
+    }
+    waitForMap()
+  }, [markers])
 
   return <div ref={containerRef} className={className ?? 'w-full h-full'} />
 }

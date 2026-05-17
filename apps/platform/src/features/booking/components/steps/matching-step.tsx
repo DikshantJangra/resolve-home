@@ -6,7 +6,7 @@ import { useBookingStore } from '@/store/booking-store'
 import { useCreateBooking, useAvailableEngineers, useCancelBooking } from '@/hooks/api-hooks'
 import { toast } from 'sonner'
 import { HiOutlineExclamationCircle, HiOutlineRefresh } from 'react-icons/hi'
-import { Button } from '@resolve/ui'
+import { Button, LoadingSpinner } from '@resolve/ui'
 import { useRouter } from 'next/navigation'
 
 const COUNTDOWN = 15
@@ -15,7 +15,7 @@ type Phase = 'creating' | 'searching' | 'done' | 'error'
 
 export const MatchingStep = () => {
   const {
-    setStep, priority, serviceId, issueDetails, location, photos,
+    setStep, priority, serviceIds, issueDetails, location, photos,
     setAvailableEngineers, setBookingId, isOpen, clearActiveDraft,
   } = useBookingStore()
 
@@ -39,13 +39,20 @@ export const MatchingStep = () => {
   const { refetch: refetchEngineers, isFetching: isRefetching } = useAvailableEngineers(bookingId || '')
 
   const handleRefresh = async () => {
-    if (!bookingId || !isOpenRef.current) return
-    const result = await refetchEngineers()
-    const engineers = result.data?.engineers
-    if (engineers?.length > 0) {
-      setAvailableEngineers(engineers)
-      clearInterval(intervalRef.current!)
-      setStep(7)
+    if (!bookingId) return
+    try {
+      const result = await refetchEngineers()
+      const engineers = result.data?.engineers
+      if (engineers && engineers.length > 0) {
+        setAvailableEngineers(engineers)
+        clearInterval(intervalRef.current!)
+        setStep(7)
+        toast.success(`Successfully matched with ${engineers.length} Pro Partner(s)!`)
+      } else {
+        toast.info("Still searching for Pro Partners... We will notify you as soon as someone is available.")
+      }
+    } catch (err) {
+      toast.error("Failed to check for partners. Please try again.")
     }
     setCountdown(COUNTDOWN)
   }
@@ -68,12 +75,12 @@ export const MatchingStep = () => {
     if (hasCalled.current) return
     hasCalled.current = true
 
-    const { scheduledDate, scheduledTime } = useBookingStore.getState()
+    const { scheduledDate, scheduledTime, serviceIds: freshServiceIds } = useBookingStore.getState()
 
     const doCreate = async (lat: number, lng: number) => {
       try {
         const data = await createBooking({
-          serviceId,
+          serviceIds: freshServiceIds,
           priority: priority?.toLowerCase() as 'emergency' | 'standard',
           issueDetails,
           scheduledDate,
@@ -225,21 +232,24 @@ export const MatchingStep = () => {
     <div className="flex flex-col h-full bg-white rounded-2xl">
       <div className="flex flex-col items-center justify-center flex-1 px-5 space-y-8">
         <div className="w-80 h-60 relative overflow-hidden flex items-center justify-center">
-          <motion.div
-            animate={{ rotate: 360, y: [0, -10, 0] }}
-            transition={{
-              rotate: { duration: 4, repeat: Infinity, ease: 'linear' },
-              y: { duration: 2, repeat: Infinity, ease: 'easeInOut' }
-            }}
-            className="w-20 h-20 relative"
-          >
-            <div className="absolute left-[33.33px] top-[16.67px] w-3.5 h-3.5 bg-indigo-200 rounded-full animate-pulse" />
-            <div className="absolute left-[33.33px] top-[50px] w-3.5 h-3.5 bg-indigo-200 rounded-full animate-pulse delay-75" />
-            <div className="absolute left-[16.67px] top-[33.33px] w-3.5 h-3.5 bg-indigo-200 rounded-full animate-pulse delay-150" />
-            <div className="absolute left-[50px] top-[33.33px] w-3.5 h-3.5 bg-indigo-200 rounded-full animate-pulse delay-200" />
-            <div className="absolute left-[16.67px] top-[33.33px] w-3.5 h-3.5 bg-blue-700 rounded-full animate-ping" />
-            <div className="absolute left-[50px] top-[33.33px] w-3.5 h-3.5 bg-blue-700 rounded-full animate-ping delay-150" />
-          </motion.div>
+          <div className="relative flex items-center justify-center">
+            {/* Outer Ripple */}
+            <motion.div
+              className="absolute w-36 h-36 rounded-full border border-blue-100 bg-blue-50/10"
+              animate={{ scale: [0.8, 1.3, 0.8], opacity: [0.5, 0.2, 0.5] }}
+              transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+            />
+            {/* Inner Ripple */}
+            <motion.div
+              className="absolute w-24 h-24 rounded-full border border-blue-200 bg-blue-50/30"
+              animate={{ scale: [0.9, 1.2, 0.9], opacity: [0.8, 0.4, 0.8] }}
+              transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
+            />
+            {/* Core Spinner Ring */}
+            <div className="relative w-16 h-16 bg-white rounded-full shadow-md border border-zinc-100/80 flex items-center justify-center z-10">
+              <LoadingSpinner className="w-8 h-8 text-blue-700" />
+            </div>
+          </div>
         </div>
         <div className="text-center space-y-2">
           <h3 className="text-neutral-700 text-xl font-semibold font-plus-jakarta leading-8">Creating Booking...</h3>

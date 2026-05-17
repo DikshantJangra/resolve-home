@@ -2,10 +2,8 @@
 
 import React, { useState, useEffect } from 'react'
 import { SettingsSidebar } from '@/features/settings/components/settings-sidebar'
-import { Input } from "@resolve/ui"
-import { Button } from "@resolve/ui"
+import { Input, Button, Skeleton, LoadingSpinner } from "@resolve/ui"
 import { useUserProfile, useAuthSession, useUpdateProfile, useUpdatePassword, useNotificationSettings, useUpdateNotificationSettings } from '@/hooks/api-hooks'
-import { Skeleton } from "@resolve/ui"
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
@@ -321,7 +319,7 @@ function NotificationsSection({ user }: { user: any }) {
       <div className="px-5 md:px-8 py-2 space-y-1">
         {isLoading ? (
           <div className="py-8 flex justify-center">
-            <div className="w-6 h-6 border-2 border-blue-700 border-t-transparent rounded-full animate-spin" />
+            <LoadingSpinner className="w-6 h-6 text-blue-700" />
           </div>
         ) : (
           items.map((item) => {

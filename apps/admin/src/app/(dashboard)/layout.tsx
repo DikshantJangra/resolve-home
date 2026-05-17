@@ -6,6 +6,7 @@ import { useAuthSession } from "@/hooks/api-hooks"
 import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
 import { toast } from "sonner"
+import { LoadingSpinner } from "@resolve/ui"
 
 export default function DashboardLayout({
   children,
@@ -59,8 +60,42 @@ export default function DashboardLayout({
 
   if (isLoading) {
     return (
-      <div className="flex h-screen w-full items-center justify-center bg-white">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-700 border-t-transparent" />
+      <div className="flex h-screen overflow-hidden bg-slate-50">
+        {/* Sidebar Skeleton */}
+        <div className="hidden lg:flex flex-col w-64 bg-white border-r border-zinc-200 p-6 gap-6 animate-pulse shrink-0">
+          <div className="h-10 w-36 bg-zinc-200 rounded-lg" />
+          <div className="space-y-5 py-6">
+            {[1, 2, 3, 4, 5, 6].map(i => (
+              <div key={i} className="flex items-center gap-3">
+                <div className="h-5 w-5 bg-zinc-200 rounded" />
+                <div className="h-4 w-28 bg-zinc-200 rounded" />
+              </div>
+            ))}
+          </div>
+        </div>
+        
+        {/* Main Content Area Skeleton */}
+        <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden">
+          {/* Navbar Skeleton */}
+          <div className="h-16 border-b border-zinc-200 bg-white flex items-center justify-between px-6 shrink-0 animate-pulse">
+            <div className="h-6 w-32 bg-zinc-200 rounded" />
+            <div className="flex items-center gap-4">
+              <div className="h-8 w-8 bg-zinc-200 rounded-full" />
+              <div className="h-4 w-20 bg-zinc-200 rounded" />
+            </div>
+          </div>
+          {/* Main Viewport Skeleton */}
+          <div className="flex-1 p-6 md:p-8 overflow-y-auto space-y-8 animate-pulse">
+            <div className="space-y-2">
+              <div className="h-8 w-48 bg-zinc-200 rounded" />
+              <div className="h-4 w-64 bg-zinc-200 rounded" />
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-5">
+              {[1, 2, 3, 4].map(i => <div key={i} className="h-28 bg-white border border-zinc-200 rounded-xl" />)}
+            </div>
+            <div className="h-96 bg-white border border-zinc-200 rounded-xl" />
+          </div>
+        </div>
       </div>
     )
   }

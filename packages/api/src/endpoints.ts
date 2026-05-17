@@ -55,6 +55,7 @@ export const ENDPOINTS = {
     REJECT: (id: string) => `/api/bookings/${id}/reject`,
     REVIEW: (id: string) => `/api/bookings/${id}/review`,
     CANCEL: (id: string) => `/api/bookings/${id}/cancel`,
+    ENGINEER_LOCATION: (id: string) => `/api/bookings/${id}/engineer-location`,
   },
 
   // ─── Engineer ─────────────────────────────────────────────────────────────

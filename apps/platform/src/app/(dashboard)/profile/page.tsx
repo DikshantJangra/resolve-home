@@ -43,10 +43,14 @@ export default function ProfilePage() {
     fullName: user?.name || 'User',
     email: user?.email || '',
     phone: user?.phone || 'Not provided',
+    country: user?.homeAddress?.country || '',
     city: user?.homeAddress?.city || '',
     state: user?.homeAddress?.state || '',
     address: user?.homeAddress?.street || '',
+    latitude: user?.homeAddress?.latitude,
+    longitude: user?.homeAddress?.longitude,
     bio: user?.bio || '',
+    role: user?.role || 'user',
     memberSince: user?.createdAt ? format(new Date(user.createdAt), 'MMM yyyy') : 'Recently',
     avatarUrl: user?.image ? formatImageUrl(user.image) : getDicebearUrl(user?.name)
   }

@@ -73,26 +73,27 @@ export const LocationStep = () => {
   }
 
   const handleUseHomeAddress = () => {
-    // Robust fallbacks for different address structures
-    const addr = profile?.homeAddress || profile?.user?.homeAddress || profile?.bioAddress || profile?.address;
-    
+    const addr = profile?.user?.homeAddress || profile?.homeAddress || profile?.bioAddress || profile?.address;
+
     if (addr) {
-      const states = State.getStatesOfCountry('NG')
-      const matchedState = states.find(s => 
+      const countryCode = addr.country || 'NG'
+      const states = State.getStatesOfCountry(countryCode)
+      const matchedState = states.find(s =>
         s.name.toLowerCase() === (addr.state || '').toLowerCase() ||
         s.isoCode === addr.state
       )
+      const countryObj = Country.getCountryByCode(countryCode)
 
       setFormData({
-        country: addr.country || 'Nigeria',
-        countryCode: matchedState?.countryCode || addr.countryCode || 'NG',
+        country: countryObj?.name || addr.country || 'Nigeria',
+        countryCode,
         state: matchedState?.name || addr.state || '',
         stateCode: matchedState?.isoCode || '',
         city: addr.city || '',
         streetAddress: addr.street || addr.streetAddress || addr.address || '',
         landmark: addr.landmark || addr.nearestLandmark || '',
-        latitude: 0,
-        longitude: 0,
+        latitude: addr.latitude || 0,
+        longitude: addr.longitude || 0,
       })
     }
   }
@@ -342,7 +343,7 @@ export const LocationStep = () => {
               </button>
             </div>
 
-            {(profile?.homeAddress || profile?.user?.homeAddress || profile?.bioAddress || profile?.address) && (
+            {(profile?.user?.homeAddress || profile?.homeAddress || profile?.bioAddress || profile?.address) && (
               <button
                 onClick={handleUseHomeAddress}
                 className="self-stretch inline-flex justify-center items-center gap-2 py-2 text-blue-700 text-sm font-medium underline hover:text-blue-800 transition-colors"

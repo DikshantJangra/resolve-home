@@ -1,23 +1,45 @@
 'use client'
 
 import React, { useState, useEffect, useRef } from 'react'
-import { HiOutlineDotsHorizontal, HiOutlinePlus, HiOutlineBriefcase, HiOutlineLocationMarker } from 'react-icons/hi'
-import { cn } from "@resolve/ui"
+import { 
+  HiOutlineDotsHorizontal, 
+  HiOutlinePlus, 
+  HiOutlineBriefcase, 
+  HiOutlineLocationMarker,
+  HiOutlineCalendar,
+  HiOutlineClock,
+  HiOutlineCheck,
+  HiOutlineX,
+  HiOutlineExclamationCircle
+} from 'react-icons/hi'
+import { cn, LoadingSpinner, formatImageUrl } from "@resolve/ui"
 import { MessageActions } from './message-actions'
 import { QuotationModal } from './quotation-modal'
-import { useChatMessages, useUserProfile, useUserChats, useUploadFile, useMarkChatRead } from '@/hooks/api-hooks'
+import { 
+  useChatMessages, 
+  useUserProfile, 
+  useUserChats, 
+  useUploadFile, 
+  useMarkChatRead,
+  useAcceptJob,
+  useRejectJob,
+  useCancelBooking
+} from '@/hooks/api-hooks'
 import { useSocket } from '@/components/providers/socket-provider'
 import { useChatStore } from '@/store/use-chat-store'
 import { format } from 'date-fns'
 import { Button } from "@resolve/ui"
 import { IoArrowBack } from 'react-icons/io5'
 import { ServiceQuotation } from './service-quotation'
+import { toast } from 'sonner'
+import { useRouter } from 'next/navigation'
 
 interface ChatWindowProps {
   onBack?: () => void
 }
 
 export const ChatWindow = ({ onBack }: ChatWindowProps) => {
+  const router = useRouter()
   const [showActions, setShowActions] = useState(false)
   const [showQuotationModal, setShowQuotationModal] = useState(false)
   const [inputMessage, setInputMessage] = useState('')
@@ -38,11 +60,54 @@ export const ChatWindow = ({ onBack }: ChatWindowProps) => {
   const user = userProfile?.user
   const scrollRef = useRef<HTMLDivElement>(null)
 
+  const { mutate: acceptJob, isPending: isAccepting } = useAcceptJob()
+  const { mutate: rejectJob, isPending: isRejecting } = useRejectJob()
+  const { mutate: cancelBooking, isPending: isCancelling } = useCancelBooking()
+
   const isEngineer = user?.role === 'worker'
 
   const activeChat = chats?.find((c: any) => c.id === activeChatId)
   const otherUser = activeChat?.otherParticipant || activeChat?.otherUser
   const booking = activeChat?.booking
+
+  const handleAcceptBooking = () => {
+    if (!booking?.id) return
+    acceptJob(booking.id, {
+      onSuccess: () => {
+        toast.success("Booking request accepted!")
+      },
+      onError: (err: any) => {
+        const errMsg = err?.response?.data?.error || err?.message || "Failed to accept booking"
+        toast.error(errMsg)
+      }
+    })
+  }
+
+  const handleDeclineBooking = () => {
+    if (!booking?.id) return
+    rejectJob(booking.id, {
+      onSuccess: () => {
+        toast.success("Booking request declined!")
+      },
+      onError: (err: any) => {
+        const errMsg = err?.response?.data?.error || err?.message || "Failed to decline booking"
+        toast.error(errMsg)
+      }
+    })
+  }
+
+  const handleCancelBooking = () => {
+    if (!booking?.id) return
+    cancelBooking(booking.id, {
+      onSuccess: () => {
+        toast.success("Booking request cancelled successfully!")
+      },
+      onError: (err: any) => {
+        const errMsg = err?.response?.data?.error || err?.message || "Failed to cancel booking"
+        toast.error(errMsg)
+      }
+    })
+  }
 
   // Load initial messages
   useEffect(() => {
@@ -187,7 +252,7 @@ export const ChatWindow = ({ onBack }: ChatWindowProps) => {
   if (isLoading) {
     return (
       <div className="flex-1 h-full flex items-center justify-center bg-neutral-50 rounded-[20px] outline outline-1 outline-zinc-300">
-        <div className="w-6 h-6 border-2 border-blue-700 border-t-transparent rounded-full animate-spin" />
+        <LoadingSpinner className="w-6 h-6 text-blue-700" />
       </div>
     )
   }
@@ -200,9 +265,9 @@ export const ChatWindow = ({ onBack }: ChatWindowProps) => {
           <button onClick={onBack} className="lg:hidden p-1 -ml-1 text-zinc-600 hover:bg-zinc-100 rounded-lg transition-colors">
             <IoArrowBack className="w-6 h-6" />
           </button>
-          <div className="w-10 h-10 md:w-12 md:h-12 rounded-full border border-indigo-50 overflow-hidden shrink-0">
+          <div className="w-10 h-10 md:w-12 md:h-12 rounded-full border border-indigo-50 overflow-hidden shrink-0 bg-white">
             <img
-              src={otherUser?.image || `https://api.dicebear.com/7.x/avataaars/svg?seed=${otherUser?.name || 'user'}`}
+              src={otherUser?.image ? formatImageUrl(otherUser.image) : `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(otherUser?.name || 'user')}`}
               alt={otherUser?.name || 'User'}
               className="w-full h-full object-cover"
             />
@@ -241,20 +306,177 @@ export const ChatWindow = ({ onBack }: ChatWindowProps) => {
       <div ref={scrollRef} className="flex-1 overflow-y-auto p-5 pb-24 space-y-4">
         {/* Booking summary card — show real data if available */}
         {booking && (
-          <div className="w-full p-4 bg-white rounded-xl border border-zinc-100 flex flex-col gap-3 shadow-sm max-w-md">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-blue-50 rounded-lg flex items-center justify-center text-blue-700">
-                <HiOutlineBriefcase className="w-4 h-4" />
+          <div className="w-full p-5 bg-white rounded-2xl border border-zinc-200 flex flex-col gap-4 shadow-sm max-w-md relative overflow-hidden">
+            {/* Top Info Bar */}
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 bg-blue-50 rounded-xl flex items-center justify-center text-blue-700 shrink-0 border border-blue-100">
+                <HiOutlineBriefcase className="w-5 h-5" />
               </div>
-              <span className="text-zinc-700 font-semibold text-sm">Booking Request</span>
+              <div className="flex flex-col min-w-0">
+                <span className="text-zinc-800 font-semibold text-sm truncate">
+                  {booking.service?.name || "Service Request"}
+                </span>
+                <span className="text-zinc-400 text-xs font-medium uppercase tracking-wider">
+                  Booking #{booking.id ? booking.id.substring(0, 8) : "Pending"}
+                </span>
+              </div>
               <span className={cn(
-                "ml-auto text-[10px] font-semibold px-2 py-0.5 rounded-full capitalize",
-                booking.status === 'awaiting_engineer' ? 'bg-amber-50 text-amber-600' :
-                  booking.status === 'completed' ? 'bg-green-50 text-green-600' : 'bg-blue-50 text-blue-600'
+                "ml-auto text-[10px] font-semibold px-2.5 py-1 rounded-full capitalize shrink-0 font-['Inter'] leading-none",
+                booking.status === 'awaiting_engineer' ? 'bg-amber-50 text-amber-600 border border-amber-100' :
+                  booking.status === 'completed' ? 'bg-green-50 text-green-600 border border-green-100' :
+                  booking.status === 'cancelled' ? 'bg-red-50 text-red-600 border border-red-100' :
+                  'bg-blue-50 text-blue-600 border border-blue-100'
               )}>
                 {booking.status?.replace('_', ' ')}
               </span>
             </div>
+
+            {/* Issue and Schedule details */}
+            <div className="flex flex-col gap-2.5 py-1 border-t border-b border-zinc-100 my-0.5">
+              {booking.issueDetails && (
+                <p className="text-zinc-600 text-xs font-normal font-['Inter'] leading-relaxed line-clamp-2">
+                  <span className="font-semibold text-zinc-700">Details: </span>
+                  {booking.issueDetails}
+                </p>
+              )}
+              
+              <div className="flex items-center gap-4 text-zinc-500 text-xs font-medium font-['Inter']">
+                {booking.scheduledDate && (
+                  <div className="flex items-center gap-1.5">
+                    <HiOutlineCalendar className="w-4 h-4 text-zinc-400" />
+                    <span>{booking.scheduledDate}</span>
+                  </div>
+                )}
+                {booking.scheduledTime && (
+                  <div className="flex items-center gap-1.5">
+                    <HiOutlineClock className="w-4 h-4 text-zinc-400" />
+                    <span>{booking.scheduledTime}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Conditional Action Buttons or Status Prompts */}
+            {booking.status === 'awaiting_engineer' ? (
+              isEngineer ? (
+                /* Worker Action Buttons */
+                <div className="flex flex-col gap-2.5">
+                  <p className="text-zinc-500 text-[11px] font-normal leading-4 font-['Inter']">
+                    The customer has selected you for this service. Please confirm if you can complete this job.
+                  </p>
+                  <div className="flex items-center gap-3">
+                    <Button
+                      variant="outline"
+                      className="flex-1 h-9 text-xs border-zinc-200 text-zinc-700 hover:bg-red-50 hover:text-red-600 hover:border-red-200 rounded-xl font-semibold transition-all shadow-none shrink-0"
+                      onClick={handleDeclineBooking}
+                      disabled={isRejecting || isAccepting}
+                    >
+                      {isRejecting ? (
+                        <span className="flex items-center justify-center gap-1.5">
+                          <LoadingSpinner className="w-3.5 h-3.5" />
+                          Declining...
+                        </span>
+                      ) : (
+                        <span className="flex items-center justify-center gap-1.5">
+                          <HiOutlineX className="w-3.5 h-3.5" />
+                          Decline Request
+                        </span>
+                      )}
+                    </Button>
+                    <Button
+                      className="flex-1 h-9 text-xs bg-blue-700 hover:bg-blue-800 text-white rounded-xl font-semibold transition-all shadow-none shrink-0"
+                      onClick={handleAcceptBooking}
+                      disabled={isAccepting || isRejecting}
+                    >
+                      {isAccepting ? (
+                        <span className="flex items-center justify-center gap-1.5">
+                          <LoadingSpinner className="w-3.5 h-3.5 text-white" />
+                          Accepting...
+                        </span>
+                      ) : (
+                        <span className="flex items-center justify-center gap-1.5">
+                          <HiOutlineCheck className="w-3.5 h-3.5" />
+                          Accept Request
+                        </span>
+                      )}
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                /* Customer Pending Box */
+                <div className="flex flex-col gap-3">
+                  <div className="bg-amber-50/50 border border-amber-100 rounded-xl p-3 flex items-start gap-2.5">
+                    <div className="w-2 h-2 bg-amber-500 rounded-full animate-pulse mt-1.5 shrink-0" />
+                    <div className="flex flex-col gap-0.5 min-w-0">
+                      <span className="text-zinc-700 text-xs font-semibold">Awaiting Professional's Confirmation</span>
+                      <span className="text-zinc-500 text-[11px] leading-relaxed">
+                        We have notified {otherUser?.name || "the professional"}. They can accept or decline this request.
+                      </span>
+                    </div>
+                  </div>
+                  <Button
+                    variant="outline"
+                    className="w-full h-9 text-xs border-zinc-200 text-zinc-600 hover:bg-red-50 hover:text-red-600 hover:border-red-200 rounded-xl font-medium transition-all shadow-none"
+                    onClick={handleCancelBooking}
+                    disabled={isCancelling}
+                  >
+                    {isCancelling ? (
+                      <span className="flex items-center justify-center gap-1.5">
+                        <LoadingSpinner className="w-3.5 h-3.5" />
+                        Cancelling Booking...
+                      </span>
+                    ) : (
+                      "Cancel Booking Request"
+                    )}
+                  </Button>
+                </div>
+              )
+            ) : booking.status === 'confirmed' ? (
+              /* Confirmed Status message */
+              <div className="bg-blue-50/50 border border-blue-100 rounded-xl p-3 flex items-start gap-2.5">
+                <HiOutlineCheck className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
+                <div className="flex flex-col gap-0.5">
+                  <span className="text-zinc-700 text-xs font-semibold">Booking Confirmed</span>
+                  <span className="text-zinc-500 text-[11px] leading-relaxed">
+                    {isEngineer 
+                      ? "You have accepted this booking request. You can now prepare a service quotation." 
+                      : `${otherUser?.name || "The professional"} has accepted your booking request.`}
+                  </span>
+                </div>
+              </div>
+            ) : booking.status === 'cancelled' ? (
+              /* Cancelled Status message */
+              <div className="bg-zinc-50 border border-zinc-100 rounded-xl p-3 flex items-start gap-2.5">
+                <HiOutlineExclamationCircle className="w-4 h-4 text-zinc-500 shrink-0 mt-0.5" />
+                <div className="flex flex-col gap-0.5">
+                  <span className="text-zinc-600 text-xs font-semibold">Booking Request Cancelled</span>
+                  <span className="text-zinc-500 text-[11px] leading-relaxed">
+                    This booking request was cancelled.
+                  </span>
+                </div>
+              </div>
+            ) : booking.status === 'pending' ? (
+              /* Declined Status / Re-selection box */
+              <div className="bg-red-50/50 border border-red-100 rounded-xl p-4 flex flex-col gap-3">
+                <div className="flex items-start gap-2.5">
+                  <HiOutlineX className="w-5 h-5 text-red-650 shrink-0 mt-0.5" />
+                  <div className="flex flex-col gap-1 min-w-0">
+                    <span className="text-red-900 text-xs font-semibold">Booking Request Declined</span>
+                    <span className="text-zinc-500 text-[11px] leading-relaxed">
+                      {booking.rejectionReason || "The professional was unable to accept this booking request."} Please select another professional partner to complete your service.
+                    </span>
+                  </div>
+                </div>
+                {!isEngineer && (
+                  <Button
+                    className="w-full h-9 text-xs bg-blue-700 hover:bg-blue-800 text-white rounded-xl font-semibold transition-all shadow-none mt-1"
+                    onClick={() => router.push(`/bookings/${booking.id}`)}
+                  >
+                    Select Another Professional
+                  </Button>
+                )}
+              </div>
+            ) : null}
           </div>
         )}
 
@@ -330,7 +552,7 @@ export const ChatWindow = ({ onBack }: ChatWindowProps) => {
           title="Attach file"
         >
           {isUploading ? (
-            <div className="w-5 h-5 border-2 border-zinc-400 border-t-transparent rounded-full animate-spin" />
+            <LoadingSpinner className="w-5 h-5 text-zinc-400" />
           ) : (
             <HiOutlinePlus className="w-5 h-5" />
           )}

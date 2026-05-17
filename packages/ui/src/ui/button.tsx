@@ -62,16 +62,8 @@ function Button({
       disabled={isLoading || disabled}
       {...props}
     >
-      {isLoading ? (
-        <>
-          <span className="opacity-0">{children}</span>
-          <div className="absolute inset-0 flex items-center justify-center">
-            <LoadingSpinner className="w-5 h-5" />
-          </div>
-        </>
-      ) : (
-        children
-      )}
+      {isLoading && <LoadingSpinner className="w-4 h-4 text-current" />}
+      {children}
     </ButtonPrimitive>
   )
 }
