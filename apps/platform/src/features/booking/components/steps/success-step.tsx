@@ -33,6 +33,11 @@ function EngineerCard({ engineer, onSelect, isPending, selectedId }: {
               {engineer.name?.[0] || 'P'}
             </div>
           )}
+          {/* Online indicator */}
+          <span className={cn(
+            "absolute bottom-0 right-0 w-3.5 h-3.5 rounded-full border-2 border-white",
+            engineer.isOnline ? "bg-green-500" : "bg-zinc-400"
+          )} title={engineer.isOnline ? "Online" : "Offline"} />
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
@@ -75,7 +80,7 @@ function EngineerCard({ engineer, onSelect, isPending, selectedId }: {
               {engineer.reviews.map((r: any, i: number) => (
                 <div key={i} className="p-3 bg-stone-50 rounded-xl border border-zinc-100">
                   <div className="flex items-center gap-1 mb-1">
-                    {[1,2,3,4,5].map(s => (
+                    {[1, 2, 3, 4, 5].map(s => (
                       <HiOutlineStar key={s} className={cn('w-3 h-3', s <= r.rating ? 'text-amber-500 fill-amber-500' : 'text-zinc-200')} />
                     ))}
                     <span className="text-zinc-400 text-[10px] ml-1">{r.customerName}</span>
