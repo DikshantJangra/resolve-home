@@ -5,7 +5,7 @@ import { HiOutlineDotsHorizontal, HiOutlinePlus, HiOutlineBriefcase, HiOutlineLo
 import { cn } from "@resolve/ui"
 import { MessageActions } from './message-actions'
 import { QuotationModal } from './quotation-modal'
-import { useChatMessages, useUserProfile, useUserChats } from '@/hooks/api-hooks'
+import { useChatMessages, useUserProfile, useUserChats, useUploadFile } from '@/hooks/api-hooks'
 import { useSocket } from '@/components/providers/socket-provider'
 import { useChatStore } from '@/store/use-chat-store'
 import { format } from 'date-fns'
@@ -23,7 +23,9 @@ export const ChatWindow = ({ onBack }: ChatWindowProps) => {
   const [inputMessage, setInputMessage] = useState('')
   const [isTyping, setIsTyping] = useState(false)
   const [otherTyping, setOtherTyping] = useState(false)
-  const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const [isUploading, setIsUploading] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const { mutateAsync: uploadFile } = useUploadFile()
 
   const { activeChatId } = useChatStore()
   const { data: initialMessages, isLoading } = useChatMessages(activeChatId || '')
@@ -54,9 +56,16 @@ export const ChatWindow = ({ onBack }: ChatWindowProps) => {
     const handleNewMessage = (message: any) => {
       if (message.chatId === activeChatId) {
         setMessages((prev) => {
-          // Avoid duplicates (optimistic update already added it)
-          const exists = prev.some((m) => m.id && m.id === message.id)
-          return exists ? prev : [...prev, message]
+          // Remove matching optimistic message (same senderId + message content sent within 5s)
+          const now = Date.now()
+          const filtered = prev.filter((m) => {
+            if (!m._tempId) return true
+            const isMatch = m.senderId === message.senderId &&
+              m.message === message.message &&
+              Math.abs(new Date(m.createdAt).getTime() - new Date(message.createdAt).getTime()) < 5000
+            return !isMatch
+          })
+          return [...filtered, message]
         })
       }
     }
@@ -106,12 +115,13 @@ export const ChatWindow = ({ onBack }: ChatWindowProps) => {
   const handleSendMessage = () => {
     if (!inputMessage.trim() || !socket || !activeChatId) return
 
-    // Stop typing indicator
     if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current)
     setIsTyping(false)
     socket.emit('stop_typing', { chatId: activeChatId })
 
+    const tempId = `temp-${Date.now()}`
     const optimistic = {
+      _tempId: tempId,
       chatId: activeChatId,
       message: inputMessage,
       senderId: user?.id,
@@ -119,9 +129,42 @@ export const ChatWindow = ({ onBack }: ChatWindowProps) => {
       mediaType: 'text',
     }
 
-    socket.emit('send_message', { chatId: activeChatId, message: inputMessage, mediaType: 'text' })
     setMessages((prev) => [...prev, optimistic])
+    socket.emit('send_message', { chatId: activeChatId, message: inputMessage, mediaType: 'text' })
     setInputMessage('')
+  }
+
+  const handleFileClick = () => fileInputRef.current?.click()
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file || !socket || !activeChatId) return
+
+    setIsUploading(true)
+    try {
+      const url = await uploadFile(file)
+      const isImage = file.type.startsWith('image/')
+      const isVideo = file.type.startsWith('video/')
+      const mediaType = isImage ? 'image' : isVideo ? 'video' : 'image'
+
+      const tempId = `temp-${Date.now()}`
+      const optimistic = {
+        _tempId: tempId,
+        chatId: activeChatId,
+        message: file.name,
+        mediaType,
+        mediaUrl: url,
+        senderId: user?.id,
+        createdAt: new Date().toISOString(),
+      }
+      setMessages((prev) => [...prev, optimistic])
+      socket.emit('send_message', { chatId: activeChatId, message: file.name, mediaType, mediaUrl: url })
+    } catch {
+      // toast handled by apiClient interceptor
+    } finally {
+      setIsUploading(false)
+      e.target.value = ''
+    }
   }
 
   if (!activeChatId) {
@@ -216,11 +259,27 @@ export const ChatWindow = ({ onBack }: ChatWindowProps) => {
           return (
             <div key={idx} className={cn("flex w-full", isMe ? "justify-end" : "justify-start")}>
               <div className={cn(
-                "max-w-[80%] p-3.5 rounded-2xl text-sm leading-relaxed shadow-sm",
+                "max-w-[80%] rounded-2xl text-sm leading-relaxed shadow-sm overflow-hidden",
                 isMe ? "bg-blue-700 text-white rounded-br-none" : "bg-white text-zinc-700 rounded-bl-none border border-zinc-100"
               )}>
-                <p className="whitespace-pre-wrap">{msg.message || msg.content}</p>
-                <p className={cn("text-[10px] mt-1 opacity-60", isMe ? "text-right" : "text-left")}>
+                {msg.mediaType === 'image' && msg.mediaUrl && (
+                  <img src={msg.mediaUrl} alt="attachment" className="max-w-[240px] w-full object-cover" />
+                )}
+                {msg.mediaType === 'video' && msg.mediaUrl && (
+                  <video src={msg.mediaUrl} controls className="max-w-[240px] w-full" />
+                )}
+                {msg.mediaType !== 'image' && msg.mediaType !== 'video' && msg.mediaUrl && (
+                  <a href={msg.mediaUrl} target="_blank" rel="noreferrer"
+                    className={cn("flex items-center gap-2 px-3.5 py-2.5 text-xs underline", isMe ? "text-blue-100" : "text-blue-700")}>
+                    📎 {msg.message || 'Attachment'}
+                  </a>
+                )}
+                {(msg.message || msg.content) && (
+                  <p className={cn("whitespace-pre-wrap px-3.5 py-2.5", msg.mediaUrl ? "pt-1" : "")}>
+                    {msg.message || msg.content}
+                  </p>
+                )}
+                <p className={cn("text-[10px] px-3.5 pb-2 opacity-60", isMe ? "text-right" : "text-left")}>
                   {format(new Date(msg.createdAt || msg.timestamp || Date.now()), 'HH:mm')}
                 </p>
               </div>
@@ -241,8 +300,24 @@ export const ChatWindow = ({ onBack }: ChatWindowProps) => {
 
       {/* Input Area */}
       <div className="absolute bottom-0 left-0 w-full h-20 p-5 bg-white border-t border-zinc-100 flex items-center gap-2">
-        <button className="p-2 bg-stone-50 rounded-lg text-zinc-600 hover:bg-stone-100 transition-colors">
-          <HiOutlinePlus className="w-5 h-5" />
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*,video/*,.pdf,.doc,.docx"
+          className="hidden"
+          onChange={handleFileChange}
+        />
+        <button
+          onClick={handleFileClick}
+          disabled={isUploading}
+          className="p-2 bg-stone-50 rounded-lg text-zinc-600 hover:bg-stone-100 transition-colors disabled:opacity-50"
+          title="Attach file"
+        >
+          {isUploading ? (
+            <div className="w-5 h-5 border-2 border-zinc-400 border-t-transparent rounded-full animate-spin" />
+          ) : (
+            <HiOutlinePlus className="w-5 h-5" />
+          )}
         </button>
         <div className="flex-1 h-11 px-4 bg-stone-50 rounded-xl flex items-center overflow-hidden">
           <input
