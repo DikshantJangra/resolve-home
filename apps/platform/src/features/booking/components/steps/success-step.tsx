@@ -11,14 +11,16 @@ import { toast } from 'sonner'
 const MAX_DISTANCE_KM = 10
 const COUNTDOWN_SECONDS = 15 // 15 seconds
 
-function EngineerCard({ engineer, onSelect, isPending, selectedId }: {
+function EngineerCard({ engineer, onSelect, isPending, selectedId, currentEngineerId }: {
   engineer: any
   onSelect: (id: string) => void
   isPending: boolean
   selectedId: string | null
+  currentEngineerId: string | null
 }) {
   const [reviewsOpen, setReviewsOpen] = useState(false)
   const isSelecting = isPending && selectedId === engineer.id
+  const isAlreadySelected = currentEngineerId === engineer.id
 
   return (
     <div className="bg-white rounded-2xl border border-zinc-200 p-4 flex flex-col gap-4 shadow-sm">
@@ -95,16 +97,18 @@ function EngineerCard({ engineer, onSelect, isPending, selectedId }: {
 
       {/* Select button */}
       <button
-        onClick={() => onSelect(engineer.id)}
-        disabled={isPending}
+        onClick={() => !isAlreadySelected && onSelect(engineer.id)}
+        disabled={isPending || isAlreadySelected}
         className={cn(
           'w-full h-10 rounded-xl text-sm font-semibold transition-all',
-          isSelecting
-            ? 'bg-blue-700 text-white opacity-70 cursor-not-allowed'
-            : 'bg-blue-700 hover:bg-blue-800 text-white active:scale-[0.98]'
+          isAlreadySelected
+            ? 'bg-emerald-600 text-white cursor-not-allowed'
+            : isSelecting
+              ? 'bg-blue-700 text-white opacity-70 cursor-not-allowed'
+              : 'bg-blue-700 hover:bg-blue-800 text-white active:scale-[0.98]'
         )}
       >
-        {isSelecting ? 'Selecting...' : 'Select Pro Partner'}
+        {isAlreadySelected ? '✓ Selected' : isSelecting ? 'Selecting...' : 'Select Pro Partner'}
       </button>
     </div>
   )
@@ -112,7 +116,7 @@ function EngineerCard({ engineer, onSelect, isPending, selectedId }: {
 
 export const SuccessStep = () => {
   const { mutate: selectEngineer, isPending, variables: selectVars } = useSelectEngineer()
-  const { availableEngineers, setAvailableEngineers, setStep, bookingId, isOpen } = useBookingStore()
+  const { availableEngineers, setAvailableEngineers, setStep, bookingId, isOpen, selectedEngineerId, setSelectedEngineerId } = useBookingStore()
   const [countdown, setCountdown] = useState(COUNTDOWN_SECONDS)
   const intervalRef = useRef<NodeJS.Timeout | null>(null)
   const isOpenRef = useRef(isOpen)
@@ -164,6 +168,7 @@ export const SuccessStep = () => {
     selectEngineer({ bookingId: bookingId || '', engineerId }, {
       onSuccess: () => {
         clearInterval(intervalRef.current!)
+        setSelectedEngineerId(engineerId)
         toast.success('Pro Partner selected!')
         setStep(8)
       },
@@ -211,6 +216,7 @@ export const SuccessStep = () => {
             onSelect={handleSelect}
             isPending={isPending}
             selectedId={(selectVars as any)?.engineerId || null}
+            currentEngineerId={selectedEngineerId}
           />
         ))}
       </div>
