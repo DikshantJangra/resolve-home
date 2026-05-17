@@ -64,32 +64,29 @@ export default function BookingDetailsPage() {
     pitch: 0,
   })
 
+  const engineerStoredLocation = engineer?.location ?? null
+
   React.useEffect(() => {
     if (engineerLocation?.latitude && engineerLocation?.longitude) {
-      setMapViewport(v => ({
-        ...v,
-        center: [engineerLocation.longitude!, engineerLocation.latitude!],
-        zoom: 15,
-      }))
+      setMapViewport(v => ({ ...v, center: [engineerLocation.longitude!, engineerLocation.latitude!], zoom: 15 }))
+    } else if (engineerStoredLocation?.latitude && engineerStoredLocation?.longitude) {
+      setMapViewport(v => ({ ...v, center: [engineerStoredLocation.longitude, engineerStoredLocation.latitude], zoom: 14 }))
     } else if (booking?.location?.longitude && booking?.location?.latitude) {
-      setMapViewport(v => ({
-        ...v,
-        center: [booking.location.longitude, booking.location.latitude],
-        zoom: 14,
-      }))
+      setMapViewport(v => ({ ...v, center: [booking.location.longitude, booking.location.latitude], zoom: 14 }))
     }
-  }, [engineerLocation, booking])
+  }, [engineerLocation, engineerStoredLocation, booking])
 
   const mapMarkers = React.useMemo<MapMarker[]>(() => {
     const markers: MapMarker[] = []
-    if (booking?.location?.latitude && booking?.location?.longitude) {
-      markers.push({ lngLat: [booking.location.longitude, booking.location.latitude], color: '#ef4444', label: 'Your location' })
-    }
     if (engineerLocation?.latitude && engineerLocation?.longitude) {
       markers.push({ lngLat: [engineerLocation.longitude, engineerLocation.latitude], color: '#1d4ed8', label: 'Pro Partner' })
+    } else if (engineerStoredLocation?.latitude && engineerStoredLocation?.longitude) {
+      markers.push({ lngLat: [engineerStoredLocation.longitude, engineerStoredLocation.latitude], color: '#1d4ed8', label: 'Pro Partner' })
+    } else if (booking?.location?.latitude && booking?.location?.longitude) {
+      markers.push({ lngLat: [booking.location.longitude, booking.location.latitude], color: '#ef4444', label: 'Your location' })
     }
     return markers
-  }, [booking, engineerLocation])
+  }, [booking, engineerLocation, engineerStoredLocation])
 
   if (isLoading) {
     return (
@@ -311,6 +308,14 @@ export default function BookingDetailsPage() {
               </>
             )}
           </div>
+          {!engineer && (
+            <div className="absolute inset-0 z-10 flex items-end justify-center pb-6 pointer-events-none">
+              <div className="px-4 py-2.5 bg-white/95 backdrop-blur-md rounded-xl shadow-lg border border-zinc-200 flex items-center gap-2">
+                <HiOutlineLocationMarker className="w-4 h-4 text-zinc-400" />
+                <span className="text-xs font-medium text-zinc-500">No Pro Partner assigned yet</span>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Profile and Review Sidebar */}

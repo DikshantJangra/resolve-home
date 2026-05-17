@@ -16,6 +16,7 @@ import {
 } from 'react-icons/hi'
 import {
   useCategories,
+  useServices,
   useUpdateEngineerProfile,
   useNigerianBanks,
   useResendGuarantorVerification,
@@ -31,6 +32,7 @@ import { HiChevronDown } from 'react-icons/hi'
 export const ProfessionalSetupWizard = ({ onComplete, initialStep }: { onComplete: () => void, initialStep?: number }) => {
   const store = useProfessionalSetupStore()
   const { data: categories } = useCategories()
+  const { data: services = [], isLoading: loadingServices } = useServices(store.categoryId)
   const { data: banks = [], isLoading: loadingBanks } = useNigerianBanks()
   const { mutate: updateProfile, isPending } = useUpdateEngineerProfile()
   const fileInputRef = React.useRef<HTMLInputElement>(null)
@@ -241,6 +243,7 @@ export const ProfessionalSetupWizard = ({ onComplete, initialStep }: { onComplet
     const payload = {
       primarySpecialty: store.specialty,
       category: store.categoryId,
+      assignedServices: store.assignedServices,
       yearsOfExperience: store.experience,
       idType: store.idType,
       idNumber: store.idNumber,
@@ -307,7 +310,10 @@ export const ProfessionalSetupWizard = ({ onComplete, initialStep }: { onComplet
                 <select
                   className="w-full h-12 px-4 rounded-lg border border-zinc-300 text-sm focus:border-blue-700 outline-none"
                   value={store.categoryId}
-                  onChange={(e) => store.updateField('categoryId', e.target.value)}
+                  onChange={(e) => {
+                    store.updateField('categoryId', e.target.value)
+                    store.updateField('assignedServices', [])
+                  }}
                 >
                   <option value="">Select your category</option>
                   {categories?.map((cat: any) => (
@@ -315,6 +321,70 @@ export const ProfessionalSetupWizard = ({ onComplete, initialStep }: { onComplet
                   ))}
                 </select>
               </div>
+
+              {store.categoryId && (
+                <div className="space-y-3 mt-4">
+                  <div className="flex justify-between items-baseline">
+                    <Label className="text-zinc-700 font-semibold text-sm">Services Offered <span className="text-red-500">*</span></Label>
+                    {store.assignedServices.length > 0 && (
+                      <span className="text-xs font-semibold text-blue-700 bg-blue-50 px-2 py-0.5 rounded-full">
+                        {store.assignedServices.length} selected
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-xs text-zinc-500">Select all the specific services you are qualified to provide.</p>
+                  
+                  {loadingServices ? (
+                    <div className="flex items-center gap-2 text-zinc-500 text-sm py-4 animate-pulse">
+                      <LoadingSpinner className="w-4 h-4 text-blue-700" />
+                      <span>Loading available services...</span>
+                    </div>
+                  ) : services.length === 0 ? (
+                    <div className="text-sm text-zinc-400 italic py-2">
+                      No specific services registered under this category yet.
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-60 overflow-y-auto p-1 border border-zinc-150 rounded-xl bg-zinc-50/50">
+                      {services.map((service: any) => {
+                        const isSelected = store.assignedServices.includes(service.id);
+                        return (
+                          <button
+                            key={service.id}
+                            type="button"
+                            onClick={() => {
+                              const current = store.assignedServices;
+                              if (isSelected) {
+                                store.updateField('assignedServices', current.filter(id => id !== service.id));
+                              } else {
+                                store.updateField('assignedServices', [...current, service.id]);
+                              }
+                            }}
+                            className={cn(
+                              "flex items-start gap-3 p-3.5 rounded-xl border text-left transition-all duration-200 select-none hover:translate-y-[-1px]",
+                              isSelected
+                                ? "bg-blue-50/60 border-blue-500 shadow-sm"
+                                : "bg-white border-zinc-200 hover:border-zinc-300"
+                            )}
+                          >
+                            <div className={cn(
+                              "w-5 h-5 rounded-md border flex items-center justify-center shrink-0 mt-0.5 transition-all",
+                              isSelected ? "bg-blue-700 border-blue-700 text-white" : "border-zinc-300"
+                            )}>
+                              {isSelected && <svg className="w-3.5 h-3.5 stroke-[3px]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>}
+                            </div>
+                            <div className="flex flex-col gap-0.5">
+                              <p className="text-xs font-semibold text-zinc-800">{service.name}</p>
+                              {service.description && (
+                                <p className="text-[10px] text-zinc-500 line-clamp-1">{service.description}</p>
+                              )}
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              )}
 
               <div className="space-y-1.5">
                 <Label>Years of experience <span className="text-red-500">*</span></Label>
@@ -740,7 +810,7 @@ export const ProfessionalSetupWizard = ({ onComplete, initialStep }: { onComplet
   }
 
   const isStepValid = () => {
-    const step1Valid = store.specialty && store.categoryId && store.experience && store.idType && store.idNumber && store.idPhoto
+    const step1Valid = store.specialty && store.categoryId && store.assignedServices.length > 0 && store.experience && store.idType && store.idNumber && store.idPhoto
     const step2Valid = store.state && store.city && store.address && store.landmark
     const step3Valid = store.guarantorName && store.guarantorEmail && store.guarantorPhone && store.guarantorRelationship && store.guarantorWorkPlace && store.accountName && store.bankName && store.bankCode && store.accountNumber
 

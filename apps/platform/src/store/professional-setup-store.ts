@@ -7,6 +7,7 @@ interface ProfessionalSetupState {
   // Step 1: Work Profile
   specialty: string
   categoryId: string
+  assignedServices: string[]
   experience: string
   idType: string
   idNumber: string
@@ -48,6 +49,7 @@ export const useProfessionalSetupStore = create<ProfessionalSetupState>()(
       
       specialty: '',
       categoryId: '',
+      assignedServices: [],
       experience: '',
       idType: 'BVN',
       idNumber: '',
@@ -80,6 +82,7 @@ export const useProfessionalSetupStore = create<ProfessionalSetupState>()(
         currentStep: 1,
         specialty: '',
         categoryId: '',
+        assignedServices: [],
         experience: '',
         idType: 'BVN',
         idNumber: '',
