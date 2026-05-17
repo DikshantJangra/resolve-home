@@ -23,13 +23,28 @@ export const MyServicesTab = () => {
   // Pre-populate once engineer profile loads
   useEffect(() => {
     if (engineerProfile && !initialized) {
-      const categoryId = engineerProfile.category || engineerProfile.categoryId || ''
+      let categoryId = engineerProfile.category || engineerProfile.categoryId || ''
+      
+      // Fallback: map specialty name to categoryId if categoryId is empty
+      if (!categoryId && engineerProfile.specialty) {
+        const spec = engineerProfile.specialty.toLowerCase()
+        if (spec.includes('elect')) {
+          categoryId = 'cb8d597e-6ea3-4233-adb5-6bb243169ce9'
+        } else if (spec.includes('plumb')) {
+          categoryId = 'dbb22cb4-b1fe-4505-9285-06da885dff81'
+        } else if (spec.includes('hvac')) {
+          categoryId = 'ec466b46-1260-4da7-b3a6-cec838b2e24c'
+        } else if (spec.includes('appliance')) {
+          categoryId = '51262f69-ecd4-4dfc-a00e-3bc7009db739'
+        }
+      }
+
       const servicesArray = Array.isArray(engineerProfile.assignedServices)
         ? engineerProfile.assignedServices
         : (engineerProfile.assignedServices ? [engineerProfile.assignedServices] : [])
 
       console.log('[MyServicesTab] Engineer profile loaded:', engineerProfile)
-      console.log('[MyServicesTab] categoryId:', categoryId, '| services:', servicesArray)
+      console.log('[MyServicesTab] categoryId resolved:', categoryId, '| services:', servicesArray)
 
       setSelectedCategory(categoryId)
       setSelectedServices(servicesArray)
