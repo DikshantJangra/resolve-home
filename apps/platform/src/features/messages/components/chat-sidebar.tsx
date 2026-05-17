@@ -69,12 +69,12 @@ export const ChatSidebar = () => {
       <div className="flex-1 overflow-y-auto px-5 pb-5 space-y-3 no-scrollbar">
         {(!filteredChats || filteredChats.length === 0) && (
           <div className="text-center py-10">
-             <p className="text-zinc-500 text-sm">No {activeTab.toLowerCase()} conversations</p>
+            <p className="text-zinc-500 text-sm">No {activeTab.toLowerCase()} conversations</p>
           </div>
         )}
         {filteredChats?.map((chat: any) => {
           const isActive = activeChatId === chat.id
-          const otherUser = chat.otherUser || chat.engineer || chat.customer
+          const otherUser = chat.otherParticipant || chat.otherUser || chat.engineer || chat.customer
           const lastMessage = chat.lastMessage
 
           return (
@@ -88,8 +88,8 @@ export const ChatSidebar = () => {
             >
               <div className="shrink-0 relative">
                 <div className="w-12 h-12 rounded-full overflow-hidden border border-indigo-50 bg-white">
-                  <img 
-                    src={otherUser?.image || `https://api.dicebear.com/7.x/avataaars/svg?seed=${otherUser?.name || chat.id}`} 
+                  <img
+                    src={otherUser?.image || `https://api.dicebear.com/7.x/avataaars/svg?seed=${otherUser?.name || chat.id}`}
                     alt={otherUser?.name}
                     className="w-full h-full object-cover"
                   />
@@ -112,7 +112,7 @@ export const ChatSidebar = () => {
                       </span>
                     </div>
                   </div>
-                  
+
                   {chat.unreadCount > 0 && (
                     <div className="px-1.5 py-0.5 bg-rose-400 rounded-full flex items-center justify-center shrink-0">
                       <span className="text-[10px] text-neutral-800 font-bold leading-none">{chat.unreadCount}</span>
@@ -120,7 +120,7 @@ export const ChatSidebar = () => {
                   )}
                 </div>
                 <p className="text-sm text-zinc-500 line-clamp-1 leading-5">
-                  {lastMessage?.content || ''}
+                  {lastMessage?.message || lastMessage?.content || ''}
                 </p>
               </div>
             </div>

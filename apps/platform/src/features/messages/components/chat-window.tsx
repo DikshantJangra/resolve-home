@@ -5,7 +5,7 @@ import { HiOutlineDotsHorizontal, HiOutlinePlus, HiOutlineSearch, HiOutlineBrief
 import { cn } from "@resolve/ui"
 import { MessageActions } from './message-actions'
 import { QuotationModal } from './quotation-modal'
-import { useChatMessages, useUserProfile } from '@/hooks/api-hooks'
+import { useChatMessages, useUserProfile, useUserChats } from '@/hooks/api-hooks'
 import { useSocket } from '@/components/providers/socket-provider'
 import { useChatStore } from '@/store/use-chat-store'
 import { format } from 'date-fns'
@@ -26,10 +26,15 @@ export const ChatWindow = ({ onBack }: ChatWindowProps) => {
   const [messages, setMessages] = useState<any[]>([])
   const { socket } = useSocket()
   const { data: userProfile } = useUserProfile()
+  const { data: chats } = useUserChats()
   const user = userProfile?.user
   const scrollRef = useRef<HTMLDivElement>(null)
 
   const isEngineer = user?.role === 'worker'
+
+  // Get the active chat's other participant info
+  const activeChat = chats?.find((c: any) => c.id === activeChatId)
+  const otherUser = activeChat?.otherParticipant || activeChat?.otherUser
 
   useEffect(() => {
     if (initialMessages) {
@@ -64,10 +69,10 @@ export const ChatWindow = ({ onBack }: ChatWindowProps) => {
 
     const messageData = {
       chatId: activeChatId,
-      content: inputMessage,
+      message: inputMessage,
       senderId: user?.id,
-      timestamp: new Date().toISOString(),
-      type: 'text'
+      createdAt: new Date().toISOString(),
+      mediaType: 'text',
     }
 
     socket.emit('send_message', messageData)
@@ -97,7 +102,7 @@ export const ChatWindow = ({ onBack }: ChatWindowProps) => {
       <div className="h-20 p-4 md:p-5 bg-stone-50 border-b border-zinc-300 flex items-center gap-2 relative z-10">
         <div className="flex-1 flex items-center gap-2 md:gap-3">
           {/* Mobile Back Button */}
-          <button 
+          <button
             onClick={onBack}
             className="lg:hidden p-1 -ml-1 text-zinc-600 hover:bg-zinc-100 rounded-lg transition-colors"
           >
@@ -105,29 +110,21 @@ export const ChatWindow = ({ onBack }: ChatWindowProps) => {
           </button>
 
           <div className="w-10 h-10 md:w-12 md:h-12 rounded-full border border-indigo-50 overflow-hidden relative shrink-0">
-            <img 
-              src={`https://api.dicebear.com/7.x/avataaars/svg?seed=Samuel`} 
-              alt="Samuel"
+            <img
+              src={otherUser?.image || `https://api.dicebear.com/7.x/avataaars/svg?seed=${otherUser?.name || 'user'}`}
+              alt={otherUser?.name || 'User'}
               className="w-full h-full object-cover"
             />
           </div>
           <div className="flex-1 flex flex-col gap-0.5">
-            <div className="flex items-center gap-2">
-              <h3 className="text-base font-medium text-neutral-700">Engineer</h3>
-              <div className="flex items-center gap-1">
-                <div className="w-1.5 h-1.5 bg-green-500 rounded-full" />
-                <span className="text-xs text-zinc-600 leading-4">Online</span>
-              </div>
-            </div>
-            <div className="text-xs text-zinc-600">
-              Discussing: <span className="text-blue-700 font-medium">Job Offer</span>
-            </div>
+            <h3 className="text-base font-medium text-neutral-700">{otherUser?.name || 'User'}</h3>
+            <div className="text-xs text-zinc-500">Booking chat</div>
           </div>
         </div>
-        
+
         {isEngineer && (
           <div className="relative">
-            <button 
+            <button
               onClick={() => setShowActions(!showActions)}
               className="w-8 h-8 flex items-center justify-center text-zinc-600 hover:bg-zinc-100 rounded-lg transition-colors border border-zinc-200"
             >
@@ -136,7 +133,7 @@ export const ChatWindow = ({ onBack }: ChatWindowProps) => {
 
             {showActions && (
               <div className="absolute right-0 mt-2 z-20">
-                <MessageActions 
+                <MessageActions
                   onMakeQuotation={() => {
                     setShowQuotationModal(true)
                     setShowActions(false)
@@ -152,7 +149,7 @@ export const ChatWindow = ({ onBack }: ChatWindowProps) => {
       </div>
 
       {/* Chat Area */}
-      <div 
+      <div
         ref={scrollRef}
         className="flex-1 overflow-y-auto p-5 pb-24 space-y-6"
       >
@@ -160,10 +157,10 @@ export const ChatWindow = ({ onBack }: ChatWindowProps) => {
         <div className="w-full p-4 bg-white rounded-xl border border-zinc-100 flex flex-col gap-4 shadow-sm max-w-md mx-auto lg:mx-0">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-               <div className="w-8 h-8 bg-blue-50 rounded-lg flex items-center justify-center text-blue-700">
-                  <HiOutlineBriefcase className="w-4 h-4" />
-               </div>
-               <span className="text-zinc-700 font-semibold text-sm">Job offer request</span>
+              <div className="w-8 h-8 bg-blue-50 rounded-lg flex items-center justify-center text-blue-700">
+                <HiOutlineBriefcase className="w-4 h-4" />
+              </div>
+              <span className="text-zinc-700 font-semibold text-sm">Job offer request</span>
             </div>
             <span className="text-[10px] text-zinc-400">12:12pm</span>
           </div>
@@ -197,9 +194,9 @@ export const ChatWindow = ({ onBack }: ChatWindowProps) => {
                 "max-w-[80%] p-4 rounded-2xl text-sm leading-relaxed shadow-sm",
                 isMe ? "bg-blue-700 text-white rounded-br-none" : "bg-white text-zinc-700 rounded-bl-none border border-zinc-100"
               )}>
-                <p>{msg.content}</p>
+                <p>{msg.message || msg.content}</p>
                 <p className={cn("text-[10px] mt-1.5 opacity-60", isMe ? "text-right" : "text-left")}>
-                  {format(new Date(msg.timestamp || Date.now()), 'HH:mm')}
+                  {format(new Date(msg.createdAt || msg.timestamp || Date.now()), 'HH:mm')}
                 </p>
               </div>
             </div>
@@ -213,8 +210,8 @@ export const ChatWindow = ({ onBack }: ChatWindowProps) => {
           <HiOutlinePlus className="w-5 h-5" />
         </button>
         <div className="flex-1 h-11 px-4 bg-stone-50 rounded-xl flex items-center overflow-hidden">
-          <input 
-            type="text" 
+          <input
+            type="text"
             value={inputMessage}
             onChange={(e) => setInputMessage(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
@@ -222,7 +219,7 @@ export const ChatWindow = ({ onBack }: ChatWindowProps) => {
             className="w-full bg-transparent text-zinc-800 text-sm font-normal outline-none placeholder:text-zinc-400"
           />
         </div>
-        <Button 
+        <Button
           onClick={handleSendMessage}
           className="h-11 bg-blue-700 hover:bg-blue-800 text-white px-6 rounded-xl"
         >
@@ -231,8 +228,8 @@ export const ChatWindow = ({ onBack }: ChatWindowProps) => {
       </div>
 
       {/* Modals */}
-      <QuotationModal 
-        isOpen={showQuotationModal} 
+      <QuotationModal
+        isOpen={showQuotationModal}
         onClose={() => setShowQuotationModal(false)}
         bookingId={activeChatId}
       />

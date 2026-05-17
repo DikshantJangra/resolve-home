@@ -577,7 +577,14 @@ export function useChatMessages(chatId: string) {
     queryKey: ['chat-messages', chatId],
     queryFn: async () => {
       const response = await apiClient.get(ENDPOINTS.CHATS.MESSAGES(chatId))
-      return response.data.data?.messages || []
+      const data = response.data.data || response.data
+      // Backend returns customerMessages + engineerMessages separately — merge and sort
+      const customer = data?.customerMessages || []
+      const engineer = data?.engineerMessages || []
+      const all = [...customer, ...engineer].sort(
+        (a: any, b: any) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+      )
+      return all.length > 0 ? all : (data?.messages || [])
     },
     enabled: !!chatId
   })
