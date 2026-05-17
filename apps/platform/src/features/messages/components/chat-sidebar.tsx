@@ -2,7 +2,7 @@
 
 import React from 'react'
 import { HiOutlineSearch, HiOutlinePlusCircle } from 'react-icons/hi'
-import { cn } from "@resolve/ui"
+import { cn, formatImageUrl } from "@resolve/ui"
 import { useUserChats } from '@/hooks/api-hooks'
 import { useChatStore } from '@/store/use-chat-store'
 import { formatDistanceToNow } from 'date-fns'
@@ -89,7 +89,7 @@ export const ChatSidebar = () => {
               <div className="shrink-0 relative">
                 <div className="w-12 h-12 rounded-full overflow-hidden border border-indigo-50 bg-white">
                   <img
-                    src={otherUser?.image || `https://api.dicebear.com/7.x/avataaars/svg?seed=${otherUser?.name || chat.id}`}
+                    src={otherUser?.image ? formatImageUrl(otherUser.image) : `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(otherUser?.name || chat.id)}`}
                     alt={otherUser?.name}
                     className="w-full h-full object-cover"
                   />

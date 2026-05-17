@@ -2,7 +2,7 @@
 
 import React from 'react'
 import { useProfessionalSetupStore } from '@/store/professional-setup-store'
-import { Button, Input, Label } from "@resolve/ui"
+import { Button, Input, Label, LoadingSpinner } from "@resolve/ui"
 import {
   HiOutlineChevronLeft,
   HiOutlineCheckCircle,
@@ -419,10 +419,7 @@ export const ProfessionalSetupWizard = ({ onComplete, initialStep }: { onComplet
                         className="w-11 h-11 bg-slate-50 border border-indigo-400 rounded-xl flex items-center justify-center hover:bg-slate-100 disabled:opacity-50"
                       >
                         {isUploading ? (
-                          <svg className="w-4 h-4 animate-spin text-blue-700" fill="none" viewBox="0 0 24 24">
-                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
-                          </svg>
+                          <LoadingSpinner className="w-4 h-4 text-blue-700" />
                         ) : (
                           <HiOutlinePlus className="w-5 h-5 text-blue-700" />
                         )}

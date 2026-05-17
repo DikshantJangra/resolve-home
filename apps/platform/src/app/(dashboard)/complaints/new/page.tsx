@@ -8,7 +8,7 @@ import {
   HiOutlineInformationCircle,
   HiOutlineCheckCircle
 } from 'react-icons/hi'
-import { Button, Input, Label, cn } from "@resolve/ui"
+import { Button, Input, Label, LoadingSpinner, cn } from "@resolve/ui"
 import { useCreateComplaint } from '@/hooks/api-hooks'
 import { toast } from 'sonner'
 
@@ -132,7 +132,7 @@ function NewComplaintForm() {
 
 export default function NewComplaintPage() {
   return (
-    <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><HiOutlineSupport className="animate-spin text-blue-700 size-8" /></div>}>
+    <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><LoadingSpinner className="w-8 h-8 text-blue-700" /></div>}>
       <NewComplaintForm />
     </Suspense>
   )

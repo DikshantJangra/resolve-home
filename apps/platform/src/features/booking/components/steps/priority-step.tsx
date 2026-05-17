@@ -6,6 +6,7 @@ import { useBookingStore, Priority } from '@/store/booking-store'
 import { useMySubscription, useWalletBalance } from '@/hooks/api-hooks'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
+import { LoadingSpinner } from '@resolve/ui'
 
 const EMERGENCY_FEE = 10000
 
@@ -57,7 +58,7 @@ export const PriorityStep = () => {
   if (subLoading) {
     return (
       <div className="flex flex-col items-center justify-center h-full gap-3 bg-white">
-        <div className="w-8 h-8 border-4 border-blue-700 border-t-transparent rounded-full animate-spin" />
+        <LoadingSpinner className="w-8 h-8 text-blue-700" />
         <p className="text-zinc-500 text-sm">Checking your plan...</p>
       </div>
     )

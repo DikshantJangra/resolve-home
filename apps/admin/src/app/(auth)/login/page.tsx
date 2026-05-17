@@ -4,7 +4,7 @@ import React from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
-import { Button, Input, Checkbox, Label, cn } from "@resolve/ui"
+import { Button, Input, Checkbox, Label, cn, LoadingSpinner } from "@resolve/ui"
 import { authClient } from "@/lib/auth-client"
 import { toast } from "sonner"
 import { useRouter, useSearchParams } from 'next/navigation'
@@ -190,10 +190,10 @@ function LoginContent() {
 
               <Button 
                 type="submit" 
-                disabled={isLoading}
+                isLoading={isLoading}
                 className="h-12 w-full bg-blue-700 hover:bg-blue-800 text-white font-semibold rounded-xl transition-all shadow-md shadow-blue-700/10 flex items-center justify-center py-0"
               >
-                <span className="leading-none">{isLoading ? 'Signing in...' : 'Sign In'}</span>
+                Sign In
               </Button>
             </div>
           </form>
@@ -207,7 +207,7 @@ export default function LoginPage() {
   return (
     <Suspense fallback={
       <div className="min-h-screen w-full flex items-center justify-center bg-stone-50">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-700 border-t-transparent" />
+        <LoadingSpinner className="w-8 h-8 text-blue-700" />
       </div>
     }>
       <LoginContent />

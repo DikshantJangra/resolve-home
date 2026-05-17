@@ -24,7 +24,7 @@ export interface BookingDraft {
   photos: string[]
   location: BookingLocation | null
   categoryId: string | null
-  serviceId: string | null
+  serviceIds: string[]
   scheduledDate: string | null
   scheduledTime: string | null
 }
@@ -37,7 +37,7 @@ interface BookingState {
   photos: string[]
   location: BookingLocation | null
   categoryId: string | null
-  serviceId: string | null
+  serviceIds: string[]
   scheduledDate: string | null
   scheduledTime: string | null
   selectedEngineerId: string | null
@@ -45,7 +45,7 @@ interface BookingState {
   bookingId: string | null
   isOpen: boolean
   drafts: BookingDraft[]
-  activeDraftId: string | null  // tracks which draft is being resumed
+  activeDraftId: string | null
 
   // Actions
   setIsOpen: (isOpen: boolean) => void
@@ -53,7 +53,7 @@ interface BookingState {
   setPriority: (priority: Priority) => void
   setServiceType: (type: string) => void
   setCategoryId: (id: string | null) => void
-  setServiceId: (id: string | null) => void
+  toggleServiceId: (id: string) => void
   setIssueDetails: (details: string) => void
   setPhotos: (photos: string[]) => void
   addPhoto: (photo: string) => void
@@ -81,7 +81,7 @@ export const useBookingStore = create<BookingState>()(
       photos: [],
       location: null,
       categoryId: null,
-      serviceId: null,
+      serviceIds: [],
       scheduledDate: null,
       scheduledTime: null,
       selectedEngineerId: null,
@@ -96,12 +96,16 @@ export const useBookingStore = create<BookingState>()(
       setPriority: (priority) => set({ priority }),
       setServiceType: (serviceType) => set({ serviceType }),
       setCategoryId: (categoryId) => set({ categoryId }),
-      setServiceId: (serviceId) => set({ serviceId }),
+      toggleServiceId: (id) => set((state) => ({
+        serviceIds: state.serviceIds.includes(id)
+          ? state.serviceIds.filter((s) => s !== id)
+          : [...state.serviceIds, id],
+      })),
       setIssueDetails: (issueDetails) => set({ issueDetails }),
       setPhotos: (photos) => set({ photos }),
       addPhoto: (photo) => set((state) => ({ photos: [...state.photos, photo] })),
       removePhoto: (index) => set((state) => ({
-        photos: state.photos.filter((_, i) => i !== index)
+        photos: state.photos.filter((_, i) => i !== index),
       })),
       setLocation: (location) => set({ location }),
       setScheduledDate: (scheduledDate) => set({ scheduledDate }),
@@ -112,7 +116,7 @@ export const useBookingStore = create<BookingState>()(
 
       saveDraft: () => {
         const s = get()
-        if (s.currentStep <= 1 && !s.priority && !s.serviceId) return
+        if (s.currentStep <= 1 && !s.priority && s.serviceIds.length === 0) return
         const draft: BookingDraft = {
           id: s.activeDraftId || crypto.randomUUID(),
           savedAt: new Date().toISOString(),
@@ -123,14 +127,14 @@ export const useBookingStore = create<BookingState>()(
           photos: s.photos,
           location: s.location,
           categoryId: s.categoryId,
-          serviceId: s.serviceId,
+          serviceIds: s.serviceIds,
           scheduledDate: s.scheduledDate,
           scheduledTime: s.scheduledTime,
         }
         set((state) => {
           const exists = state.drafts.some((d) => d.id === draft.id)
           const updated = exists
-            ? state.drafts.map((d) => d.id === draft.id ? draft : d)
+            ? state.drafts.map((d) => (d.id === draft.id ? draft : d))
             : [draft, ...state.drafts].slice(0, 5)
           return { drafts: updated, activeDraftId: draft.id }
         })
@@ -146,7 +150,7 @@ export const useBookingStore = create<BookingState>()(
           photos: draft.photos,
           location: draft.location,
           categoryId: draft.categoryId,
-          serviceId: draft.serviceId,
+          serviceIds: draft.serviceIds?.length ? draft.serviceIds : ((draft as any).serviceId ? [(draft as any).serviceId] : []),
           scheduledDate: draft.scheduledDate,
           scheduledTime: draft.scheduledTime,
           selectedEngineerId: null,
@@ -180,7 +184,7 @@ export const useBookingStore = create<BookingState>()(
           photos: [],
           location: null,
           categoryId: null,
-          serviceId: null,
+          serviceIds: [],
           scheduledDate: null,
           scheduledTime: null,
           selectedEngineerId: null,
@@ -195,4 +199,3 @@ export const useBookingStore = create<BookingState>()(
     }
   )
 )
-
