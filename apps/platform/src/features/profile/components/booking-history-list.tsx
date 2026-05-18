@@ -4,7 +4,7 @@ import React from 'react'
 import { HiOutlineStar, HiOutlineChevronRight } from 'react-icons/hi'
 import { HiWrenchScrewdriver } from 'react-icons/hi2'
 import { cn } from "@resolve/ui"
-import { useUserBookings } from '@/hooks/api-hooks'
+import { useUserBookings, useAuthSession, useUserProfile, useEngineerMyBookings } from '@/hooks/api-hooks'
 import { Skeleton } from "@resolve/ui"
 import { format } from 'date-fns'
 import Link from 'next/link'
@@ -18,6 +18,7 @@ interface BookingHistoryItemProps {
   rating: number
   iconBgColor: string
   iconColor: string
+  isWorker?: boolean
 }
 
 export const BookingHistoryItem = ({
@@ -28,10 +29,11 @@ export const BookingHistoryItem = ({
   price,
   rating,
   iconBgColor,
-  iconColor
+  iconColor,
+  isWorker
 }: BookingHistoryItemProps) => {
   return (
-    <Link href={`/bookings/${id}`}>
+    <Link href={isWorker ? `/engineer/jobs/${id}` : `/bookings/${id}`}>
       <div className="self-stretch h-20 py-4 flex justify-start items-center gap-3.5 border-b border-zinc-50 last:border-0 hover:bg-slate-50 px-4 -mx-4 rounded-xl transition-colors cursor-pointer group">
         <div className={cn("w-11 h-11 rounded-xl flex justify-center items-center shrink-0", iconBgColor)}>
           <HiWrenchScrewdriver className={cn("w-5 h-5", iconColor)} />
@@ -45,7 +47,7 @@ export const BookingHistoryItem = ({
             </span>
           </div>
           <div className="text-slate-500 text-xs font-normal leading-5 truncate">
-            with {professionalName} · {date}
+            {isWorker ? `for ${professionalName} · ${date}` : `with ${professionalName} · ${date}`}
           </div>
         </div>
 
@@ -71,17 +73,27 @@ export const BookingHistoryItem = ({
 }
 
 export const BookingHistoryList = () => {
-  const { data: bookings, isLoading } = useUserBookings()
+  const { data: profile } = useUserProfile()
+  const { data: session } = useAuthSession()
+  const user = profile?.user || session?.user
+  const isWorker = user?.role === 'worker' || user?.role === 'Work as a Professional' || user?.role === 'engineer'
+
+  const { data: customerBookings, isLoading: isCustomerLoading } = useUserBookings({ enabled: !isWorker })
+  const { data: engineerBookings, isLoading: isEngineerLoading } = useEngineerMyBookings({ enabled: isWorker })
+
+  const bookings = isWorker ? engineerBookings : customerBookings
+  const isLoading = isWorker ? isCustomerLoading : isEngineerLoading
 
   const history = bookings?.filter((b: any) => b.status?.toLowerCase() === 'completed').map((b: any) => ({
     id: b.id,
     category: b.service?.name || 'Service',
-    professionalName: b.engineer?.user?.name || 'Assigned Pro',
+    professionalName: isWorker ? (b.customer?.name || 'Customer') : (b.engineer?.user?.name || 'Assigned Pro'),
     date: b.createdAt ? format(new Date(b.createdAt), 'MMM d, yyyy') : 'Recently',
     price: b.totalPrice || 0,
     rating: b.review?.rating || 5, // Default to 5 if not yet rated for history view
     iconBgColor: 'bg-blue-50',
-    iconColor: 'text-blue-700'
+    iconColor: 'text-blue-700',
+    isWorker
   })) || []
 
   if (isLoading) {
@@ -107,8 +119,8 @@ export const BookingHistoryList = () => {
           No completed bookings found.
         </div>
       )}
-      <Link href="/bookings" className="text-blue-700 text-sm font-semibold leading-5 hover:text-blue-800 transition-colors text-left px-4 mt-2">
-        View all bookings
+      <Link href={isWorker ? "/engineer/dashboard" : "/bookings"} className="text-blue-700 text-sm font-semibold leading-5 hover:text-blue-800 transition-colors text-left px-4 mt-2">
+        {isWorker ? "Go to Dashboard" : "View all bookings"}
       </Link>
     </div>
   )

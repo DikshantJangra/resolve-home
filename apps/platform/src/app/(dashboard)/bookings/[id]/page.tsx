@@ -164,31 +164,31 @@ export default function BookingDetailsPage() {
   }
 
   const statusSteps: ProgressStep[] = [
-    { 
-      label: 'Pro Matched', 
-      status: (['confirmed', 'on_the_way', 'arrived', 'awaiting_quotation_approval', 'payment_pending', 'payment_completed', 'in_progress', 'in-progress', 'completed'].includes(booking.status) ? 'completed' : 'pending') as any 
+    {
+      label: 'Pro Matched',
+      status: (['confirmed', 'on_the_way', 'arrived', 'awaiting_quotation_approval', 'payment_pending', 'payment_completed', 'in_progress', 'in-progress', 'completed'].includes(booking.status) ? 'completed' : 'pending') as any
     },
-    { 
-      label: 'On the way', 
-      status: (booking.status === 'on_the_way' 
-        ? 'current' 
-        : (['arrived', 'awaiting_quotation_approval', 'payment_pending', 'payment_completed', 'in_progress', 'in-progress', 'completed'].includes(booking.status) ? 'completed' : 'pending')) as any 
+    {
+      label: 'On the way',
+      status: (booking.status === 'on_the_way'
+        ? 'current'
+        : (['arrived', 'awaiting_quotation_approval', 'payment_pending', 'payment_completed', 'in_progress', 'in-progress', 'completed'].includes(booking.status) ? 'completed' : 'pending')) as any
     },
-    { 
-      label: 'Arrived', 
-      status: (booking.status === 'arrived' 
-        ? 'current' 
-        : (['awaiting_quotation_approval', 'payment_pending', 'payment_completed', 'in_progress', 'in-progress', 'completed'].includes(booking.status) ? 'completed' : 'pending')) as any 
+    {
+      label: 'Arrived',
+      status: (booking.status === 'arrived'
+        ? 'current'
+        : (['awaiting_quotation_approval', 'payment_pending', 'payment_completed', 'in_progress', 'in-progress', 'completed'].includes(booking.status) ? 'completed' : 'pending')) as any
     },
-    { 
-      label: 'In progress', 
-      status: (['in_progress', 'in-progress'].includes(booking.status) 
-        ? 'current' 
-        : (['completed'].includes(booking.status) ? 'completed' : 'pending')) as any 
+    {
+      label: 'In progress',
+      status: (['in_progress', 'in-progress'].includes(booking.status)
+        ? 'current'
+        : (['completed'].includes(booking.status) ? 'completed' : 'pending')) as any
     },
-    { 
-      label: 'Completed', 
-      status: (booking.status === 'completed' ? 'completed' : 'pending') as any 
+    {
+      label: 'Completed',
+      status: (booking.status === 'completed' ? 'completed' : 'pending') as any
     },
   ]
 
@@ -196,7 +196,11 @@ export default function BookingDetailsPage() {
 
   const displayUser = isWorker ? customer : engineer
   const displayName = displayUser?.name || (isWorker ? 'Homeowner' : 'Pro Partner')
-  const displayImage = displayUser?.image ? formatImageUrl(displayUser.image) : `https://api.dicebear.com/7.x/avataaars/svg?seed=${displayName}`
+  const displayImage = displayUser?.image 
+    ? formatImageUrl(displayUser.image) 
+    : (displayUser?.idDocument 
+        ? formatImageUrl(displayUser.idDocument) 
+        : `https://api.dicebear.com/7.x/avataaars/svg?seed=${displayName}`)
   const userRole = isWorker ? 'Homeowner' : (engineer?.role || 'Pro Partner')
 
   return (
@@ -415,10 +419,6 @@ export default function BookingDetailsPage() {
                       <HiOutlineBriefcase className="w-4 h-4" />
                       <span>{engineer?.completedJobs || 0} Jobs Completed</span>
                     </div>
-                    <div className="flex items-center gap-1.5 text-zinc-500 text-xs">
-                      <HiOutlineLocationMarker className="w-4 h-4" />
-                      <span>{engineer?.distance ? `${engineer.distance}km away` : '---'}</span>
-                    </div>
                   </div>
                 </div>
               </div>
@@ -465,8 +465,8 @@ export default function BookingDetailsPage() {
 
               {/* Review Section (if completed booking and customer hasn't submitted a review yet) */}
               {booking.status === 'completed' && !booking.review && engineer && (
-                <ReviewForm 
-                  bookingId={booking.id} 
+                <ReviewForm
+                  bookingId={booking.id}
                   onSuccess={() => {
                     setTimeout(() => {
                       window.location.reload()
@@ -478,6 +478,6 @@ export default function BookingDetailsPage() {
           )}
         </div>
       </div>
-    </div>
+    </div >
   )
 }

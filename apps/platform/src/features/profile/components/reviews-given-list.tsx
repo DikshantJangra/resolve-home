@@ -3,7 +3,7 @@
 import React from 'react'
 import { HiOutlineStar } from 'react-icons/hi'
 import { cn } from "@resolve/ui"
-import { useUserBookings } from '@/hooks/api-hooks'
+import { useUserBookings, useAuthSession, useUserProfile, useEngineerMyBookings } from '@/hooks/api-hooks'
 import { format } from 'date-fns'
 
 interface ReviewGivenItemProps {
@@ -57,20 +57,34 @@ export const ReviewGivenItem = ({
 }
 
 export const ReviewsGivenList = () => {
-  const { data: bookings, isLoading } = useUserBookings()
+  const { data: profile } = useUserProfile()
+  const { data: session } = useAuthSession()
+  const user = profile?.user || session?.user
+  const isWorker = user?.role === 'worker' || user?.role === 'Work as a Professional' || user?.role === 'engineer'
+
+  const { data: customerBookings, isLoading: isCustomerLoading } = useUserBookings({ enabled: !isWorker })
+  const { data: engineerBookings, isLoading: isEngineerLoading } = useEngineerMyBookings({ enabled: isWorker })
+
+  const bookings = isWorker ? engineerBookings : customerBookings
+  const isLoading = isWorker ? isEngineerLoading : isCustomerLoading
 
   const reviews = bookings
     ?.filter((b: any) => b.status === 'completed' && b.review)
-    .map((b: any) => ({
-      professionalName: b.engineer?.user?.name || 'Professional',
-      professionalInitials: b.engineer?.user?.name 
-        ? b.engineer.user.name.split(' ').map((n: string) => n[0]).join('').toUpperCase() 
-        : 'P',
-      category: b.service?.name || 'Service',
-      date: b.review?.createdAt ? format(new Date(b.review.createdAt), 'MMM d, yyyy') : format(new Date(b.updatedAt), 'MMM d, yyyy'),
-      rating: b.review?.rating || 0,
-      comment: b.review?.comment || ''
-    })) || []
+    .map((b: any) => {
+      const name = isWorker ? (b.customer?.name || 'Customer') : (b.engineer?.user?.name || 'Professional')
+      const initials = name 
+        ? name.split(' ').map((n: string) => n[0]).join('').toUpperCase() 
+        : (isWorker ? 'C' : 'P')
+
+      return {
+        professionalName: name,
+        professionalInitials: initials,
+        category: b.service?.name || 'Service',
+        date: b.review?.createdAt ? format(new Date(b.review.createdAt), 'MMM d, yyyy') : format(new Date(b.updatedAt), 'MMM d, yyyy'),
+        rating: b.review?.rating || 0,
+        comment: b.review?.comment || ''
+      }
+    }) || []
 
   if (isLoading) {
     return (
@@ -88,7 +102,9 @@ export const ReviewsGivenList = () => {
         <div className="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center">
           <HiOutlineStar className="w-8 h-8 text-blue-200" />
         </div>
-        <p className="text-zinc-500 text-sm italic">You haven&apos;t given any reviews yet.</p>
+        <p className="text-zinc-500 text-sm italic">
+          {isWorker ? "No reviews received yet." : "You haven't given any reviews yet."}
+        </p>
       </div>
     )
   }

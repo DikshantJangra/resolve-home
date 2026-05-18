@@ -25,9 +25,10 @@ interface ServiceQuotationProps {
     status?: 'pending' | 'approved' | 'rejected'
   }
   isMe: boolean
+  bookingStatus?: string
 }
 
-export const ServiceQuotation = ({ quotation, isMe }: ServiceQuotationProps) => {
+export const ServiceQuotation = ({ quotation, isMe, bookingStatus }: ServiceQuotationProps) => {
   const [showMaterials, setShowMaterials] = useState(false)
   const { mutate: approve, isPending: isApproving } = useApproveQuotation()
   const { mutate: reject, isPending: isRejecting } = useRejectQuotation()
@@ -168,6 +169,18 @@ export const ServiceQuotation = ({ quotation, isMe }: ServiceQuotationProps) => 
           <div className="self-stretch bg-red-50/60 border border-red-100 rounded-xl p-3 flex items-center justify-center gap-2 text-red-800 text-xs font-semibold">
             <HiOutlineX className="w-4.5 h-4.5 text-red-600 shrink-0" />
             <span>Quotation Declined</span>
+          </div>
+        ) : bookingStatus === 'completed' ? (
+          <div className="self-stretch bg-zinc-50 border border-zinc-100 rounded-xl p-3 flex items-center justify-center gap-2 text-zinc-500 text-xs font-semibold">
+            <span>Booking Completed</span>
+          </div>
+        ) : bookingStatus === 'cancelled' ? (
+          <div className="self-stretch bg-zinc-50 border border-zinc-100 rounded-xl p-3 flex items-center justify-center gap-2 text-zinc-500 text-xs font-semibold">
+            <span>Booking Cancelled</span>
+          </div>
+        ) : (bookingStatus && ['payment_pending', 'confirmed', 'on_the_way', 'arrived', 'in_progress', 'in-progress'].includes(bookingStatus)) ? (
+          <div className="self-stretch bg-zinc-50 border border-zinc-100 rounded-xl p-3 flex items-center justify-center gap-2 text-zinc-400 text-xs font-semibold">
+            <span>Quotation Inactive</span>
           </div>
         ) : isMe ? (
           /* Sent by me (pro) - pending approval status */

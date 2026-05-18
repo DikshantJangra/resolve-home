@@ -43,12 +43,12 @@ export default function MessagesPage() {
   const showLoading = !mounted || isLoading
 
   return (
-    <div className="h-[calc(100vh-140px)] flex flex-col gap-4 md:gap-6">
-      <div className="flex flex-col gap-1">
+    <div className="h-[calc(100vh-130px)] lg:h-[calc(100vh-140px)] flex flex-col gap-4 md:gap-6 overflow-hidden">
+      <div className="flex flex-col gap-1 shrink-0">
         <h1 className="text-neutral-700 text-xl md:text-2xl font-bold font-['Plus_Jakarta_Sans'] leading-8">Messages</h1>
       </div>
 
-      <div className="flex-1 flex gap-5 overflow-hidden relative">
+      <div className="flex-1 flex gap-5 overflow-hidden relative min-h-0">
         {/* Sidebar: Visible on desktop, or on mobile when no chat is active */}
         <div className={cn(
           "w-full lg:w-[458px] h-full transition-all shrink-0",

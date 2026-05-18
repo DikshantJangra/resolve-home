@@ -48,7 +48,8 @@ apiClient.interceptors.response.use(
     error.message = message
     
     const silent = (error.config as any)?.silentError
-    if (error.response?.status === 401 || silent) {
+    const isBookingNotFound = message?.toLowerCase()?.includes('booking not found')
+    if (error.response?.status === 401 || silent || isBookingNotFound) {
       // Silently ignore — callers handle empty/unauthenticated state
     } else if (error.response?.status !== undefined) {
       toast.error(message)

@@ -23,7 +23,8 @@ import {
   useMarkChatRead,
   useAcceptJob,
   useRejectJob,
-  useCancelBooking
+  useCancelBooking,
+  useBookingQuotation
 } from '@/hooks/api-hooks'
 import { useSocket } from '@/components/providers/socket-provider'
 import { useChatStore } from '@/store/use-chat-store'
@@ -69,6 +70,7 @@ export const ChatWindow = ({ onBack }: ChatWindowProps) => {
   const activeChat = chats?.find((c: any) => c.id === activeChatId)
   const otherUser = activeChat?.otherParticipant || activeChat?.otherUser
   const booking = activeChat?.booking
+  const { data: latestQuotation } = useBookingQuotation(booking?.id || '')
 
   const handleAcceptBooking = () => {
     if (!booking?.id) return
@@ -304,7 +306,7 @@ export const ChatWindow = ({ onBack }: ChatWindowProps) => {
       </div>
 
       {/* Chat Area */}
-      <div ref={scrollRef} className="flex-1 overflow-y-auto p-5 pb-24 space-y-4">
+      <div ref={scrollRef} className="flex-1 overflow-y-auto p-5 pb-24 space-y-4 premium-scrollbar">
         {/* Booking summary card — show real data if available */}
         {booking && (
           <div className="w-full p-5 bg-white rounded-2xl border border-zinc-200 flex flex-col gap-4 shadow-sm max-w-md relative overflow-hidden">
@@ -482,11 +484,20 @@ export const ChatWindow = ({ onBack }: ChatWindowProps) => {
         )}
 
         {messages.map((msg, idx) => {
-          const isMe = msg.senderId === user?.id
+          const isMe = msg.senderId === user?.id || msg.senderId === userProfile?.engineerProfile?.id
           if (msg.mediaType === 'quotation' || msg.type === 'quotation') {
             return (
               <div key={idx} className={cn("flex w-full", isMe ? "justify-end" : "justify-start")}>
-                <ServiceQuotation quotation={msg.quotation || msg.metadata} isMe={isMe} />
+                <ServiceQuotation 
+                  quotation={{
+                    ...(msg.quotation || msg.metadata),
+                    status: (latestQuotation && (latestQuotation.id === (msg.quotation?.id || msg.metadata?.id) || latestQuotation.id === (msg.quotation?.quotationId || msg.metadata?.quotationId)))
+                      ? latestQuotation.status
+                      : (msg.quotation?.status || msg.metadata?.status || 'pending')
+                  }} 
+                  isMe={isMe} 
+                  bookingStatus={booking?.status}
+                />
               </div>
             )
           }

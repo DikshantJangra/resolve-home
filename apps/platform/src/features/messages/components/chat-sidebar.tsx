@@ -66,7 +66,7 @@ export const ChatSidebar = () => {
       </div>
 
       {/* Contact List */}
-      <div className="flex-1 overflow-y-auto px-5 pb-5 space-y-3 no-scrollbar">
+      <div className="flex-1 overflow-y-auto px-5 pb-5 space-y-3 premium-scrollbar">
         {(!filteredChats || filteredChats.length === 0) && (
           <div className="text-center py-10">
             <p className="text-zinc-500 text-sm">No {activeTab.toLowerCase()} conversations</p>

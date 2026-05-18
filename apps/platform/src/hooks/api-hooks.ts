@@ -161,7 +161,7 @@ export function useBookingDetail(id: string) {
       const data = response.data.data || response.data
       return data?.booking || data
     },
-    enabled: !!id && typeof window !== 'undefined' && !!localStorage.getItem('auth_token')
+    enabled: !!id && id !== 'undefined' && id !== 'null' && typeof window !== 'undefined' && !!localStorage.getItem('auth_token')
   })
 }
 
@@ -215,7 +215,7 @@ export function useAvailableEngineers(bookingId: string) {
       })
       return response.data.data
     },
-    enabled: !!bookingId
+    enabled: !!bookingId && bookingId !== 'undefined' && bookingId !== 'null'
   })
 }
 
@@ -226,7 +226,7 @@ export function useEngineerLocation(bookingId: string, enabled: boolean) {
       const response = await apiClient.get(ENDPOINTS.BOOKINGS.ENGINEER_LOCATION(bookingId))
       return response.data.data as { latitude: number | null; longitude: number | null; lastActiveAt: string | null }
     },
-    enabled: !!bookingId && enabled,
+    enabled: !!bookingId && bookingId !== 'undefined' && bookingId !== 'null' && enabled,
     refetchInterval: 10000,
     staleTime: 0,
   })
@@ -603,7 +603,7 @@ export function useBookingQuotation(bookingId: string) {
       const response = await apiClient.get(ENDPOINTS.QUOTATIONS.BY_BOOKING(bookingId))
       return response.data.data?.quotation ?? null
     },
-    enabled: !!bookingId && typeof window !== 'undefined' && !!localStorage.getItem('auth_token')
+    enabled: !!bookingId && bookingId !== 'undefined' && bookingId !== 'null' && typeof window !== 'undefined' && !!localStorage.getItem('auth_token')
   })
 }
 

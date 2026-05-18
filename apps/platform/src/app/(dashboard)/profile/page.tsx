@@ -6,7 +6,7 @@ import { PersonalInfoTab } from '@/features/profile/components/personal-info-tab
 import { MyServicesTab } from '@/features/profile/components/my-services-tab'
 import { BookingHistoryList } from '@/features/profile/components/booking-history-list'
 import { ReviewsGivenList } from '@/features/profile/components/reviews-given-list'
-import { useAuthSession, useUserProfile, useUserBookings } from '@/hooks/api-hooks'
+import { useAuthSession, useUserProfile, useUserBookings, useEngineerMyBookings } from '@/hooks/api-hooks'
 import { format } from 'date-fns'
 import { Skeleton, formatImageUrl } from "@resolve/ui"
 import { getDicebearUrl } from '@/lib/constants'
@@ -16,7 +16,8 @@ export default function ProfilePage() {
   const [activeTab, setActiveTab] = useState<TabType>('Personal Info')
   const { data: session, isPending: sessionPending } = useAuthSession()
   const { data: profile, isPending: profilePending } = useUserProfile()
-  const { data: bookings } = useUserBookings()
+  const { data: customerBookings } = useUserBookings()
+  const { data: engineerBookings } = useEngineerMyBookings()
 
   const isDataPending = sessionPending || profilePending
 
@@ -49,6 +50,8 @@ export default function ProfilePage() {
     homeAddress: user?.homeAddress,
     engineerProfile: profile?.engineerProfile
   })
+
+  const bookings = isWorker ? engineerBookings : customerBookings
 
   const completedBookings = bookings?.filter((b: any) => b.status?.toLowerCase() === 'completed')?.length || 0
 
