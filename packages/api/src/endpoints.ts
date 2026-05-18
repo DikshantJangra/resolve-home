@@ -99,6 +99,12 @@ export const ENDPOINTS = {
     READ: (chatId: string) => `/api/chats/${chatId}/read`,
   },
 
+  // ─── Payments & Escrow ───────────────────────────────────────────────────
+  PAYMENTS: {
+    PAY: (bookingId: string) => `/api/payments/booking/${bookingId}/pay`,
+    RELEASE: (bookingId: string) => `/api/payments/booking/${bookingId}/release-escrow`,
+  },
+
   // ─── File Upload ──────────────────────────────────────────────────────────
   UPLOAD: {
     CONFIG: '/api/upload/config',

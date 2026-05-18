@@ -1,8 +1,8 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { HiOutlineX, HiOutlineTrash } from 'react-icons/hi'
-import { useCreateQuotation } from '@/hooks/api-hooks'
+import { useCreateQuotation, useBookingQuotation } from '@/hooks/api-hooks'
 import { toast } from 'sonner'
 import { cn } from "@resolve/ui"
 
@@ -26,6 +26,26 @@ export const QuotationModal = ({ isOpen, onClose, bookingId }: QuotationModalPro
   ])
 
   const { mutate: createQuotation, isPending } = useCreateQuotation()
+  const { data: existingQuotation } = useBookingQuotation(bookingId)
+
+  useEffect(() => {
+    if (existingQuotation) {
+      setLaborFee((existingQuotation.laborFee || 0).toString())
+      if (existingQuotation.materials && existingQuotation.materials.length > 0) {
+        setItems(existingQuotation.materials.map((m: any, idx: number) => ({
+          id: idx.toString(),
+          name: m.name,
+          price: (m.price || 0).toString(),
+          quantity: (m.quantity || 1).toString()
+        })))
+      } else {
+        setItems([{ id: '1', name: '', price: '0', quantity: '1' }])
+      }
+    } else {
+      setLaborFee('0')
+      setItems([{ id: '1', name: '', price: '0', quantity: '1' }])
+    }
+  }, [existingQuotation, isOpen])
 
   if (!isOpen) return null
 
@@ -82,7 +102,7 @@ export const QuotationModal = ({ isOpen, onClose, bookingId }: QuotationModalPro
           <div className="self-stretch px-5 pt-5 pb-3 border-b border-zinc-300 inline-flex justify-start items-start">
             <div className="flex-1 inline-flex flex-col justify-start items-start gap-1">
               <div className="self-stretch justify-start text-neutral-700 text-xl font-semibold font-['Plus_Jakarta_Sans'] leading-8">
-                Create Job Quotation
+                {existingQuotation ? 'Update Job Quotation' : 'Create Job Quotation'}
               </div>
               <div className="self-stretch justify-start text-zinc-600 text-base font-normal font-['Inter'] leading-6">
                 Break down costs for labor and materials.
@@ -190,7 +210,7 @@ export const QuotationModal = ({ isOpen, onClose, bookingId }: QuotationModalPro
             onClick={handleSubmit}
             disabled={isPending}
           >
-            {isPending ? 'Sending...' : 'Send Quotation'}
+            {isPending ? 'Sending...' : (existingQuotation ? 'Update Quotation' : 'Send Quotation')}
           </button>
         </div>
       </div>

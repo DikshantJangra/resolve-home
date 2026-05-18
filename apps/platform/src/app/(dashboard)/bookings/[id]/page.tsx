@@ -10,7 +10,8 @@ import {
   HiOutlineBriefcase,
   HiOutlinePhone,
   HiOutlineChatAlt,
-  HiOutlineLocationMarker
+  HiOutlineLocationMarker,
+  HiOutlineRefresh
 } from 'react-icons/hi'
 import { HiWrenchScrewdriver } from 'react-icons/hi2'
 import { BookingProgressTracker } from '@/features/booking/components/booking-progress-tracker'
@@ -28,9 +29,9 @@ import { ProgressStep } from '@/features/booking/types'
 export default function BookingDetailsPage() {
   const { id } = useParams()
   const { data: userProfile } = useUserProfile()
-  const { data: booking, isLoading, error } = useBookingDetail(id as string)
+  const { data: booking, isLoading, error, refetch } = useBookingDetail(id as string)
   const { mutate: cancelBooking, isPending: isCancelling } = useCancelBooking()
-  const { data: quotation } = useBookingQuotation(id as string)
+  const { data: quotation, refetch: refetchQuotation } = useBookingQuotation(id as string)
   const queryClient = useQueryClient()
 
   const engineer = !isLoading && booking
@@ -41,6 +42,20 @@ export default function BookingDetailsPage() {
   const { refetch: refetchEngineers, isFetching: isRefetchingEngineers } = useAvailableEngineers(
     hasNoEngineer ? id as string : ''
   )
+
+  const handleRefetch = async () => {
+    toast.promise(
+      Promise.all([
+        refetch(),
+        refetchQuotation()
+      ]),
+      {
+        loading: 'Refreshing booking details...',
+        success: 'Booking details refreshed!',
+        error: 'Failed to refresh booking details.'
+      }
+    )
+  }
 
   const handleRefreshPro = async () => {
     await queryClient.invalidateQueries({ queryKey: ['booking-detail', id] })
@@ -54,7 +69,7 @@ export default function BookingDetailsPage() {
 
   const isWorker = userProfile?.user?.role === 'worker'
 
-  const trackingActive = !!engineer && ['confirmed', 'on_the_way', 'arrived', 'in_progress'].includes(booking?.status ?? '')
+  const trackingActive = !!engineer && ['confirmed', 'on_the_way', 'arrived', 'in_progress', 'in-progress'].includes(booking?.status ?? '')
   const { data: engineerLocation } = useEngineerLocation(id as string, !isLoading && !!booking && trackingActive)
 
   const [mapViewport, setMapViewport] = React.useState<MapViewport>({
@@ -149,11 +164,32 @@ export default function BookingDetailsPage() {
   }
 
   const statusSteps: ProgressStep[] = [
-    { label: 'Pro Matched', status: (['pending', 'confirmed', 'in_progress', 'completed'].includes(booking.status) ? 'completed' : 'pending') as any },
-    { label: 'On the way', status: (booking.status === 'on_the_way' ? 'current' : (['in_progress', 'completed'].includes(booking.status) ? 'completed' : 'pending')) as any },
-    { label: 'Arrived', status: (booking.status === 'arrived' ? 'current' : (['in_progress', 'completed'].includes(booking.status) ? 'completed' : 'pending')) as any },
-    { label: 'In progress', status: (booking.status === 'in_progress' ? 'current' : (['completed'].includes(booking.status) ? 'completed' : 'pending')) as any },
-    { label: 'Completed', status: (booking.status === 'completed' ? 'current' : 'pending') as any },
+    { 
+      label: 'Pro Matched', 
+      status: (['confirmed', 'on_the_way', 'arrived', 'awaiting_quotation_approval', 'payment_pending', 'payment_completed', 'in_progress', 'in-progress', 'completed'].includes(booking.status) ? 'completed' : 'pending') as any 
+    },
+    { 
+      label: 'On the way', 
+      status: (booking.status === 'on_the_way' 
+        ? 'current' 
+        : (['arrived', 'awaiting_quotation_approval', 'payment_pending', 'payment_completed', 'in_progress', 'in-progress', 'completed'].includes(booking.status) ? 'completed' : 'pending')) as any 
+    },
+    { 
+      label: 'Arrived', 
+      status: (booking.status === 'arrived' 
+        ? 'current' 
+        : (['awaiting_quotation_approval', 'payment_pending', 'payment_completed', 'in_progress', 'in-progress', 'completed'].includes(booking.status) ? 'completed' : 'pending')) as any 
+    },
+    { 
+      label: 'In progress', 
+      status: (['in_progress', 'in-progress'].includes(booking.status) 
+        ? 'current' 
+        : (['completed'].includes(booking.status) ? 'completed' : 'pending')) as any 
+    },
+    { 
+      label: 'Completed', 
+      status: (booking.status === 'completed' ? 'completed' : 'pending') as any 
+    },
   ]
 
   const customer = booking.user
@@ -165,8 +201,8 @@ export default function BookingDetailsPage() {
 
   return (
     <div className="flex flex-col gap-6 max-w-6xl mx-auto pb-10">
-      {/* Breadcrumb */}
-      <div className="flex flex-col gap-3">
+      {/* Breadcrumb & Refresh */}
+      <div className="flex justify-between items-center">
         <Link
           href="/bookings"
           className="inline-flex items-center gap-1 text-zinc-600 hover:text-blue-700 transition-colors group"
@@ -178,6 +214,14 @@ export default function BookingDetailsPage() {
           </div>
           <span className="text-sm font-medium">Bookings details</span>
         </Link>
+        <Button
+          variant="outline"
+          onClick={handleRefetch}
+          className="h-9 px-3.5 border-zinc-200 text-zinc-600 hover:bg-zinc-50 flex items-center gap-1.5 font-semibold text-xs rounded-xl"
+        >
+          <HiOutlineRefresh className="w-4 h-4 text-zinc-500" />
+          Refresh
+        </Button>
       </div>
 
       {/* Main Status Card */}
@@ -200,13 +244,13 @@ export default function BookingDetailsPage() {
           </div>
           <div className={cn(
             "px-5 py-1.5 rounded-full flex items-center shrink-0",
-            booking.status === 'in_progress' ? "bg-stone-500/10" : "bg-emerald-500/10"
+            ['in_progress', 'in-progress'].includes(booking.status) ? "bg-stone-500/10" : "bg-emerald-500/10"
           )}>
             <div className={cn(
               "text-xs font-medium capitalize",
-              booking.status === 'in_progress' ? "text-stone-500" : "text-green-700"
+              ['in_progress', 'in-progress'].includes(booking.status) ? "text-stone-500" : "text-green-700"
             )}>
-              {booking.status?.replace('_', ' ') || 'Pending'}
+              {booking.status?.replace('_', ' ')?.replace('-', ' ') || 'Pending'}
             </div>
           </div>
         </div>
@@ -391,8 +435,8 @@ export default function BookingDetailsPage() {
               </div>
 
               {/* Quotation View */}
-              {quotation && quotation.quotation && (
-                <QuotationView quotation={quotation.quotation} />
+              {quotation && (
+                <QuotationView quotation={quotation} booking={booking} />
               )}
 
               {/* Engineer Reviews */}
@@ -419,9 +463,16 @@ export default function BookingDetailsPage() {
                 )}
               </div>
 
-              {/* Review Section (if completed booking) */}
+              {/* Review Section (if completed booking and customer hasn't submitted a review yet) */}
               {booking.status === 'completed' && !booking.review && engineer && (
-                <ReviewForm bookingId={booking.id} />
+                <ReviewForm 
+                  bookingId={booking.id} 
+                  onSuccess={() => {
+                    setTimeout(() => {
+                      window.location.reload()
+                    }, 800)
+                  }}
+                />
               )}
             </div>
           )}

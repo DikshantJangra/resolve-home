@@ -282,7 +282,7 @@ export const ChatWindow = ({ onBack }: ChatWindowProps) => {
           </div>
         </div>
 
-        {isEngineer && (
+        {isEngineer && booking?.status === 'arrived' && (
           <div className="relative">
             <button
               onClick={() => setShowActions(!showActions)}
@@ -295,6 +295,7 @@ export const ChatWindow = ({ onBack }: ChatWindowProps) => {
                 <MessageActions
                   onMakeQuotation={() => { setShowQuotationModal(true); setShowActions(false) }}
                   onFlagMessage={() => setShowActions(false)}
+                  hasQuotation={messages.some(msg => msg.mediaType === 'quotation' || msg.type === 'quotation')}
                 />
               </div>
             )}

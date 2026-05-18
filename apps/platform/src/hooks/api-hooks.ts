@@ -420,7 +420,7 @@ export function useCompleteJob() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: async (bookingId: string) => {
-      const response = await apiClient.put(ENDPOINTS.ENGINEER.BOOKING_BY_ID(bookingId) + '/complete')
+      const response = await apiClient.put(ENDPOINTS.ENGINEER.BOOKING_BY_ID(bookingId) + '/status', { status: 'completed' })
       return response.data
     },
     onSuccess: (_, bookingId) => {
@@ -970,5 +970,34 @@ export function useAdminSubscriptions(page = 1, limit = 10) {
       return response.data.data || response.data
     },
     enabled: typeof window !== 'undefined' && !!localStorage.getItem('auth_token')
+  })
+}
+
+export function usePayBooking() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (bookingId: string) => {
+      const response = await apiClient.post((ENDPOINTS as any).PAYMENTS.PAY(bookingId))
+      return response.data
+    },
+    onSuccess: (_, bookingId) => {
+      queryClient.invalidateQueries({ queryKey: ['booking', bookingId] })
+      queryClient.invalidateQueries({ queryKey: ['bookings'] })
+      queryClient.invalidateQueries({ queryKey: ['wallet-balance'] })
+    }
+  })
+}
+
+export function useReleaseEscrow() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (bookingId: string) => {
+      const response = await apiClient.post((ENDPOINTS as any).PAYMENTS.RELEASE(bookingId))
+      return response.data
+    },
+    onSuccess: (_, bookingId) => {
+      queryClient.invalidateQueries({ queryKey: ['booking', bookingId] })
+      queryClient.invalidateQueries({ queryKey: ['bookings'] })
+    }
   })
 }

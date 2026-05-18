@@ -121,13 +121,13 @@ export default function EngineerLayout({ children }: { children: React.ReactNode
       )}
 
       <div className={cn(
-        "fixed inset-y-0 left-0 z-[1001] transform transition-transform duration-300 ease-in-out lg:sticky lg:top-0 lg:h-screen lg:translate-x-0 lg:z-[1001]",
+        "fixed inset-y-0 left-0 z-[1001] w-48 transform transition-transform duration-300 ease-in-out lg:fixed lg:h-screen lg:translate-x-0 lg:z-[1001]",
         isSidebarOpen ? "translate-x-0 pointer-events-auto" : "-translate-x-full pointer-events-none lg:translate-x-0 lg:pointer-events-auto"
       )}>
         <Sidebar onClose={() => setIsSidebarOpen(false)} />
       </div>
 
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className="flex-1 flex flex-col min-w-0 lg:pl-48">
         <Navbar onMenuClick={() => setIsSidebarOpen(true)} />
         <main className="p-4 md:p-8 flex-grow">
           <div className="max-w-[1440px] mx-auto">
