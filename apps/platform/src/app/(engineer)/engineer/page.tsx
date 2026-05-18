@@ -7,6 +7,7 @@ import { HiOutlineLocationMarker, HiOutlineClock, HiOutlineBriefcase, HiOutlineC
 import { cn, Skeleton } from "@resolve/ui"
 import { useEngineerBookings, useUserProfile, useAuthSession } from '@/hooks/api-hooks'
 import { ProfessionalSetupWizard } from '@/features/professional-setup/components/professional-setup-wizard'
+import { VerificationRequired } from '@/features/professional-setup/components/verification-required'
 import { createPortal } from 'react-dom'
 
 export default function EngineerDashboardPage() {
@@ -24,11 +25,12 @@ export default function EngineerDashboardPage() {
   )
 
   // Explicit open/close flag so onComplete() actually dismisses the overlay
-  const [isSetupOpen, setIsSetupOpen] = React.useState(true)
+  const [isSetupOpen, setIsSetupOpen] = React.useState(false)
+  const isPendingVerification = userProfile?.engineerProfile?.verificationStatus === 'pending'
   // Don't flash overlay while profile data is still loading
   const showVerificationOverlay = !isProfilePending && !isVerified && isSetupOpen
   const { data: bookings, isPending: isBookingsPending, error } = useEngineerBookings({ enabled: !!isVerified })
-  const isPending = isSessionPending || isProfilePending || (!!user && !showVerificationOverlay && isBookingsPending)
+  const isPending = isSessionPending || isProfilePending || (!!user && isVerified && isBookingsPending)
 
   React.useEffect(() => {
     setMounted(true)
@@ -58,6 +60,31 @@ export default function EngineerDashboardPage() {
           <p className="text-zinc-700 font-semibold">Failed to load jobs feed</p>
           <p className="text-sm text-zinc-500">There was an error fetching your jobs. Please try again later.</p>
         </div>
+      </div>
+    )
+  }
+
+  if (!isVerified) {
+    if (isPendingVerification) {
+      return (
+        <div className="flex items-start justify-center pt-10 pb-20 max-w-2xl mx-auto">
+          <ProfessionalSetupWizard onComplete={() => {}} />
+        </div>
+      )
+    }
+
+    return (
+      <div className="relative min-h-[60vh] flex items-center justify-center">
+        <VerificationRequired onVerify={() => setIsSetupOpen(true)} />
+        
+        {isSetupOpen && mounted && createPortal(
+          <div className="fixed inset-0 z-[1000] flex items-start justify-center sm:pt-10 sm:pb-20 overflow-y-auto bg-white/10 backdrop-blur-md">
+            <div className="w-full max-w-2xl px-4 animate-in fade-in slide-in-from-bottom-8 duration-500">
+              <ProfessionalSetupWizard onComplete={() => setIsSetupOpen(false)} isModal={true} />
+            </div>
+          </div>,
+          document.body
+        )}
       </div>
     )
   }
@@ -117,7 +144,7 @@ export default function EngineerDashboardPage() {
       {showVerificationOverlay && mounted && createPortal(
         <div className="fixed inset-0 z-[1000] flex items-start justify-center sm:pt-10 sm:pb-20 overflow-y-auto bg-white/10 backdrop-blur-md">
           <div className="w-full max-w-2xl px-4 animate-in fade-in slide-in-from-bottom-8 duration-500">
-            <ProfessionalSetupWizard onComplete={() => setIsSetupOpen(false)} />
+            <ProfessionalSetupWizard onComplete={() => setIsSetupOpen(false)} isModal={true} />
           </div>
         </div>,
         document.body

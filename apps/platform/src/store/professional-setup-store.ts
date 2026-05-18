@@ -1,5 +1,4 @@
 import { create } from 'zustand'
-import { persist } from 'zustand/middleware'
 
 interface ProfessionalSetupState {
   currentStep: number
@@ -42,71 +41,64 @@ interface ProfessionalSetupState {
   reset: () => void
 }
 
-export const useProfessionalSetupStore = create<ProfessionalSetupState>()(
-  persist(
-    (set) => ({
-      currentStep: 1,
-      
-      specialty: '',
-      categoryId: '',
-      assignedServices: [],
-      experience: '',
-      idType: 'BVN',
-      idNumber: '',
-      idPhoto: null,
-      
-      country: 'Nigeria',
-      countryCode: 'NG',
-      state: '',
-      stateCode: '',
-      city: '',
-      address: '',
-      landmark: '',
-      
-      guarantorName: '',
-      guarantorEmail: '',
-      guarantorPhone: '',
-      guarantorRelationship: '',
-      guarantorWorkPlace: '',
-      accountName: '',
-      bankName: '',
-      bankCode: '',
-      accountNumber: '',
-      
-      setStep: (step) => set({ currentStep: step }),
-      nextStep: () => set((state) => ({ currentStep: Math.min(state.currentStep + 1, 4) })),
-      prevStep: () => set((state) => ({ currentStep: Math.max(state.currentStep - 1, 1) })),
-      
-      updateField: (field, value) => set((state) => ({ ...state, [field]: value })),
-      reset: () => set({
-        currentStep: 1,
-        specialty: '',
-        categoryId: '',
-        assignedServices: [],
-        experience: '',
-        idType: 'BVN',
-        idNumber: '',
-        idPhoto: null,
-        country: 'Nigeria',
-        countryCode: 'NG',
-        state: '',
-        stateCode: '',
-        city: '',
-        address: '',
-        landmark: '',
-        guarantorName: '',
-        guarantorEmail: '',
-        guarantorPhone: '',
-        guarantorRelationship: '',
-        guarantorWorkPlace: '',
-        accountName: '',
-        bankName: '',
-        bankCode: '',
-        accountNumber: '',
-      }),
-    }),
-    {
-      name: 'professional-setup-storage',
-    }
-  )
-)
+export const useProfessionalSetupStore = create<ProfessionalSetupState>((set) => ({
+  currentStep: 1,
+  
+  specialty: '',
+  categoryId: '',
+  assignedServices: [],
+  experience: '',
+  idType: 'BVN',
+  idNumber: '',
+  idPhoto: null,
+  
+  country: 'Nigeria',
+  countryCode: 'NG',
+  state: '',
+  stateCode: '',
+  city: '',
+  address: '',
+  landmark: '',
+  
+  guarantorName: '',
+  guarantorEmail: '',
+  guarantorPhone: '',
+  guarantorRelationship: '',
+  guarantorWorkPlace: '',
+  accountName: '',
+  bankName: '',
+  bankCode: '',
+  accountNumber: '',
+  
+  setStep: (step) => set({ currentStep: step }),
+  nextStep: () => set((state) => ({ currentStep: Math.min(state.currentStep + 1, 4) })),
+  prevStep: () => set((state) => ({ currentStep: Math.max(state.currentStep - 1, 1) })),
+  
+  updateField: (field, value) => set((state) => ({ ...state, [field]: value })),
+  reset: () => set({
+    currentStep: 1,
+    specialty: '',
+    categoryId: '',
+    assignedServices: [],
+    experience: '',
+    idType: 'BVN',
+    idNumber: '',
+    idPhoto: null,
+    country: 'Nigeria',
+    countryCode: 'NG',
+    state: '',
+    stateCode: '',
+    city: '',
+    address: '',
+    landmark: '',
+    guarantorName: '',
+    guarantorEmail: '',
+    guarantorPhone: '',
+    guarantorRelationship: '',
+    guarantorWorkPlace: '',
+    accountName: '',
+    bankName: '',
+    bankCode: '',
+    accountNumber: '',
+  }),
+}))

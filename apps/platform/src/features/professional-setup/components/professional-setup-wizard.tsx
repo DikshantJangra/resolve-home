@@ -29,7 +29,7 @@ import { apiClient, ENDPOINTS } from "@resolve/api"
 import { Country, State, City } from 'country-state-city'
 import { HiChevronDown } from 'react-icons/hi'
 
-export const ProfessionalSetupWizard = ({ onComplete, initialStep }: { onComplete: () => void, initialStep?: number }) => {
+export const ProfessionalSetupWizard = ({ onComplete, initialStep, isModal }: { onComplete: () => void, initialStep?: number, isModal?: boolean }) => {
   const store = useProfessionalSetupStore()
   const { data: categories } = useCategories()
   const { data: services = [], isLoading: loadingServices } = useServices(store.categoryId)
@@ -41,6 +41,19 @@ export const ProfessionalSetupWizard = ({ onComplete, initialStep }: { onComplet
   const [isLocating, setIsLocating] = React.useState(false)
   const [isEditingEmail, setIsEditingEmail] = React.useState(false)
   const [tempEmail, setTempEmail] = React.useState('')
+  const [selectedServicesMap, setSelectedServicesMap] = React.useState<Record<string, string>>({})
+
+  React.useEffect(() => {
+    if (services && services.length > 0) {
+      setSelectedServicesMap(prev => {
+        const next = { ...prev }
+        services.forEach((s: any) => {
+          next[s.id] = s.name
+        })
+        return next
+      })
+    }
+  }, [services])
 
   const { mutate: resendVerification, isPending: isResending } = useResendGuarantorVerification()
   const { mutate: updateGuarantor, isPending: isUpdatingGuarantor } = useUpdateGuarantor()
@@ -164,10 +177,13 @@ export const ProfessionalSetupWizard = ({ onComplete, initialStep }: { onComplet
   React.useEffect(() => {
     if (initialStep) {
       store.setStep(initialStep)
+    } else if (userProfile?.engineerProfile?.verificationStatus === 'pending') {
+      store.setStep(4)
     }
-  }, [initialStep])
+  }, [initialStep, userProfile?.engineerProfile?.verificationStatus])
 
   React.useEffect(() => {
+    if (!isModal) return
     const originalBodyOverflow = document.body.style.overflow
     const originalHtmlOverflow = document.documentElement.style.overflow
     document.body.style.overflow = 'hidden'
@@ -176,7 +192,7 @@ export const ProfessionalSetupWizard = ({ onComplete, initialStep }: { onComplet
       document.body.style.overflow = originalBodyOverflow
       document.documentElement.style.overflow = originalHtmlOverflow
     }
-  }, [])
+  }, [isModal])
 
   // Sanity check for experience enum
   React.useEffect(() => {
@@ -319,7 +335,6 @@ export const ProfessionalSetupWizard = ({ onComplete, initialStep }: { onComplet
                   value={store.categoryId}
                   onChange={(e) => {
                     store.updateField('categoryId', e.target.value)
-                    store.updateField('assignedServices', [])
                   }}
                 >
                   <option value="">Select your category</option>
@@ -388,6 +403,30 @@ export const ProfessionalSetupWizard = ({ onComplete, initialStep }: { onComplet
                           </button>
                         );
                       })}
+                    </div>
+                  )}
+                  {store.assignedServices.length > 0 && (
+                    <div className="space-y-2 mt-4 p-3 bg-zinc-50 border border-zinc-150 rounded-xl">
+                      <Label className="text-zinc-700 font-semibold text-xs">Total Selected Services ({store.assignedServices.length})</Label>
+                      <div className="flex flex-wrap gap-2">
+                        {store.assignedServices.map(id => {
+                          const name = selectedServicesMap[id] || id;
+                          return (
+                            <span key={id} className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 border border-blue-100 text-blue-700 text-xs font-medium">
+                              {name}
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  store.updateField('assignedServices', store.assignedServices.filter(sid => sid !== id));
+                                }}
+                                className="w-3.5 h-3.5 rounded-full flex items-center justify-center hover:bg-blue-200 text-blue-500 hover:text-blue-700 font-bold transition-colors cursor-pointer"
+                              >
+                                &times;
+                              </button>
+                            </span>
+                          )
+                        })}
+                      </div>
                     </div>
                   )}
                 </div>

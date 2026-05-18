@@ -9,6 +9,9 @@ import { useAuthSession, useUserProfile, useUserBookings, useEngineerDashboard }
 import { cn, FileUpload, Skeleton } from "@resolve/ui"
 import { useProfessionalSetupStore } from '@/store/professional-setup-store'
 import Link from 'next/link'
+import { VerificationRequired } from '@/features/professional-setup/components/verification-required'
+import { ProfessionalSetupWizard } from '@/features/professional-setup/components/professional-setup-wizard'
+import { createPortal } from 'react-dom'
 
 function EngineerRecentRequests({ requests }: { requests: any[] }) {
   if (!requests.length) {
@@ -46,8 +49,10 @@ export default function DashboardPage() {
   const showVerificationOverlay = isEngineer && !isVerified
 
   const { data: bookings, isPending: bookingsPending } = useUserBookings({ enabled: !showVerificationOverlay && !isEngineer })
-  const { data: engineerDashboard, isPending: engineerDashPending } = useEngineerDashboard(isEngineer)
+  const { data: engineerDashboard, isPending: engineerDashPending } = useEngineerDashboard(isEngineer && isVerified)
   const [isUploaderOpen, setIsUploaderOpen] = React.useState(false)
+  const [isSetupOpen, setIsSetupOpen] = React.useState(false)
+  const isPendingVerification = userProfile?.engineerProfile?.verificationStatus === 'pending'
   const updateField = useProfessionalSetupStore((state) => state.updateField)
 
   React.useEffect(() => {
@@ -55,7 +60,9 @@ export default function DashboardPage() {
   }, [])
 
   React.useEffect(() => {
-    if (showVerificationOverlay) {
+    if (showVerificationOverlay && !isSetupOpen) {
+      document.body.style.overflow = 'unset'
+    } else if (showVerificationOverlay && isSetupOpen) {
       document.body.style.overflow = 'hidden'
     } else {
       document.body.style.overflow = 'unset'
@@ -63,7 +70,7 @@ export default function DashboardPage() {
     return () => {
       document.body.style.overflow = 'unset'
     }
-  }, [showVerificationOverlay])
+  }, [showVerificationOverlay, isSetupOpen])
 
   const avgRating = isEngineer ? "4.8" : "5.0"
 
@@ -75,12 +82,37 @@ export default function DashboardPage() {
 
   const status = (user as any)?.status
 
-  if (sessionPending || profilePending || (!!user && bookingsPending && !showVerificationOverlay && !isEngineer) || (isEngineer && engineerDashPending)) {
+  if (sessionPending || profilePending || (!!user && bookingsPending && !showVerificationOverlay && !isEngineer) || (isEngineer && isVerified && engineerDashPending)) {
     return (
       <div className="space-y-8 animate-pulse">
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
           {[1, 2, 3, 4].map(i => <div key={i} className="h-32 bg-white border border-zinc-200 rounded-xl" />)}
         </div>
+      </div>
+    )
+  }
+
+  if (showVerificationOverlay) {
+    if (isPendingVerification) {
+      return (
+        <div className="flex items-start justify-center pt-10 pb-20 max-w-2xl mx-auto">
+          <ProfessionalSetupWizard onComplete={() => {}} />
+        </div>
+      )
+    }
+
+    return (
+      <div className="relative min-h-[60vh] flex items-center justify-center">
+        <VerificationRequired onVerify={() => setIsSetupOpen(true)} />
+        
+        {isSetupOpen && mounted && createPortal(
+          <div className="fixed inset-0 z-[1000] flex items-start justify-center sm:pt-10 sm:pb-20 overflow-y-auto bg-white/10 backdrop-blur-md">
+            <div className="w-full max-w-2xl px-4 animate-in fade-in slide-in-from-bottom-8 duration-500">
+              <ProfessionalSetupWizard onComplete={() => setIsSetupOpen(false)} isModal={true} />
+            </div>
+          </div>,
+          document.body
+        )}
       </div>
     )
   }

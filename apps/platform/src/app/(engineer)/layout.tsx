@@ -7,7 +7,10 @@ import { cn } from "@resolve/ui"
 import { 
   HiOutlineLocationMarker
 } from 'react-icons/hi'
-import { useEngineerLocationTracker } from '@/hooks/api-hooks'
+import { useEngineerLocationTracker, useUserProfile, useAuthSession } from '@/hooks/api-hooks'
+import { VerificationRequired } from '@/features/professional-setup/components/verification-required'
+import { ProfessionalSetupWizard } from '@/features/professional-setup/components/professional-setup-wizard'
+import { createPortal } from 'react-dom'
 
 function LocationPermissionModal({ onAllow, onDismiss }: { onAllow: () => void, onDismiss: () => void }) {
   return (
@@ -47,10 +50,15 @@ export default function EngineerLayout({ children }: { children: React.ReactNode
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const [showLocationModal, setShowLocationModal] = useState(false)
   const [locationGranted, setLocationGranted] = useState(false)
+  const [mounted, setMounted] = useState(false)
+
+  const { data: session, isPending: isSessionPending } = useAuthSession()
+  const { data: userProfile, isPending: isProfilePending } = useUserProfile()
 
   useEngineerLocationTracker(locationGranted)
 
   useEffect(() => {
+    setMounted(true)
     if (!navigator.geolocation) return
     navigator.permissions?.query({ name: 'geolocation' as PermissionName }).then(result => {
       if (result.state === 'granted') {
@@ -70,6 +78,31 @@ export default function EngineerLayout({ children }: { children: React.ReactNode
       () => {}
     )
   }
+
+  const user = userProfile?.user || session?.user
+  const isVerified = !!(
+    (user as any)?.isVerified || 
+    (user as any)?.status === 'verified' || 
+    userProfile?.engineerProfile?.verificationStatus === 'approved' ||
+    userProfile?.engineerProfile?.isVerified ||
+    userProfile?.engineerProfile?.approvedAt
+  )
+
+  const isPendingVerification = userProfile?.engineerProfile?.verificationStatus === 'pending'
+  const [isSetupOpen, setIsSetupOpen] = useState(false)
+
+  const isPending = isSessionPending || isProfilePending
+
+  useEffect(() => {
+    if (!isVerified && isSetupOpen) {
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = 'unset'
+    }
+    return () => {
+      document.body.style.overflow = 'unset'
+    }
+  }, [isVerified, isSetupOpen])
 
   return (
     <div className="flex min-h-screen bg-slate-50 overflow-x-hidden">
@@ -98,7 +131,35 @@ export default function EngineerLayout({ children }: { children: React.ReactNode
         <Navbar onMenuClick={() => setIsSidebarOpen(true)} />
         <main className="p-4 md:p-8 flex-grow">
           <div className="max-w-[1440px] mx-auto">
-            {children}
+            {isPending ? (
+              <div className="flex h-[50vh] items-center justify-center">
+                <div className="animate-pulse flex flex-col items-center gap-4">
+                  <div className="w-12 h-12 rounded-full bg-blue-100 animate-bounce" />
+                  <div className="h-4 w-32 bg-zinc-200 rounded" />
+                </div>
+              </div>
+            ) : !isVerified ? (
+              isPendingVerification ? (
+                <div className="flex items-start justify-center pt-10 pb-20 max-w-2xl mx-auto w-full">
+                  <ProfessionalSetupWizard onComplete={() => {}} />
+                </div>
+              ) : (
+                <div className="relative min-h-[60vh] flex items-center justify-center w-full">
+                  <VerificationRequired onVerify={() => setIsSetupOpen(true)} />
+                  
+                  {isSetupOpen && mounted && createPortal(
+                    <div className="fixed inset-0 z-[1000] flex items-start justify-center sm:pt-10 sm:pb-20 overflow-y-auto bg-white/10 backdrop-blur-md">
+                      <div className="w-full max-w-2xl px-4 animate-in fade-in slide-in-from-bottom-8 duration-500">
+                        <ProfessionalSetupWizard onComplete={() => setIsSetupOpen(false)} isModal={true} />
+                      </div>
+                    </div>,
+                    document.body
+                  )}
+                </div>
+              )
+            ) : (
+              children
+            )}
           </div>
         </main>
       </div>

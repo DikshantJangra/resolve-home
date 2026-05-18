@@ -16,8 +16,22 @@ export const MyServicesTab = () => {
   const [selectedCategory, setSelectedCategory] = useState<string>('')
   const [selectedServices, setSelectedServices] = useState<string[]>([])
   const [initialized, setInitialized] = useState(false)
+  const [selectedServicesMap, setSelectedServicesMap] = useState<Record<string, string>>({})
 
   const { data: services = [], isLoading: loadingServices } = useServices(selectedCategory)
+
+  // Capture service names when they are loaded
+  useEffect(() => {
+    if (services && services.length > 0) {
+      setSelectedServicesMap(prev => {
+        const next = { ...prev }
+        services.forEach((s: any) => {
+          next[s.id] = s.name
+        })
+        return next
+      })
+    }
+  }, [services])
   const { mutate: updateServices, isPending } = useUpdateEngineerServices()
 
   // Pre-populate once engineer profile loads
@@ -134,7 +148,6 @@ export const MyServicesTab = () => {
             value={selectedCategory}
             onChange={(e) => {
               setSelectedCategory(e.target.value)
-              setSelectedServices([])
             }}
           >
             <option value="">Select your primary category</option>
@@ -201,6 +214,30 @@ export const MyServicesTab = () => {
                   </button>
                 )
               })}
+            </div>
+          )}
+          {selectedServices.length > 0 && (
+            <div className="space-y-2 mt-4 p-3 bg-zinc-50 border border-zinc-150 rounded-xl">
+              <Label className="text-zinc-700 font-semibold text-xs">Total Selected Services ({selectedServices.length})</Label>
+              <div className="flex flex-wrap gap-2">
+                {selectedServices.map(id => {
+                  const name = selectedServicesMap[id] || id;
+                  return (
+                    <span key={id} className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 border border-blue-100 text-blue-700 text-xs font-medium">
+                      {name}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSelectedServices(prev => prev.filter(sid => sid !== id));
+                        }}
+                        className="w-3.5 h-3.5 rounded-full flex items-center justify-center hover:bg-blue-200 text-blue-500 hover:text-blue-700 font-bold transition-colors cursor-pointer"
+                      >
+                        &times;
+                      </button>
+                    </span>
+                  )
+                })}
+              </div>
             </div>
           )}
         </div>

@@ -11,11 +11,16 @@ export const RecentRequests = () => {
   const { data: userProfile, isLoading: profileLoading } = useUserProfile()
   const setIsOpen = useBookingStore((s) => s.setIsOpen)
   const isWorker = userProfile?.user?.role === 'worker'
+  const isVerified = !!(
+    userProfile?.engineerProfile?.isVerified ||
+    userProfile?.engineerProfile?.verificationStatus === 'approved' ||
+    userProfile?.engineerProfile?.approvedAt
+  )
 
   const { data: requests, isLoading: customerLoading } = useUserBookings({ enabled: !isWorker })
-  const { data: engineerDashboard, isLoading: engineerLoading } = useEngineerDashboard(isWorker)
+  const { data: engineerDashboard, isLoading: engineerLoading } = useEngineerDashboard(isWorker && isVerified)
 
-  const isLoading = profileLoading || (isWorker ? engineerLoading : customerLoading)
+  const isLoading = profileLoading || (isWorker ? (isVerified && engineerLoading) : customerLoading)
   const engineerRequests: any[] = engineerDashboard?.recentRequests || []
 
   if (isLoading) {
