@@ -9,14 +9,14 @@ import { cn } from "@resolve/ui";
 const CENTER = { x: 603, y: 384 };
 
 const nodes = [
-  { city: 'Enugu', initials: 'EN', border: '#FFC7AE', left: '46px', top: '44px', img: '/assets/workers/james.png', delay: 0 },
-  { city: 'Osun', initials: 'OS', border: '#B0F9B7', left: '356px', top: '0px', img: '/assets/workers/ngozi.png', delay: 0.1 },
-  { city: 'Lagos', initials: 'LG', border: '#9D7AFF', left: '775px', top: '7px', img: '/assets/workers/tunde.png', delay: 0.2 },
-  { city: 'Abuja', initials: 'AB', border: '#F3A3F9', left: '1064px', top: '155px', img: '/assets/workers/amaka.png', delay: 0.3 },
-  { city: 'Ibadan', initials: 'IB', border: '#FFC7AE', left: '0px', top: '376px', img: '/assets/workers/kunle.png', delay: 0.4 },
-  { city: 'Imo', initials: 'IM', border: '#BCA7FF', left: '224px', top: '578px', img: '/assets/workers/james.png', delay: 0.5 },
-  { city: 'Ogun', initials: 'OG', border: '#CDE6FF', left: '873px', top: '598px', img: '/assets/workers/tunde.png', delay: 0.6 },
-  { city: 'Ekiti', initials: 'EK', border: '#FFE763', left: '1103px', top: '381px', img: '/assets/workers/ngozi.png', delay: 0.7 },
+  { city: 'Enugu', initials: 'EN', border: '#FFC7AE', left: '46px', top: '44px', img: '/assets/workers/james.png', delay: 0, status: 'Soon' },
+  { city: 'Osun', initials: 'OS', border: '#B0F9B7', left: '356px', top: '0px', img: '/assets/workers/ngozi.png', delay: 0.1, status: 'Soon' },
+  { city: 'Lagos', initials: 'LG', border: '#9D7AFF', left: '775px', top: '7px', img: '/assets/workers/tunde.png', delay: 0.2, status: 'Active' },
+  { city: 'Abuja', initials: 'AB', border: '#F3A3F9', left: '1064px', top: '155px', img: '/assets/workers/amaka.png', delay: 0.3, status: 'Soon' },
+  { city: 'Ibadan', initials: 'IB', border: '#FFC7AE', left: '0px', top: '376px', img: '/assets/workers/kunle.png', delay: 0.4, status: 'Soon' },
+  { city: 'Imo', initials: 'IM', border: '#BCA7FF', left: '224px', top: '578px', img: '/assets/workers/james.png', delay: 0.5, status: 'Soon' },
+  { city: 'Ogun', initials: 'OG', border: '#CDE6FF', left: '873px', top: '598px', img: '/assets/workers/tunde.png', delay: 0.6, status: 'Soon' },
+  { city: 'Ekiti', initials: 'EK', border: '#FFE763', left: '1103px', top: '381px', img: '/assets/workers/ngozi.png', delay: 0.7, status: 'Soon' },
 ];
 
 // Calculated paths to reach EXACT centers of nodes from EXACT center of Resolve logo
@@ -60,7 +60,7 @@ export const AboutNetwork = () => {
             transition={{ delay: 0.1 }}
             className="mt-4 font-heading text-4xl md:text-5xl font-bold text-white"
           >
-            Engineers everywhere you need them.
+            Technicians everywhere you need them.
           </motion.h2>
         </div>
 
@@ -127,8 +127,13 @@ export const AboutNetwork = () => {
               className="absolute group flex flex-col items-center gap-2 z-30"
               style={{ left: node.left, top: node.top }}
             >
-              <div className="text-[20px] font-semibold text-[#fcfcfc] text-center whitespace-nowrap drop-shadow-xl group-hover:text-blue-300 transition-colors">
-                {node.city}
+              <div className="text-[20px] font-semibold text-[#fcfcfc] text-center whitespace-nowrap drop-shadow-xl group-hover:text-blue-300 transition-colors flex flex-col items-center gap-1">
+                <span>{node.city}</span>
+                {node.status === 'Active' ? (
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">Active</span>
+                ) : (
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-white/10 text-zinc-300 border border-white/10">Soon</span>
+                )}
               </div>
               <div 
                 className="relative group-hover:scale-110 transition-transform duration-200 cursor-pointer rounded-full border-[4px] shadow-2xl overflow-hidden bg-[#1E293B]"
@@ -141,9 +146,11 @@ export const AboutNetwork = () => {
                   className="w-[117px] h-[117px]"
                   sizes="117px"
                 />
-                <span className="absolute right-[12px] top-[6px] h-4 w-4 rounded-full border-2 border-white bg-[#2AC38B] z-20">
-                   <span className="absolute inset-0 rounded-full bg-[#2AC38B] animate-ping opacity-100" />
-                </span>
+                {node.status === 'Active' && (
+                  <span className="absolute right-[12px] top-[6px] h-4 w-4 rounded-full border-2 border-white bg-[#2AC38B] z-20">
+                     <span className="absolute inset-0 rounded-full bg-[#2AC38B] animate-ping opacity-100" />
+                  </span>
+                )}
               </div>
             </motion.div>
           ))}
@@ -167,7 +174,14 @@ export const AboutNetwork = () => {
                 sizes="64px"
                 style={{ borderColor: node.border }}
               />
-              <div className="text-lg font-semibold text-white">{node.city}</div>
+              <div className="flex flex-col gap-1 items-start">
+                <div className="text-lg font-semibold text-white leading-none">{node.city}</div>
+                {node.status === 'Active' ? (
+                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">Active</span>
+                ) : (
+                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-white/10 text-zinc-300 border border-white/10">Soon</span>
+                )}
+              </div>
             </motion.div>
           ))}
         </div>

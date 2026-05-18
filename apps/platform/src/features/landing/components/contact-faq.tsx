@@ -22,18 +22,18 @@ const faqs = [
     icon: HiOutlineClock,
   },
   {
-    question: 'Are your engineers verified?',
-    answer: 'Every Resolv engineer is COREN & SON certified, identity-verified, and background-checked before entering your home.',
+    question: 'Are your Resolv Pro partners verified?',
+    answer: 'Every Resolv Pro partner is certified, identity verified, and background checked before entering your home.',
     icon: HiOutlineShieldCheck,
   },
   {
     question: 'Which cities do you currently cover?',
-    answer: "We're live in Lagos, Abuja, and Port Harcourt, expanding fast to Ibadan, Enugu, and Kano.",
+    answer: "We currently live in Lagos, to be live soon in Abuja and Port Harcourt.",
     icon: HiOutlineMapPin,
   },
   {
     question: 'How does emergency booking work?',
-    answer: 'Tap Emergency anytime. We prioritize your job and dispatch the nearest engineer quickly.',
+    answer: 'Tap Emergency anytime. We prioritize your job and dispatch the nearest technician quickly.',
     icon: HiOutlineBolt,
   },
   {
@@ -48,12 +48,12 @@ const faqs = [
   },
   {
     question: "What if I'm not happy with the work?",
-    answer: "Our satisfaction guarantee means if the issue isn’t fixed, we send another engineer at no cost.",
+    answer: "Our satisfaction guarantee means if the issue isn’t fixed, we send another technician at no cost.",
     icon: HiOutlineHandThumbDown,
   },
   {
     question: 'How do membership plans save me money?',
-    answer: 'Members get up to 15% off callouts, priority access, and annual visits that pay for themselves after one job.',
+    answer: 'Members get free call out based on subscription category, priority access, and annual visits that pay for themselves.',
     icon: HiOutlineCurrencyDollar,
   },
   {
