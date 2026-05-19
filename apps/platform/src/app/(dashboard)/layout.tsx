@@ -1,12 +1,11 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState } from 'react'
 import { Sidebar } from "@/components/layout/sidebar"
 import { Navbar } from "@/components/layout/navbar"
 import { cn } from "@resolve/ui"
 import { BookingWizardModal } from '@/features/booking/components/booking-wizard-modal'
 import { useUserProfile, useEngineerLocationTracker } from '@/hooks/api-hooks'
-import { useRouter } from 'next/navigation'
 
 export default function DashboardLayout({
   children,
@@ -18,13 +17,8 @@ export default function DashboardLayout({
   // Only track location when the user IS a worker AND has a completed engineer profile in the DB
   const isEngineer = user?.user?.role === 'worker' && !!user?.engineerProfile
   useEngineerLocationTracker(isEngineer)
-  const router = useRouter()
 
-  useEffect(() => {
-    if (!isPending && user?.user && !user.user.emailVerified) {
-      router.push('/auth/verify-email')
-    }
-  }, [user, isPending, router])
+  // Email verification is not required to use the dashboard
 
   if (isPending) {
     return (
@@ -41,7 +35,7 @@ export default function DashboardLayout({
             ))}
           </div>
         </div>
-        
+
         {/* Main Content Area Skeleton */}
         <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden">
           {/* Navbar Skeleton */}
@@ -72,7 +66,7 @@ export default function DashboardLayout({
     <div className="flex min-h-screen bg-slate-50">
       {/* Mobile Sidebar Backdrop */}
       {isSidebarOpen && (
-        <div 
+        <div
           className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[60] lg:hidden"
           onClick={() => setIsSidebarOpen(false)}
         />

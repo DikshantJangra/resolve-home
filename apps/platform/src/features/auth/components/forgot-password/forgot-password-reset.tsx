@@ -7,7 +7,6 @@ import { z } from "zod"
 import { Button } from "@resolve/ui"
 import { Input } from "@resolve/ui"
 import { HiOutlineEye, HiOutlineEyeSlash } from "react-icons/hi2"
-import { useForgotPasswordStore } from "@/store/use-forgot-password-store"
 import { cn } from "@resolve/ui"
 import { toast } from "sonner"
 import { apiClient } from "@resolve/api"
@@ -35,12 +34,11 @@ interface ForgotPasswordResetProps {
 }
 
 export function ForgotPasswordReset({ externalToken, onSuccess }: ForgotPasswordResetProps) {
-  const { nextStep, token: storeToken } = useForgotPasswordStore()
-  const token = externalToken || storeToken
+  const token = externalToken || ""
   const [showPass, setShowPass] = React.useState(false)
   const [showConfirm, setShowConfirm] = React.useState(false)
   const [isLoading, setIsLoading] = React.useState(false)
-  
+
   const {
     register,
     handleSubmit,
@@ -57,7 +55,7 @@ export function ForgotPasswordReset({ externalToken, onSuccess }: ForgotPassword
     try {
       const response = await apiClient.post(ENDPOINTS.AUTH.RESET_PASSWORD, {
         newPassword: data.password,
-        token: token || "", // Token from store (or OTP)
+        token: token || "", // Token from URL
       })
 
       if (response.data.success === false) {
@@ -66,8 +64,6 @@ export function ForgotPasswordReset({ externalToken, onSuccess }: ForgotPassword
         toast.success("Password reset successfully!")
         if (onSuccess) {
           onSuccess()
-        } else {
-          nextStep()
         }
       }
     } catch (err: any) {

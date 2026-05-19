@@ -2,30 +2,9 @@
 
 import * as React from "react"
 import Image from "next/image"
-import { useForgotPasswordStore } from "@/store/use-forgot-password-store"
 import { ForgotPasswordEmail } from "@/features/auth/components/forgot-password/forgot-password-email"
-import { ForgotPasswordOtp } from "@/features/auth/components/forgot-password/forgot-password-otp"
-import { ForgotPasswordReset } from "@/features/auth/components/forgot-password/forgot-password-reset"
-import { ForgotPasswordSuccess } from "@/features/auth/components/forgot-password/forgot-password-success"
 
 export default function ForgotPasswordPage() {
-  const { step } = useForgotPasswordStore()
-
-  const renderStep = () => {
-    switch (step) {
-      case 1:
-        return <ForgotPasswordEmail />
-      case 2:
-        return <ForgotPasswordOtp />
-      case 3:
-        return <ForgotPasswordReset />
-      case 4:
-        return <ForgotPasswordSuccess />
-      default:
-        return <ForgotPasswordEmail />
-    }
-  }
-
   return (
     <main className="flex min-h-screen items-center justify-center bg-stone-50 p-0 sm:p-4 font-inter">
       <div className="relative flex w-full max-w-[1234px] min-h-screen sm:min-h-0 sm:h-auto lg:h-[864px] overflow-hidden sm:rounded-[20px] bg-white sm:shadow-xl">
@@ -58,7 +37,7 @@ export default function ForgotPasswordPage() {
         <div className="flex w-full h-full lg:w-1/2">
           <div className="flex w-full h-full items-center justify-center py-8 px-4 sm:py-10 sm:px-8">
             <div className="flex h-full w-full max-w-[500px] flex-col overflow-y-auto rounded-[20px] bg-white p-4 sm:p-6 lg:p-8 scrollbar-hide">
-              {renderStep()}
+              <ForgotPasswordEmail />
             </div>
           </div>
         </div>

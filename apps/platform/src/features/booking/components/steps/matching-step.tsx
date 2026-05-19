@@ -169,23 +169,37 @@ export const MatchingStep = () => {
   )
 
   if (phase === 'error') {
+    const isSubscriptionError = errorMsg?.toLowerCase().includes('subscription')
     return (
       <div className="flex flex-col items-center justify-center h-full p-10 text-center gap-5 bg-white rounded-2xl">
         <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center">
           <HiOutlineExclamationCircle className="w-8 h-8 text-red-500" />
         </div>
         <div className="space-y-2">
-          <h3 className="text-lg font-bold text-neutral-700">Booking Failed</h3>
-          <p className="text-zinc-600 text-sm leading-relaxed max-w-xs">{errorMsg}</p>
+          <h3 className="text-lg font-bold text-neutral-700">
+            {isSubscriptionError ? 'Subscription Required' : 'Booking Failed'}
+          </h3>
+          <p className="text-zinc-600 text-sm leading-relaxed max-w-xs">
+            {isSubscriptionError
+              ? 'You need an active subscription to make standard bookings. Upgrade your plan to continue.'
+              : errorMsg}
+          </p>
         </div>
         <div className="flex flex-col gap-3 w-full">
-          <Button className="w-full bg-blue-700 rounded-xl"
-            onClick={() => { setErrorMsg(null); hasCalled.current = false; setPhase('creating'); setStep(5) }}>
-            Go Back
-          </Button>
+          {isSubscriptionError ? (
+            <Button className="w-full bg-blue-700 rounded-xl"
+              onClick={() => { useBookingStore.getState().setIsOpen(false); router.push('/subscriptions') }}>
+              View Subscription Plans
+            </Button>
+          ) : (
+            <Button className="w-full bg-blue-700 rounded-xl"
+              onClick={() => { setErrorMsg(null); hasCalled.current = false; setPhase('creating'); setStep(5) }}>
+              Go Back
+            </Button>
+          )}
           <Button variant="outline" className="w-full rounded-xl"
-            onClick={() => { useBookingStore.getState().setIsOpen(false); router.push('/subscriptions') }}>
-            Upgrade Plan
+            onClick={() => useBookingStore.getState().setIsOpen(false)}>
+            Close
           </Button>
         </div>
       </div>
