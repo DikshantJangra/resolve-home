@@ -571,11 +571,16 @@ export const ProfessionalSetupWizard = ({ onComplete, initialStep, isModal }: { 
               <div className="space-y-1.5">
                 <Label>About you (Describe yourself and your qualifications) <span className="text-red-500">*</span></Label>
                 <textarea
-                  placeholder="Tell homeowners about your experience, qualifications, and the quality of service they can expect..."
+                  placeholder="E.g. I'm a licensed electrician with 8+ years of experience in residential wiring, fault diagnosis, and safety installations. I pride myself on punctuality, clean workmanship, and transparent pricing..."
                   value={store.aboutMe}
                   onChange={(e) => store.updateField('aboutMe', e.target.value)}
-                  className="w-full min-h-[120px] px-4 py-3 rounded-lg border border-zinc-200 text-sm focus:border-blue-700 outline-none resize-y transition-all bg-white"
+                  rows={5}
+                  className="w-full min-h-[130px] px-4 py-3 rounded-lg border border-zinc-200 text-sm focus:border-blue-700 outline-none resize-y transition-all bg-white"
                 />
+                <p className="text-[11px] text-zinc-400 leading-relaxed flex items-start gap-1.5 pt-0.5">
+                  <span className="shrink-0 mt-0.5 w-3.5 h-3.5 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center text-[9px] font-bold">i</span>
+                  This is shown to homeowners when they are selecting a Pro Partner. Make it clear, professional, and highlight your key qualifications.
+                </p>
               </div>
 
               <div className="space-y-1.5">
