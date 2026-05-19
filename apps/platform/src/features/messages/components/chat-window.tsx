@@ -70,6 +70,7 @@ export const ChatWindow = ({ onBack }: ChatWindowProps) => {
   const activeChat = chats?.find((c: any) => c.id === activeChatId)
   const otherUser = activeChat?.otherParticipant || activeChat?.otherUser
   const booking = activeChat?.booking
+  const isAwaiting = booking?.status === 'awaiting_engineer'
   const { data: latestQuotation } = useBookingQuotation(booking?.id || '')
 
   const handleAcceptBooking = () => {
@@ -306,283 +307,420 @@ export const ChatWindow = ({ onBack }: ChatWindowProps) => {
       </div>
 
       {/* Chat Area */}
-      <div ref={scrollRef} className="flex-1 overflow-y-auto p-5 pb-24 space-y-4 premium-scrollbar">
-        {/* Booking summary card — show real data if available */}
-        {booking && (
-          <div className="w-full p-5 bg-white rounded-2xl border border-zinc-200 flex flex-col gap-4 shadow-sm max-w-md relative overflow-hidden">
-            {/* Top Info Bar */}
-            <div className="flex items-center gap-3">
-              <div className="w-9 h-9 bg-blue-50 rounded-xl flex items-center justify-center text-blue-700 shrink-0 border border-blue-100">
-                <HiOutlineBriefcase className="w-5 h-5" />
-              </div>
-              <div className="flex flex-col min-w-0">
-                <span className="text-zinc-800 font-semibold text-sm truncate">
-                  {booking.service?.name || "Service Request"}
-                </span>
-                <span className="text-zinc-400 text-xs font-medium uppercase tracking-wider">
-                  Booking #{booking.id ? booking.id.substring(0, 8) : "Pending"}
-                </span>
-              </div>
-              <span className={cn(
-                "ml-auto text-[10px] font-semibold px-2.5 py-1 rounded-full capitalize shrink-0 font-['Inter'] leading-none",
-                booking.status === 'awaiting_engineer' ? 'bg-amber-50 text-amber-600 border border-amber-100' :
-                  booking.status === 'completed' ? 'bg-green-50 text-green-600 border border-green-100' :
-                  booking.status === 'cancelled' ? 'bg-red-50 text-red-600 border border-red-100' :
-                  'bg-blue-50 text-blue-600 border border-blue-100'
-              )}>
-                {booking.status?.replace('_', ' ')}
-              </span>
-            </div>
-
-            {/* Issue and Schedule details */}
-            <div className="flex flex-col gap-2.5 py-1 border-t border-b border-zinc-100 my-0.5">
-              {booking.issueDetails && (
-                <p className="text-zinc-600 text-xs font-normal font-['Inter'] leading-relaxed line-clamp-2">
-                  <span className="font-semibold text-zinc-700">Details: </span>
-                  {booking.issueDetails}
-                </p>
-              )}
-              
-              <div className="flex items-center gap-4 text-zinc-500 text-xs font-medium font-['Inter']">
-                {booking.scheduledDate && (
-                  <div className="flex items-center gap-1.5">
-                    <HiOutlineCalendar className="w-4 h-4 text-zinc-400" />
-                    <span>{booking.scheduledDate}</span>
+      <div 
+        ref={scrollRef} 
+        className={cn(
+          "flex-1 overflow-y-auto p-5 space-y-4 premium-scrollbar",
+          isAwaiting ? "pb-5 flex items-center justify-center" : "pb-24"
+        )}
+      >
+        {isAwaiting ? (
+          /* Show centered request confirmation details and hide inbox/outbox messages */
+          <div className="w-full flex justify-center py-6">
+            {booking && (
+              <div className="w-full p-5 bg-white rounded-2xl border border-zinc-200 flex flex-col gap-4 shadow-sm max-w-md relative overflow-hidden">
+                {/* Top Info Bar */}
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 bg-blue-50 rounded-xl flex items-center justify-center text-blue-700 shrink-0 border border-blue-100">
+                    <HiOutlineBriefcase className="w-5 h-5" />
                   </div>
-                )}
-                {booking.scheduledTime && (
-                  <div className="flex items-center gap-1.5">
-                    <HiOutlineClock className="w-4 h-4 text-zinc-400" />
-                    <span>{booking.scheduledTime}</span>
+                  <div className="flex flex-col min-w-0">
+                    <span className="text-zinc-800 font-semibold text-sm truncate">
+                      {booking.service?.name || "Service Request"}
+                    </span>
+                    <span className="text-zinc-400 text-xs font-medium uppercase tracking-wider">
+                      Booking #{booking.id ? booking.id.substring(0, 8) : "Pending"}
+                    </span>
                   </div>
-                )}
-              </div>
-            </div>
+                  <span className="ml-auto text-[10px] font-semibold px-2.5 py-1 rounded-full bg-amber-50 text-amber-600 border border-amber-100 capitalize shrink-0 font-['Inter'] leading-none">
+                    Awaiting confirmation
+                  </span>
+                </div>
 
-            {/* Conditional Action Buttons or Status Prompts */}
-            {booking.status === 'awaiting_engineer' ? (
-              isEngineer ? (
-                /* Worker Action Buttons */
-                <div className="flex flex-col gap-2.5">
-                  <p className="text-zinc-500 text-[11px] font-normal leading-4 font-['Inter']">
-                    The customer has selected you for this service. Please confirm if you can complete this job.
-                  </p>
-                  <div className="flex items-center gap-3">
-                    <Button
-                      variant="outline"
-                      className="flex-1 h-9 text-xs border-zinc-200 text-zinc-700 hover:bg-red-50 hover:text-red-600 hover:border-red-200 rounded-xl font-semibold transition-all shadow-none shrink-0"
-                      onClick={handleDeclineBooking}
-                      disabled={isRejecting || isAccepting}
-                    >
-                      {isRejecting ? (
-                        <span className="flex items-center justify-center gap-1.5">
-                          <LoadingSpinner className="w-3.5 h-3.5" />
-                          Declining...
-                        </span>
-                      ) : (
-                        <span className="flex items-center justify-center gap-1.5">
-                          <HiOutlineX className="w-3.5 h-3.5" />
-                          Decline Request
-                        </span>
-                      )}
-                    </Button>
-                    <Button
-                      className="flex-1 h-9 text-xs bg-blue-700 hover:bg-blue-800 text-white rounded-xl font-semibold transition-all shadow-none shrink-0"
-                      onClick={handleAcceptBooking}
-                      disabled={isAccepting || isRejecting}
-                    >
-                      {isAccepting ? (
-                        <span className="flex items-center justify-center gap-1.5">
-                          <LoadingSpinner className="w-3.5 h-3.5 text-white" />
-                          Accepting...
-                        </span>
-                      ) : (
-                        <span className="flex items-center justify-center gap-1.5">
-                          <HiOutlineCheck className="w-3.5 h-3.5" />
-                          Accept Request
-                        </span>
-                      )}
-                    </Button>
+                {/* Issue and Schedule details */}
+                <div className="flex flex-col gap-2.5 py-1 border-t border-b border-zinc-100 my-0.5">
+                  {booking.issueDetails && (
+                    <p className="text-zinc-600 text-xs font-normal font-['Inter'] leading-relaxed line-clamp-2">
+                      <span className="font-semibold text-zinc-700">Details: </span>
+                      {booking.issueDetails}
+                    </p>
+                  )}
+                  
+                  <div className="flex items-center gap-4 text-zinc-500 text-xs font-medium font-['Inter']">
+                    {booking.scheduledDate && (
+                      <div className="flex items-center gap-1.5">
+                        <HiOutlineCalendar className="w-4 h-4 text-zinc-400" />
+                        <span>{booking.scheduledDate}</span>
+                      </div>
+                    )}
+                    {booking.scheduledTime && (
+                      <div className="flex items-center gap-1.5">
+                        <HiOutlineClock className="w-4 h-4 text-zinc-400" />
+                        <span>{booking.scheduledTime}</span>
+                      </div>
+                    )}
                   </div>
                 </div>
-              ) : (
-                /* Customer Pending Box */
-                <div className="flex flex-col gap-3">
-                  <div className="bg-amber-50/50 border border-amber-100 rounded-xl p-3 flex items-start gap-2.5">
-                    <div className="w-2 h-2 bg-amber-500 rounded-full animate-pulse mt-1.5 shrink-0" />
-                    <div className="flex flex-col gap-0.5 min-w-0">
-                      <span className="text-zinc-700 text-xs font-semibold">Awaiting Professional's Confirmation</span>
+
+                {/* Worker or Customer Action Buttons */}
+                {isEngineer ? (
+                  /* Worker Action Buttons */
+                  <div className="flex flex-col gap-2.5">
+                    <p className="text-zinc-500 text-[11px] font-normal leading-4 font-['Inter']">
+                      The customer has selected you for this service. Please confirm if you can complete this job.
+                    </p>
+                    <div className="flex items-center gap-3">
+                      <Button
+                        variant="outline"
+                        className="flex-1 h-9 text-xs border-zinc-200 text-zinc-700 hover:bg-red-50 hover:text-red-600 hover:border-red-200 rounded-xl font-semibold transition-all shadow-none shrink-0"
+                        onClick={handleDeclineBooking}
+                        disabled={isRejecting || isAccepting}
+                      >
+                        {isRejecting ? (
+                          <span className="flex items-center justify-center gap-1.5">
+                            <LoadingSpinner className="w-3.5 h-3.5" />
+                            Declining...
+                          </span>
+                        ) : (
+                          <span className="flex items-center justify-center gap-1.5">
+                            <HiOutlineX className="w-3.5 h-3.5" />
+                            Decline Request
+                          </span>
+                        )}
+                      </Button>
+                      <Button
+                        className="flex-1 h-9 text-xs bg-blue-700 hover:bg-blue-800 text-white rounded-xl font-semibold transition-all shadow-none shrink-0"
+                        onClick={handleAcceptBooking}
+                        disabled={isAccepting || isRejecting}
+                      >
+                        {isAccepting ? (
+                          <span className="flex items-center justify-center gap-1.5">
+                            <LoadingSpinner className="w-3.5 h-3.5 text-white" />
+                            Accepting...
+                          </span>
+                        ) : (
+                          <span className="flex items-center justify-center gap-1.5">
+                            <HiOutlineCheck className="w-3.5 h-3.5" />
+                            Accept Request
+                          </span>
+                        )}
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  /* Customer Pending Box */
+                  <div className="flex flex-col gap-3">
+                    <div className="bg-amber-50/50 border border-amber-100 rounded-xl p-3 flex items-start gap-2.5">
+                      <div className="w-2 h-2 bg-amber-500 rounded-full animate-pulse mt-1.5 shrink-0" />
+                      <div className="flex flex-col gap-0.5 min-w-0">
+                        <span className="text-zinc-700 text-xs font-semibold">Awaiting Professional's Confirmation</span>
+                        <span className="text-zinc-500 text-[11px] leading-relaxed">
+                          We have notified {otherUser?.name || "the professional"}. They can accept or decline this request.
+                        </span>
+                      </div>
+                    </div>
+                    <Button
+                      variant="outline"
+                      className="w-full h-9 text-xs border-zinc-200 text-zinc-600 hover:bg-red-50 hover:text-red-600 hover:border-red-200 rounded-xl font-medium transition-all shadow-none"
+                      onClick={handleCancelBooking}
+                      disabled={isCancelling}
+                    >
+                      {isCancelling ? (
+                        <span className="flex items-center justify-center gap-1.5">
+                          <LoadingSpinner className="w-3.5 h-3.5" />
+                          Cancelling Booking...
+                        </span>
+                      ) : (
+                        "Cancel Booking Request"
+                      )}
+                    </Button>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        ) : (
+          <>
+            {/* Booking summary card — show real data if available */}
+            {booking && (
+              <div className="w-full p-5 bg-white rounded-2xl border border-zinc-200 flex flex-col gap-4 shadow-sm max-w-md relative overflow-hidden">
+                {/* Top Info Bar */}
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 bg-blue-50 rounded-xl flex items-center justify-center text-blue-700 shrink-0 border border-blue-100">
+                    <HiOutlineBriefcase className="w-5 h-5" />
+                  </div>
+                  <div className="flex flex-col min-w-0">
+                    <span className="text-zinc-800 font-semibold text-sm truncate">
+                      {booking.service?.name || "Service Request"}
+                    </span>
+                    <span className="text-zinc-400 text-xs font-medium uppercase tracking-wider">
+                      Booking #{booking.id ? booking.id.substring(0, 8) : "Pending"}
+                    </span>
+                  </div>
+                  <span className={cn(
+                    "ml-auto text-[10px] font-semibold px-2.5 py-1 rounded-full capitalize shrink-0 font-['Inter'] leading-none",
+                    booking.status === 'awaiting_engineer' ? 'bg-amber-50 text-amber-600 border border-amber-100' :
+                      booking.status === 'completed' ? 'bg-green-50 text-green-600 border border-green-100' :
+                      booking.status === 'cancelled' ? 'bg-red-50 text-red-600 border border-red-100' :
+                      'bg-blue-50 text-blue-600 border border-blue-100'
+                  )}>
+                    {booking.status?.replace('_', ' ')}
+                  </span>
+                </div>
+
+                {/* Issue and Schedule details */}
+                <div className="flex flex-col gap-2.5 py-1 border-t border-b border-zinc-100 my-0.5">
+                  {booking.issueDetails && (
+                    <p className="text-zinc-600 text-xs font-normal font-['Inter'] leading-relaxed line-clamp-2">
+                      <span className="font-semibold text-zinc-700">Details: </span>
+                      {booking.issueDetails}
+                    </p>
+                  )}
+                  
+                  <div className="flex items-center gap-4 text-zinc-500 text-xs font-medium font-['Inter']">
+                    {booking.scheduledDate && (
+                      <div className="flex items-center gap-1.5">
+                        <HiOutlineCalendar className="w-4 h-4 text-zinc-400" />
+                        <span>{booking.scheduledDate}</span>
+                      </div>
+                    )}
+                    {booking.scheduledTime && (
+                      <div className="flex items-center gap-1.5">
+                        <HiOutlineClock className="w-4 h-4 text-zinc-400" />
+                        <span>{booking.scheduledTime}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Conditional Action Buttons or Status Prompts */}
+                {booking.status === 'awaiting_engineer' ? (
+                  isEngineer ? (
+                    /* Worker Action Buttons */
+                    <div className="flex flex-col gap-2.5">
+                      <p className="text-zinc-500 text-[11px] font-normal leading-4 font-['Inter']">
+                        The customer has selected you for this service. Please confirm if you can complete this job.
+                      </p>
+                      <div className="flex items-center gap-3">
+                        <Button
+                          variant="outline"
+                          className="flex-1 h-9 text-xs border-zinc-200 text-zinc-700 hover:bg-red-50 hover:text-red-650 hover:border-red-200 rounded-xl font-semibold transition-all shadow-none shrink-0"
+                          onClick={handleDeclineBooking}
+                          disabled={isRejecting || isAccepting}
+                        >
+                          {isRejecting ? (
+                            <span className="flex items-center justify-center gap-1.5">
+                              <LoadingSpinner className="w-3.5 h-3.5" />
+                              Declining...
+                            </span>
+                          ) : (
+                            <span className="flex items-center justify-center gap-1.5">
+                              <HiOutlineX className="w-3.5 h-3.5" />
+                              Decline Request
+                            </span>
+                          )}
+                        </Button>
+                        <Button
+                          className="flex-1 h-9 text-xs bg-blue-700 hover:bg-blue-800 text-white rounded-xl font-semibold transition-all shadow-none shrink-0"
+                          onClick={handleAcceptBooking}
+                          disabled={isAccepting || isRejecting}
+                        >
+                          {isAccepting ? (
+                            <span className="flex items-center justify-center gap-1.5">
+                              <LoadingSpinner className="w-3.5 h-3.5 text-white" />
+                              Accepting...
+                            </span>
+                          ) : (
+                            <span className="flex items-center justify-center gap-1.5">
+                              <HiOutlineCheck className="w-3.5 h-3.5" />
+                              Accept Request
+                            </span>
+                          )}
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    /* Customer Pending Box */
+                    <div className="flex flex-col gap-3">
+                      <div className="bg-amber-50/50 border border-amber-100 rounded-xl p-3 flex items-start gap-2.5">
+                        <div className="w-2 h-2 bg-amber-500 rounded-full animate-pulse mt-1.5 shrink-0" />
+                        <div className="flex flex-col gap-0.5 min-w-0">
+                          <span className="text-zinc-700 text-xs font-semibold">Awaiting Professional's Confirmation</span>
+                          <span className="text-zinc-500 text-[11px] leading-relaxed">
+                            We have notified {otherUser?.name || "the professional"}. They can accept or decline this request.
+                          </span>
+                        </div>
+                      </div>
+                      <Button
+                        variant="outline"
+                        className="w-full h-9 text-xs border-zinc-200 text-zinc-650 hover:bg-red-50 hover:text-red-650 hover:border-red-200 rounded-xl font-medium transition-all shadow-none"
+                        onClick={handleCancelBooking}
+                        disabled={isCancelling}
+                      >
+                        {isCancelling ? (
+                          <span className="flex items-center justify-center gap-1.5">
+                            <LoadingSpinner className="w-3.5 h-3.5" />
+                            Cancelling Booking...
+                          </span>
+                        ) : (
+                          "Cancel Booking Request"
+                        )}
+                      </Button>
+                    </div>
+                  )
+                ) : booking.status === 'confirmed' ? (
+                  /* Confirmed Status message */
+                  <div className="bg-blue-50/50 border border-blue-100 rounded-xl p-3 flex items-start gap-2.5">
+                    <HiOutlineCheck className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
+                    <div className="flex flex-col gap-0.5">
+                      <span className="text-zinc-700 text-xs font-semibold">Booking Confirmed</span>
                       <span className="text-zinc-500 text-[11px] leading-relaxed">
-                        We have notified {otherUser?.name || "the professional"}. They can accept or decline this request.
+                        {isEngineer 
+                          ? "You have accepted this booking request. You can now prepare a service quotation." 
+                          : `${otherUser?.name || "The professional"} has accepted your booking request.`}
                       </span>
                     </div>
                   </div>
-                  <Button
-                    variant="outline"
-                    className="w-full h-9 text-xs border-zinc-200 text-zinc-600 hover:bg-red-50 hover:text-red-600 hover:border-red-200 rounded-xl font-medium transition-all shadow-none"
-                    onClick={handleCancelBooking}
-                    disabled={isCancelling}
-                  >
-                    {isCancelling ? (
-                      <span className="flex items-center justify-center gap-1.5">
-                        <LoadingSpinner className="w-3.5 h-3.5" />
-                        Cancelling Booking...
+                ) : booking.status === 'cancelled' ? (
+                  /* Cancelled Status message */
+                  <div className="bg-zinc-50 border border-zinc-100 rounded-xl p-3 flex items-start gap-2.5">
+                    <HiOutlineExclamationCircle className="w-4 h-4 text-zinc-500 shrink-0 mt-0.5" />
+                    <div className="flex flex-col gap-0.5">
+                      <span className="text-zinc-600 text-xs font-semibold">Booking Request Cancelled</span>
+                      <span className="text-zinc-500 text-[11px] leading-relaxed">
+                        This booking request was cancelled.
                       </span>
-                    ) : (
-                      "Cancel Booking Request"
+                    </div>
+                  </div>
+                ) : booking.status === 'pending' ? (
+                  /* Declined Status / Re-selection box */
+                  <div className="bg-red-50/50 border border-red-100 rounded-xl p-4 flex flex-col gap-3">
+                    <div className="flex items-start gap-2.5">
+                      <HiOutlineX className="w-5 h-5 text-red-650 shrink-0 mt-0.5" />
+                      <div className="flex flex-col gap-1 min-w-0">
+                        <span className="text-red-900 text-xs font-semibold">Booking Request Declined</span>
+                        <span className="text-zinc-500 text-[11px] leading-relaxed">
+                          {booking.rejectionReason || "The professional was unable to accept this booking request."} Please select another professional partner to complete your service.
+                        </span>
+                      </div>
+                    </div>
+                    {!isEngineer && (
+                      <Button
+                        className="w-full h-9 text-xs bg-blue-700 hover:bg-blue-800 text-white rounded-xl font-semibold transition-all shadow-none mt-1"
+                        onClick={() => router.push(`/bookings/${booking.id}`)}
+                      >
+                        Select Another Professional
+                      </Button>
                     )}
-                  </Button>
-                </div>
-              )
-            ) : booking.status === 'confirmed' ? (
-              /* Confirmed Status message */
-              <div className="bg-blue-50/50 border border-blue-100 rounded-xl p-3 flex items-start gap-2.5">
-                <HiOutlineCheck className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
-                <div className="flex flex-col gap-0.5">
-                  <span className="text-zinc-700 text-xs font-semibold">Booking Confirmed</span>
-                  <span className="text-zinc-500 text-[11px] leading-relaxed">
-                    {isEngineer 
-                      ? "You have accepted this booking request. You can now prepare a service quotation." 
-                      : `${otherUser?.name || "The professional"} has accepted your booking request.`}
-                  </span>
-                </div>
+                  </div>
+                ) : null}
               </div>
-            ) : booking.status === 'cancelled' ? (
-              /* Cancelled Status message */
-              <div className="bg-zinc-50 border border-zinc-100 rounded-xl p-3 flex items-start gap-2.5">
-                <HiOutlineExclamationCircle className="w-4 h-4 text-zinc-500 shrink-0 mt-0.5" />
-                <div className="flex flex-col gap-0.5">
-                  <span className="text-zinc-600 text-xs font-semibold">Booking Request Cancelled</span>
-                  <span className="text-zinc-500 text-[11px] leading-relaxed">
-                    This booking request was cancelled.
-                  </span>
-                </div>
-              </div>
-            ) : booking.status === 'pending' ? (
-              /* Declined Status / Re-selection box */
-              <div className="bg-red-50/50 border border-red-100 rounded-xl p-4 flex flex-col gap-3">
-                <div className="flex items-start gap-2.5">
-                  <HiOutlineX className="w-5 h-5 text-red-650 shrink-0 mt-0.5" />
-                  <div className="flex flex-col gap-1 min-w-0">
-                    <span className="text-red-900 text-xs font-semibold">Booking Request Declined</span>
-                    <span className="text-zinc-500 text-[11px] leading-relaxed">
-                      {booking.rejectionReason || "The professional was unable to accept this booking request."} Please select another professional partner to complete your service.
-                    </span>
+            )}
+
+            {messages.map((msg, idx) => {
+              const isMe = msg.senderId === user?.id || msg.senderId === userProfile?.engineerProfile?.id
+              if (msg.mediaType === 'quotation' || msg.type === 'quotation') {
+                return (
+                  <div key={idx} className={cn("flex w-full", isMe ? "justify-end" : "justify-start")}>
+                    <ServiceQuotation 
+                      quotation={{
+                        ...(msg.quotation || msg.metadata),
+                        status: (latestQuotation && (latestQuotation.id === (msg.quotation?.id || msg.metadata?.id) || latestQuotation.id === (msg.quotation?.quotationId || msg.metadata?.quotationId)))
+                          ? latestQuotation.status
+                          : (msg.quotation?.status || msg.metadata?.status || 'pending')
+                      }} 
+                      isMe={isMe} 
+                      bookingStatus={booking?.status}
+                    />
+                  </div>
+                )
+              }
+              return (
+                <div key={idx} className={cn("flex w-full", isMe ? "justify-end" : "justify-start")}>
+                  <div className={cn(
+                    "max-w-[80%] rounded-2xl text-sm leading-relaxed shadow-sm overflow-hidden",
+                    isMe ? "bg-blue-700 text-white rounded-br-none" : "bg-white text-zinc-700 rounded-bl-none border border-zinc-100"
+                  )}>
+                    {msg.mediaType === 'image' && msg.mediaUrl && (
+                      <a href={msg.mediaUrl} target="_blank" rel="noreferrer">
+                        <img src={msg.mediaUrl} alt="attachment" className="max-w-[240px] w-full object-cover rounded-t-2xl" />
+                      </a>
+                    )}
+                    {msg.mediaType === 'video' && msg.mediaUrl && (
+                      <video src={msg.mediaUrl} controls className="max-w-[240px] w-full" />
+                    )}
+                    {msg.mediaType !== 'image' && msg.mediaType !== 'video' && msg.mediaUrl && (
+                      <a href={msg.mediaUrl} target="_blank" rel="noreferrer"
+                        className={cn("flex items-center gap-2 px-3.5 py-2.5 text-xs underline", isMe ? "text-blue-100" : "text-blue-700")}>
+                        📎 {msg.message || 'Attachment'}
+                      </a>
+                    )}
+                    {(msg.message || msg.content) && msg.mediaType !== 'image' && msg.mediaType !== 'video' && !msg.mediaUrl && (
+                      <p className="whitespace-pre-wrap px-3.5 py-2.5">
+                        {msg.message || msg.content}
+                      </p>
+                    )}
+                    {msg.mediaType === 'image' && msg.mediaUrl && (msg.message || msg.content) && msg.message !== msg.mediaUrl && (
+                      <p className="whitespace-pre-wrap px-3.5 py-1 text-xs opacity-80">{msg.message || msg.content}</p>
+                    )}
+                    <p className={cn("text-[10px] px-3.5 pb-2 opacity-60", isMe ? "text-right" : "text-left")}>
+                      {format(new Date(msg.createdAt || msg.timestamp || Date.now()), 'HH:mm')}
+                    </p>
                   </div>
                 </div>
-                {!isEngineer && (
-                  <Button
-                    className="w-full h-9 text-xs bg-blue-700 hover:bg-blue-800 text-white rounded-xl font-semibold transition-all shadow-none mt-1"
-                    onClick={() => router.push(`/bookings/${booking.id}`)}
-                  >
-                    Select Another Professional
-                  </Button>
-                )}
-              </div>
-            ) : null}
-          </div>
-        )}
+              )
+            })}
 
-        {messages.map((msg, idx) => {
-          const isMe = msg.senderId === user?.id || msg.senderId === userProfile?.engineerProfile?.id
-          if (msg.mediaType === 'quotation' || msg.type === 'quotation') {
-            return (
-              <div key={idx} className={cn("flex w-full", isMe ? "justify-end" : "justify-start")}>
-                <ServiceQuotation 
-                  quotation={{
-                    ...(msg.quotation || msg.metadata),
-                    status: (latestQuotation && (latestQuotation.id === (msg.quotation?.id || msg.metadata?.id) || latestQuotation.id === (msg.quotation?.quotationId || msg.metadata?.quotationId)))
-                      ? latestQuotation.status
-                      : (msg.quotation?.status || msg.metadata?.status || 'pending')
-                  }} 
-                  isMe={isMe} 
-                  bookingStatus={booking?.status}
-                />
+            {otherTyping && (
+              <div className="flex justify-start">
+                <div className="bg-white border border-zinc-100 rounded-2xl rounded-bl-none px-4 py-3 flex items-center gap-1 shadow-sm">
+                  {[0, 1, 2].map(i => (
+                    <div key={i} className="w-1.5 h-1.5 bg-zinc-400 rounded-full animate-bounce" style={{ animationDelay: `${i * 0.15}s` }} />
+                  ))}
+                </div>
               </div>
-            )
-          }
-          return (
-            <div key={idx} className={cn("flex w-full", isMe ? "justify-end" : "justify-start")}>
-              <div className={cn(
-                "max-w-[80%] rounded-2xl text-sm leading-relaxed shadow-sm overflow-hidden",
-                isMe ? "bg-blue-700 text-white rounded-br-none" : "bg-white text-zinc-700 rounded-bl-none border border-zinc-100"
-              )}>
-                {msg.mediaType === 'image' && msg.mediaUrl && (
-                  <a href={msg.mediaUrl} target="_blank" rel="noreferrer">
-                    <img src={msg.mediaUrl} alt="attachment" className="max-w-[240px] w-full object-cover rounded-t-2xl" />
-                  </a>
-                )}
-                {msg.mediaType === 'video' && msg.mediaUrl && (
-                  <video src={msg.mediaUrl} controls className="max-w-[240px] w-full" />
-                )}
-                {msg.mediaType !== 'image' && msg.mediaType !== 'video' && msg.mediaUrl && (
-                  <a href={msg.mediaUrl} target="_blank" rel="noreferrer"
-                    className={cn("flex items-center gap-2 px-3.5 py-2.5 text-xs underline", isMe ? "text-blue-100" : "text-blue-700")}>
-                    📎 {msg.message || 'Attachment'}
-                  </a>
-                )}
-                {(msg.message || msg.content) && msg.mediaType !== 'image' && msg.mediaType !== 'video' && !msg.mediaUrl && (
-                  <p className="whitespace-pre-wrap px-3.5 py-2.5">
-                    {msg.message || msg.content}
-                  </p>
-                )}
-                {msg.mediaType === 'image' && msg.mediaUrl && (msg.message || msg.content) && msg.message !== msg.mediaUrl && (
-                  <p className="whitespace-pre-wrap px-3.5 py-1 text-xs opacity-80">{msg.message || msg.content}</p>
-                )}
-                <p className={cn("text-[10px] px-3.5 pb-2 opacity-60", isMe ? "text-right" : "text-left")}>
-                  {format(new Date(msg.createdAt || msg.timestamp || Date.now()), 'HH:mm')}
-                </p>
-              </div>
-            </div>
-          )
-        })}
-
-        {otherTyping && (
-          <div className="flex justify-start">
-            <div className="bg-white border border-zinc-100 rounded-2xl rounded-bl-none px-4 py-3 flex items-center gap-1 shadow-sm">
-              {[0, 1, 2].map(i => (
-                <div key={i} className="w-1.5 h-1.5 bg-zinc-400 rounded-full animate-bounce" style={{ animationDelay: `${i * 0.15}s` }} />
-              ))}
-            </div>
-          </div>
+            )}
+          </>
         )}
       </div>
 
       {/* Input Area */}
-      <div className="absolute bottom-0 left-0 w-full h-20 p-5 bg-white border-t border-zinc-100 flex items-center gap-2">
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept="image/*,video/*,.pdf,.doc,.docx"
-          className="hidden"
-          onChange={handleFileChange}
-        />
-        <button
-          onClick={handleFileClick}
-          disabled={isUploading}
-          className="p-2 bg-stone-50 rounded-lg text-zinc-600 hover:bg-stone-100 transition-colors disabled:opacity-50"
-          title="Attach file"
-        >
-          {isUploading ? (
-            <LoadingSpinner className="w-5 h-5 text-zinc-400" />
-          ) : (
-            <HiOutlinePlus className="w-5 h-5" />
-          )}
-        </button>
-        <div className="flex-1 h-11 px-4 bg-stone-50 rounded-xl flex items-center overflow-hidden">
+      {!isAwaiting && (
+        <div className="absolute bottom-0 left-0 w-full h-20 p-5 bg-white border-t border-zinc-100 flex items-center gap-2">
           <input
-            type="text"
-            value={inputMessage}
-            onChange={handleInputChange}
-            onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
-            placeholder="Type a message here"
-            className="w-full bg-transparent text-zinc-800 text-sm outline-none placeholder:text-zinc-400"
+            ref={fileInputRef}
+            type="file"
+            accept="image/*,video/*,.pdf,.doc,.docx"
+            className="hidden"
+            onChange={handleFileChange}
           />
+          <button
+            onClick={handleFileClick}
+            disabled={isUploading}
+            className="p-2 bg-stone-50 rounded-lg text-zinc-600 hover:bg-stone-100 transition-colors disabled:opacity-50"
+            title="Attach file"
+          >
+            {isUploading ? (
+              <LoadingSpinner className="w-5 h-5 text-zinc-400" />
+            ) : (
+              <HiOutlinePlus className="w-5 h-5" />
+            )}
+          </button>
+          <div className="flex-1 h-11 px-4 bg-stone-50 rounded-xl flex items-center overflow-hidden">
+            <input
+              type="text"
+              value={inputMessage}
+              onChange={handleInputChange}
+              onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
+              placeholder="Type a message here"
+              className="w-full bg-transparent text-zinc-800 text-sm outline-none placeholder:text-zinc-400"
+            />
+          </div>
+          <Button onClick={handleSendMessage} className="h-11 bg-blue-700 hover:bg-blue-800 text-white px-6 rounded-xl">
+            Send
+          </Button>
         </div>
-        <Button onClick={handleSendMessage} className="h-11 bg-blue-700 hover:bg-blue-800 text-white px-6 rounded-xl">
-          Send
-        </Button>
-      </div>
+      )}
 
       <QuotationModal isOpen={showQuotationModal} onClose={() => setShowQuotationModal(false)} bookingId={activeChatId} />
     </div>

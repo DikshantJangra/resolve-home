@@ -98,6 +98,82 @@ export const LocationStep = () => {
     }
   }
 
+  const fallbackToIPLocation = async () => {
+    setIsLocating(true)
+    toast.info("Location permission blocked or denied. Falling back to IP-based location...")
+    try {
+      const response = await fetch('https://ipapi.co/json/')
+      const data = await response.json()
+      if (data && data.country) {
+        const countryCode = data.country.toUpperCase()
+        const states = State.getStatesOfCountry(countryCode)
+        const cleanStateName = (data.region || '').replace(/ State$/i, '')
+        const matchedState = states.find(s =>
+          s.name.toLowerCase().includes(cleanStateName.toLowerCase()) ||
+          cleanStateName.toLowerCase().includes(s.name.toLowerCase()) ||
+          s.isoCode === data.region_code
+        )
+
+        const countryObj = Country.getCountryByCode(countryCode)
+        
+        setFormData(prev => ({
+          ...prev,
+          country: countryObj?.name || prev.country,
+          countryCode: countryCode,
+          state: matchedState?.name || cleanStateName,
+          stateCode: matchedState?.isoCode || data.region_code || '',
+          city: data.city || '',
+          streetAddress: data.org || data.city || '',
+          landmark: '',
+          latitude: data.latitude,
+          longitude: data.longitude,
+        }))
+        toast.success("Location auto-detected via IP!")
+      } else {
+        throw new Error("Invalid IP location data")
+      }
+    } catch (error) {
+      console.error("IP geolocation failed:", error)
+      try {
+        const response = await fetch('https://ip-api.com/json/')
+        const data = await response.json()
+        if (data && data.status === 'success') {
+          const countryCode = data.countryCode.toUpperCase()
+          const states = State.getStatesOfCountry(countryCode)
+          const cleanStateName = (data.regionName || '').replace(/ State$/i, '')
+          const matchedState = states.find(s =>
+            s.name.toLowerCase().includes(cleanStateName.toLowerCase()) ||
+            cleanStateName.toLowerCase().includes(s.name.toLowerCase()) ||
+            s.isoCode === data.region
+          )
+
+          const countryObj = Country.getCountryByCode(countryCode)
+
+          setFormData(prev => ({
+            ...prev,
+            country: countryObj?.name || prev.country,
+            countryCode: countryCode,
+            state: matchedState?.name || cleanStateName,
+            stateCode: matchedState?.isoCode || data.region || '',
+            city: data.city || '',
+            streetAddress: data.as || data.city || '',
+            landmark: '',
+            latitude: data.lat,
+            longitude: data.lon,
+          }))
+          toast.success("Location auto-detected via IP!")
+        } else {
+          toast.error("Failed to detect location. Please enter manually.")
+        }
+      } catch (err) {
+        console.error("Second IP geolocation failed:", err)
+        toast.error("Location access denied or blocked. Please enter manually.")
+      }
+    } finally {
+      setIsLocating(false)
+    }
+  }
+
   const handleUseGPS = () => {
     if (!navigator.geolocation) {
       alert("Geolocation is not supported by your browser")
@@ -107,12 +183,7 @@ export const LocationStep = () => {
     // Check permission state first
     navigator.permissions?.query({ name: 'geolocation' as PermissionName }).then(result => {
       if (result.state === 'denied') {
-        toast.error('Location access is blocked. Please enable it in your browser settings.', {
-          action: {
-            label: 'How to enable',
-            onClick: () => window.open('https://support.google.com/chrome/answer/142065', '_blank')
-          }
-        })
+        fallbackToIPLocation()
         return
       }
       startLocating()
@@ -168,12 +239,14 @@ export const LocationStep = () => {
       (error) => {
         setIsLocating(false)
         console.error("Geolocation error:", error.code, error.message)
-        let message = "Failed to get your location."
-        if (error.code === 1) message = "Location access denied. Please enable it in your browser settings."
-        else if (error.code === 2) message = "Location unavailable. Please try again or enter manually."
-        else if (error.code === 3) message = "Location request timed out. Please try again."
-        
-        toast.error(message)
+        if (error.code === 1) { // Location access denied
+          fallbackToIPLocation()
+        } else {
+          let message = "Failed to get your location."
+          if (error.code === 2) message = "Location unavailable. Please try again or enter manually."
+          else if (error.code === 3) message = "Location request timed out. Please try again."
+          toast.error(message)
+        }
       }
     )
   }

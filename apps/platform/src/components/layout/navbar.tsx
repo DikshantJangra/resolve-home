@@ -74,7 +74,7 @@ export const Navbar = ({ onMenuClick }: NavbarProps) => {
             <HiOutlineMenu className="w-6 h-6" />
           </button>
           <Link href="/">
-            <Image src="/logo.svg" alt="ResolvHome" width={112} height={40} priority className="w-24 sm:w-28 h-8 sm:h-10 object-contain" />
+            <Image src="/logo.svg" alt="ResolvHome" width={192} height={56} priority className="w-44 sm:w-48 h-12 sm:h-14 object-contain object-left" />
           </Link>
         </div>
 

@@ -37,7 +37,7 @@ export const AdminNavbar = ({ onMenuClick }: AdminNavbarProps) => {
           <HiOutlineMenuAlt2 className="w-6 h-6" />
         </button>
         <Link href="/" className="lg:hidden shrink-0">
-          <img src="/logo.svg" alt="ResolvHome" className="w-28 h-9 object-contain" />
+          <img src="/logo.svg" alt="ResolvHome" className="w-44 h-14 object-contain object-left" />
         </Link>
       </div>
 

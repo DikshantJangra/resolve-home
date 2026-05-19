@@ -12,6 +12,8 @@ import { cn } from "@resolve/ui"
 import { toast } from "sonner"
 import { apiClient } from "@resolve/api"
 import { ENDPOINTS } from "@resolve/api"
+import Link from "next/link"
+import { IoArrowBack } from "react-icons/io5"
 
 const resetSchema = z.object({
   password: z.string()
@@ -161,16 +163,26 @@ export function ForgotPasswordReset({ externalToken, onSuccess }: ForgotPassword
           </div>
         </div>
 
-        <Button
-          type="submit"
-          disabled={isLoading}
-          className={cn(
-            "h-12 w-full rounded-xl bg-blue-700 text-sm font-medium text-white hover:bg-blue-800",
-            isLoading && "opacity-50 cursor-not-allowed"
-          )}
-        >
-          {isLoading ? "Saving..." : "Save & continue"}
-        </Button>
+        <div className="flex flex-col gap-4 w-full">
+          <Button
+            type="submit"
+            disabled={isLoading}
+            className={cn(
+              "h-12 w-full rounded-xl bg-blue-700 text-sm font-medium text-white hover:bg-blue-800",
+              isLoading && "opacity-50 cursor-not-allowed"
+            )}
+          >
+            {isLoading ? "Saving..." : "Save & continue"}
+          </Button>
+
+          <Link
+            href="/login"
+            className="flex items-center justify-center gap-2 text-sm font-medium text-zinc-500 hover:text-zinc-800 transition-colors py-2"
+          >
+            <IoArrowBack className="h-4 w-4" />
+            Back to login
+          </Link>
+        </div>
       </form>
 
       <p className="text-center text-xs font-normal font-inter leading-4 text-zinc-600 mt-auto">

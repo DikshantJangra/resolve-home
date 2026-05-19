@@ -19,97 +19,146 @@ function EngineerCard({ engineer, onSelect, isPending, selectedId, currentEngine
   currentEngineerId: string | null
 }) {
   const [reviewsOpen, setReviewsOpen] = useState(false)
+  const [bioExpanded, setBioExpanded] = useState(false)
   const isSelecting = isPending && selectedId === engineer.id
   const isAlreadySelected = currentEngineerId === engineer.id
 
+  const aboutText = engineer.aboutMe || "No introduction provided yet by this Pro Partner."
+  const isLongBio = aboutText.length > 180
+
   return (
-    <div className="bg-white rounded-2xl border border-zinc-200 p-4 flex flex-col gap-4 shadow-sm">
-      {/* Header */}
-      <div className="flex items-start gap-3">
-        <div className="relative shrink-0">
-          {engineer.image ? (
-            <img src={formatImageUrl(engineer.image)} alt={engineer.name}
-              className="w-14 h-14 rounded-full object-cover border-2 border-white shadow-sm" />
-          ) : (
-            <div className="w-14 h-14 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 text-xl font-bold">
-              {engineer.name?.[0] || 'P'}
-            </div>
-          )}
-          {/* Online indicator */}
-          <span className={cn(
-            "absolute bottom-0 right-0 w-3.5 h-3.5 rounded-full border-2 border-white",
-            engineer.isOnline ? "bg-green-500" : "bg-zinc-400"
-          )} title={engineer.isOnline ? "Online" : "Offline"} />
-        </div>
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-neutral-700 text-sm font-bold">{engineer.name}</span>
-            <span className="px-1.5 py-0.5 bg-orange-50 text-orange-600 text-[9px] font-bold rounded">Pro Verified</span>
+    <div className="bg-white rounded-2xl border border-zinc-200 p-5 md:p-6 flex flex-col gap-4 md:gap-5 shadow-sm hover:shadow-md transition-shadow">
+      {/* Premium Desktop Grid & Mobile Layout */}
+      <div className="flex flex-col md:grid md:grid-cols-12 gap-5 md:gap-6 items-start">
+        
+        {/* Column 1: Profile & Actions */}
+        <div className="flex md:flex-col items-center md:items-start gap-4 md:col-span-4 w-full border-b md:border-b-0 pb-4 md:pb-0 border-zinc-100">
+          <div className="relative shrink-0">
+            {engineer.image ? (
+              <img src={formatImageUrl(engineer.image)} alt={engineer.name}
+                className="w-16 h-16 rounded-full object-cover border-2 border-white shadow-md" />
+            ) : (
+              <div className="w-16 h-16 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 text-2xl font-bold border-2 border-white shadow-md">
+                {engineer.name?.[0] || 'P'}
+              </div>
+            )}
+            {/* Online indicator */}
+            <span className={cn(
+              "absolute bottom-0 right-0 w-4 h-4 rounded-full border-2 border-white",
+              engineer.isOnline ? "bg-green-500" : "bg-zinc-400"
+            )} title={engineer.isOnline ? "Online" : "Offline"} />
           </div>
-          <span className="text-zinc-500 text-xs">{engineer.categoryName || engineer.specialty || 'Professional'}</span>
-          <div className="flex items-center gap-3 mt-1.5 flex-wrap">
-            <div className="flex items-center gap-1">
-              <HiOutlineStar className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
-              <span className="text-zinc-600 text-xs font-semibold">{engineer.rating || 0}</span>
-              <span className="text-zinc-400 text-xs">({engineer.reviews?.length || 0})</span>
+          
+          <div className="flex-1 min-w-0 md:space-y-1">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-neutral-700 text-base font-bold tracking-tight">{engineer.name}</span>
+              <span className="px-2 py-0.5 bg-orange-50 text-orange-600 text-[10px] font-extrabold uppercase rounded tracking-wider">Pro Verified</span>
             </div>
-            <div className="flex items-center gap-1">
-              <HiOutlineBriefcase className="w-3.5 h-3.5 text-zinc-400" />
-              <span className="text-zinc-600 text-xs">{engineer.completedJobs || 0} jobs</span>
-            </div>
+            
+            <p className="text-blue-700 text-xs font-semibold">{engineer.categoryName || engineer.specialty || 'Professional Partner'}</p>
+            
             {engineer.distance !== null && engineer.distance !== undefined && (
-              <div className="flex items-center gap-1">
+              <div className="flex items-center gap-1 text-zinc-500 text-xs mt-1">
                 <IoLocationOutline className="w-3.5 h-3.5 text-blue-600" />
-                <span className="text-blue-600 text-xs font-semibold">{engineer.distance}km away</span>
+                <span className="font-medium text-zinc-650">{engineer.distance}km away</span>
               </div>
             )}
           </div>
+          
+          {/* Action Select Button (For tablet & desktop, hidden on mobile to show at bottom) */}
+          <div className="hidden md:block w-full pt-3">
+            <button
+              onClick={() => !isAlreadySelected && onSelect(engineer.id)}
+              disabled={isPending || isAlreadySelected}
+              className={cn(
+                'w-full h-11 rounded-xl text-sm font-semibold transition-all shadow-sm flex items-center justify-center gap-2',
+                isAlreadySelected
+                  ? 'bg-emerald-600 text-white cursor-not-allowed'
+                  : isSelecting
+                    ? 'bg-blue-700 text-white opacity-70 cursor-not-allowed'
+                    : 'bg-blue-700 hover:bg-blue-800 text-white active:scale-[0.98]'
+              )}
+            >
+              {isAlreadySelected ? '✓ Selected' : isSelecting ? 'Selecting...' : 'Select Pro Partner'}
+            </button>
+          </div>
         </div>
+
+        {/* Column 2: Stats (Desktop 2cols, Mobile horizontal row) */}
+        <div className="md:col-span-2 flex flex-col gap-1 w-full">
+          <span className="text-[10px] uppercase font-bold text-zinc-400 tracking-wider hidden md:block">Stats</span>
+          <div className="flex flex-row md:flex-col gap-6 md:gap-3 w-full bg-zinc-50 md:bg-transparent p-3 md:p-0 rounded-xl">
+            <div className="flex flex-col">
+              <span className="text-[10px] uppercase font-bold text-zinc-400 tracking-wider md:hidden">Jobs Done</span>
+              <div className="flex items-center gap-1.5 mt-0.5">
+                <HiOutlineBriefcase className="w-4 h-4 text-zinc-500" />
+                <span className="text-zinc-700 text-xs font-semibold">{engineer.completedJobs || 0} completed</span>
+              </div>
+            </div>
+            
+            <div className="flex flex-col border-l md:border-l-0 pl-6 md:pl-0">
+              <span className="text-[10px] uppercase font-bold text-zinc-400 tracking-wider md:hidden">Rating</span>
+              <div className="flex items-center gap-1.5 mt-0.5">
+                <HiOutlineStar className="w-4 h-4 text-amber-500 fill-amber-500" />
+                <span className="text-zinc-700 text-xs font-semibold">{engineer.rating || 0} ({engineer.reviews?.length || 0})</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Column 3: Qualifications (Desktop 3cols, Mobile standard) */}
+        <div className="md:col-span-3 flex flex-col gap-1.5 w-full">
+          <span className="text-[10px] uppercase font-bold text-zinc-400 tracking-wider">Services Offered</span>
+          <div className="flex flex-wrap gap-1.5">
+            {engineer.assignedServicesDetail?.length > 0 ? (
+              engineer.assignedServicesDetail.map((s: any) => (
+                <span key={s.id} className="text-[11px] font-semibold text-zinc-700 bg-zinc-100 hover:bg-zinc-200 transition-colors px-2.5 py-1 rounded-md">
+                  {s.name}
+                </span>
+              ))
+            ) : (
+              <span className="text-xs text-zinc-400 italic">General {engineer.categoryName || 'Service'}</span>
+            )}
+          </div>
+        </div>
+
+        {/* Column 4: Details / About me (Desktop 3cols, Mobile standard) */}
+        <div className="md:col-span-3 flex flex-col gap-1.5 w-full">
+          <span className="text-[10px] uppercase font-bold text-zinc-400 tracking-wider">About me</span>
+          <div className="text-xs text-zinc-650 leading-relaxed space-y-1">
+            <p className="whitespace-pre-line">
+              {bioExpanded || !isLongBio ? aboutText : `${aboutText.slice(0, 180)}...`}
+            </p>
+            {isLongBio && (
+              <button
+                onClick={() => setBioExpanded(!bioExpanded)}
+                className="text-blue-700 font-bold hover:text-blue-800 transition-colors inline-block focus:outline-none mt-1 cursor-pointer"
+              >
+                {bioExpanded ? 'View less' : 'View more'}
+              </button>
+            )}
+          </div>
+        </div>
+
       </div>
 
-      {/* Reviews toggle */}
-      {engineer.reviews?.length > 0 && (
-        <div className="flex flex-col gap-2">
-          <button
-            onClick={() => setReviewsOpen(v => !v)}
-            className="flex items-center gap-1 text-xs text-zinc-500 hover:text-blue-700 transition-colors"
-          >
-            {reviewsOpen ? <HiOutlineChevronUp className="w-3.5 h-3.5" /> : <HiOutlineChevronDown className="w-3.5 h-3.5" />}
-            {reviewsOpen ? 'Hide reviews' : `See ${engineer.reviews.length} review${engineer.reviews.length > 1 ? 's' : ''}`}
-          </button>
-          {reviewsOpen && (
-            <div className="flex flex-col gap-2 max-h-40 overflow-y-auto pr-1 no-scrollbar">
-              {engineer.reviews.map((r: any, i: number) => (
-                <div key={i} className="p-3 bg-stone-50 rounded-xl border border-zinc-100">
-                  <div className="flex items-center gap-1 mb-1">
-                    {[1, 2, 3, 4, 5].map(s => (
-                      <HiOutlineStar key={s} className={cn('w-3 h-3', s <= r.rating ? 'text-amber-500 fill-amber-500' : 'text-zinc-200')} />
-                    ))}
-                    <span className="text-zinc-400 text-[10px] ml-1">{r.customerName}</span>
-                  </div>
-                  <p className="text-zinc-600 text-xs leading-relaxed">{r.comment}</p>
-                </div>
-              ))}
-            </div>
+      {/* Select button (Mobile only - hidden on desktop) */}
+      <div className="md:hidden w-full pt-1">
+        <button
+          onClick={() => !isAlreadySelected && onSelect(engineer.id)}
+          disabled={isPending || isAlreadySelected}
+          className={cn(
+            'w-full h-11 rounded-xl text-sm font-semibold transition-all shadow-sm flex items-center justify-center gap-2',
+            isAlreadySelected
+              ? 'bg-emerald-600 text-white cursor-not-allowed'
+              : isSelecting
+                ? 'bg-blue-700 text-white opacity-70 cursor-not-allowed'
+                : 'bg-blue-700 hover:bg-blue-800 text-white active:scale-[0.98]'
           )}
-        </div>
-      )}
-
-      {/* Select button */}
-      <button
-        onClick={() => !isAlreadySelected && onSelect(engineer.id)}
-        disabled={isPending || isAlreadySelected}
-        className={cn(
-          'w-full h-10 rounded-xl text-sm font-semibold transition-all',
-          isAlreadySelected
-            ? 'bg-emerald-600 text-white cursor-not-allowed'
-            : isSelecting
-              ? 'bg-blue-700 text-white opacity-70 cursor-not-allowed'
-              : 'bg-blue-700 hover:bg-blue-800 text-white active:scale-[0.98]'
-        )}
-      >
-        {isAlreadySelected ? '✓ Selected' : isSelecting ? 'Selecting...' : 'Select Pro Partner'}
-      </button>
+        >
+          {isAlreadySelected ? '✓ Selected' : isSelecting ? 'Selecting...' : 'Select Pro Partner'}
+        </button>
+      </div>
     </div>
   )
 }

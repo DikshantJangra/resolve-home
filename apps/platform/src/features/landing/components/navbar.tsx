@@ -102,8 +102,8 @@ export const Navbar = () => {
                 : <HiMenuAlt4 className="h-6 w-6" />}
             </button>
             <Link href="/" onClick={(e) => handleScroll(e, 'hero')} className="flex items-center transition-opacity hover:opacity-90">
-              <div className="relative h-10 w-[120px] sm:h-12 sm:w-[136px]">
-                <Image src="/logo.svg" alt="ResolvHome" fill className="object-contain" priority sizes="136px" />
+              <div className="relative h-14 w-[180px] sm:h-16 sm:w-[210px]">
+                <Image src="/logo.svg" alt="ResolvHome" fill className="object-contain object-left" priority sizes="210px" />
               </div>
             </Link>
           </div>

@@ -11,6 +11,7 @@ interface ProfessionalSetupState {
   idType: string
   idNumber: string
   idPhoto: string | null
+  aboutMe: string
   
   // Step 2: Location
   country: string
@@ -51,6 +52,7 @@ export const useProfessionalSetupStore = create<ProfessionalSetupState>((set) =>
   idType: 'BVN',
   idNumber: '',
   idPhoto: null,
+  aboutMe: '',
   
   country: 'Nigeria',
   countryCode: 'NG',
@@ -84,6 +86,7 @@ export const useProfessionalSetupStore = create<ProfessionalSetupState>((set) =>
     idType: 'BVN',
     idNumber: '',
     idPhoto: null,
+    aboutMe: '',
     country: 'Nigeria',
     countryCode: 'NG',
     state: '',

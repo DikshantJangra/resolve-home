@@ -6,6 +6,8 @@ import { useForgotPasswordStore } from "@/store/use-forgot-password-store"
 import { cn } from "@resolve/ui"
 import { toast } from "sonner"
 import { authClient } from "@/lib/auth-client"
+import Link from "next/link"
+import { IoArrowBack } from "react-icons/io5"
 
 export function ForgotPasswordOtp() {
   const { email, nextStep, prevStep, setToken } = useForgotPasswordStore()
@@ -94,17 +96,25 @@ export function ForgotPasswordOtp() {
           {isLoading ? "Verifying..." : "Verify & continue"}
         </Button>
         
-        <div className="flex flex-col items-center gap-4">
+        <div className="flex flex-col items-center gap-4 w-full">
           <p className="text-zinc-600 text-sm font-medium font-inter leading-5">
             Didn’t receive code? <span className="text-blue-700 font-bold">0:{timer < 10 ? `0${timer}` : timer}</span>
           </p>
-          <button 
-            type="button"
-            onClick={prevStep}
-            className="text-zinc-600 text-sm font-medium font-inter underline leading-5 hover:text-zinc-900 transition-colors"
-          >
-            Change email
-          </button>
+          <div className="flex justify-between items-center w-full mt-2">
+            <button 
+              type="button"
+              onClick={prevStep}
+              className="text-zinc-600 text-sm font-medium font-inter underline leading-5 hover:text-zinc-900 transition-colors cursor-pointer"
+            >
+              Change email
+            </button>
+            <Link 
+              href="/login"
+              className="text-zinc-500 text-sm font-medium font-inter hover:text-zinc-800 transition-colors"
+            >
+              Back to login
+            </Link>
+          </div>
         </div>
       </div>
 

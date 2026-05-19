@@ -3,13 +3,14 @@
 import React from 'react'
 import { HiOutlineSearch, HiOutlinePlusCircle } from 'react-icons/hi'
 import { cn, formatImageUrl } from "@resolve/ui"
-import { useUserChats } from '@/hooks/api-hooks'
+import { useUserChats, useUserProfile } from '@/hooks/api-hooks'
 import { useChatStore } from '@/store/use-chat-store'
 import { formatDistanceToNow } from 'date-fns'
 
 export const ChatSidebar = () => {
   const [isMounted, setIsMounted] = React.useState(false)
   const { data: chats, isLoading } = useUserChats()
+  const { data: userProfile, isLoading: isProfileLoading } = useUserProfile()
   const { activeChatId, setActiveChatId } = useChatStore()
   const [activeTab, setActiveTab] = React.useState('Inbox')
 
@@ -17,7 +18,7 @@ export const ChatSidebar = () => {
     setIsMounted(true)
   }, [])
 
-  if (!isMounted || isLoading) {
+  if (!isMounted || isLoading || isProfileLoading) {
     return (
       <div className="w-full h-full bg-neutral-50 rounded-[20px] outline outline-1 outline-zinc-300 p-5 flex items-center justify-center">
         <div className="text-zinc-500 animate-pulse">Loading conversations...</div>
@@ -25,9 +26,22 @@ export const ChatSidebar = () => {
     )
   }
 
+  const isWorker = userProfile?.user?.role === 'worker' || userProfile?.role === 'worker'
+  const tabs = isWorker ? ['Inbox', 'Unread', 'Request'] : ['Inbox', 'Unread']
+
   const filteredChats = chats?.filter((chat: any) => {
-    if (activeTab === 'Unread') return chat.unreadCount > 0
-    return true
+    const isRequest = chat.booking && chat.booking.status === 'awaiting_engineer'
+    
+    if (activeTab === 'Request') {
+      return isRequest
+    } else {
+      if (isRequest) return false // Hide requests in Inbox/Unread tabs
+      
+      if (activeTab === 'Unread') {
+        return chat.unreadCount > 0
+      }
+      return true
+    }
   })
 
   return (
@@ -35,7 +49,7 @@ export const ChatSidebar = () => {
       {/* Header Tabs */}
       <div className="px-5 border-b border-zinc-300 flex items-center justify-between bg-white relative z-10 shrink-0">
         <div className="flex items-center gap-1">
-          {['Inbox', 'Unread', 'Request'].map((tab) => (
+          {tabs.map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}

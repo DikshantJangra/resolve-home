@@ -11,6 +11,7 @@ interface QuotationViewProps {
   quotation: {
     id: string
     laborFee: number
+    callOutFee?: number
     materials: Array<{ name: string; price: number; quantity: number }>
     totalAmount: number
     status: 'pending' | 'approved' | 'rejected' | 'revised'

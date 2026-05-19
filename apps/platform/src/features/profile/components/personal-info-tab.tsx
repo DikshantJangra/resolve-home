@@ -97,11 +97,88 @@ export const PersonalInfoTab = ({
   const getStateName = (countryCode: string, stateCode: string) =>
     State.getStateByCodeAndCountry(stateCode, countryCode)?.name || stateCode
 
+  const fallbackToIPLocation = async () => {
+    setIsLocating(true)
+    toast.info("Location permission blocked or denied. Falling back to IP-based location...")
+    try {
+      const response = await fetch('https://ipapi.co/json/')
+      const data = await response.json()
+      if (data && data.country) {
+        const countryCode = data.country.toUpperCase()
+        const states = State.getStatesOfCountry(countryCode)
+        const cleanStateName = (data.region || '').replace(/ State$/i, '')
+        const matchedState = states.find(s =>
+          s.name.toLowerCase().includes(cleanStateName.toLowerCase()) ||
+          cleanStateName.toLowerCase().includes(s.name.toLowerCase()) ||
+          s.isoCode === data.region_code
+        )
+        
+        setFormData(prev => ({
+          ...prev,
+          country: countryCode,
+          state: matchedState ? matchedState.isoCode : data.region_code || '',
+          city: data.city || '',
+          homeAddress: data.org || data.city || '',
+          latitude: data.latitude,
+          longitude: data.longitude
+        }))
+        toast.success("Location auto-detected via IP!")
+      } else {
+        throw new Error("Invalid IP location data")
+      }
+    } catch (error) {
+      console.error("IP geolocation failed:", error)
+      try {
+        const response = await fetch('https://ip-api.com/json/')
+        const data = await response.json()
+        if (data && data.status === 'success') {
+          const countryCode = data.countryCode.toUpperCase()
+          const states = State.getStatesOfCountry(countryCode)
+          const cleanStateName = (data.regionName || '').replace(/ State$/i, '')
+          const matchedState = states.find(s =>
+            s.name.toLowerCase().includes(cleanStateName.toLowerCase()) ||
+            cleanStateName.toLowerCase().includes(s.name.toLowerCase()) ||
+            s.isoCode === data.region
+          )
+
+          setFormData(prev => ({
+            ...prev,
+            country: countryCode,
+            state: matchedState ? matchedState.isoCode : data.region || '',
+            city: data.city || '',
+            homeAddress: data.as || data.city || '',
+            latitude: data.lat,
+            longitude: data.lon
+          }))
+          toast.success("Location auto-detected via IP!")
+        } else {
+          toast.error("Failed to detect location. Please enter manually.")
+        }
+      } catch (err) {
+        console.error("Second IP geolocation failed:", err)
+        toast.error("Location access denied or blocked. Please enter manually.")
+      }
+    } finally {
+      setIsLocating(false)
+    }
+  }
+
   const handleGetGPS = () => {
     if (!navigator.geolocation) {
       toast.error("Geolocation is not supported by your browser")
       return
     }
+
+    navigator.permissions?.query({ name: 'geolocation' as PermissionName }).then(result => {
+      if (result.state === 'denied') {
+        fallbackToIPLocation()
+        return
+      }
+      startLocating()
+    }).catch(() => startLocating())
+  }
+
+  const startLocating = () => {
     setIsLocating(true)
     navigator.geolocation.getCurrentPosition(
       async (position) => {
@@ -156,16 +233,18 @@ export const PersonalInfoTab = ({
       },
       (error) => {
         console.error("Geolocation error:", error)
-        let errMsg = "Failed to retrieve location"
         if (error.code === error.PERMISSION_DENIED) {
-          errMsg = "Location permission denied"
-        } else if (error.code === error.POSITION_UNAVAILABLE) {
-          errMsg = "Location position unavailable"
-        } else if (error.code === error.TIMEOUT) {
-          errMsg = "Location request timed out"
+          fallbackToIPLocation()
+        } else {
+          let errMsg = "Failed to retrieve location"
+          if (error.code === error.POSITION_UNAVAILABLE) {
+            errMsg = "Location position unavailable"
+          } else if (error.code === error.TIMEOUT) {
+            errMsg = "Location request timed out"
+          }
+          toast.error(errMsg)
+          setIsLocating(false)
         }
-        toast.error(errMsg)
-        setIsLocating(false)
       },
       { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
     )

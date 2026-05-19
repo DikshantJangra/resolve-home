@@ -13,7 +13,7 @@ export const ENDPOINTS = {
     SIGN_IN_SOCIAL: '/api/auth/sign-in/social',
     VERIFY_EMAIL: '/api/auth/verify-email',
     RESEND_VERIFICATION_CODE: '/api/auth/resend-verification',
-    FORGET_PASSWORD: '/api/auth/forget-password',
+    FORGET_PASSWORD: '/api/auth/request-password-reset',
     RESET_PASSWORD: '/api/auth/reset-password',
     SIGN_OUT: '/api/auth/sign-out',
     GET_SESSION: '/api/auth/get-session',

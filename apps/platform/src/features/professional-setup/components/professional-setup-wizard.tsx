@@ -101,12 +101,122 @@ export const ProfessionalSetupWizard = ({ onComplete, initialStep, isModal }: { 
     })
   }
 
+  const fallbackToIPLocation = async () => {
+    setIsLocating(true)
+    toast.info("Location permission blocked or denied. Falling back to IP-based location...")
+    try {
+      const response = await fetch('https://ipapi.co/json/')
+      const data = await response.json()
+      if (data && data.country) {
+        const countryCode = data.country.toUpperCase()
+        const states = State.getStatesOfCountry(countryCode)
+        const cleanStateName = (data.region || '').replace(/ State$/i, '')
+        const matchedState = states.find(s =>
+          s.name.toLowerCase().includes(cleanStateName.toLowerCase()) ||
+          cleanStateName.toLowerCase().includes(s.name.toLowerCase()) ||
+          s.isoCode === data.region_code
+        )
+
+        const country = Country.getCountryByCode(countryCode)
+
+        if (country) {
+          store.updateField('country', country.name)
+          store.updateField('countryCode', country.isoCode)
+
+          if (matchedState) {
+            store.updateField('state', matchedState.name)
+            store.updateField('stateCode', matchedState.isoCode)
+
+            const cities = City.getCitiesOfState(countryCode, matchedState.isoCode)
+            const cleanCityName = (data.city || '').replace(/ (City|LGA|Local Government Area)$/i, '')
+            const matchedCity = cities.find(c =>
+              c.name.toLowerCase().includes(cleanCityName.toLowerCase()) ||
+              cleanCityName.toLowerCase().includes(c.name.toLowerCase())
+            )
+
+            if (matchedCity) {
+              store.updateField('city', matchedCity.name)
+            } else {
+              store.updateField('city', cleanCityName)
+            }
+          }
+        }
+
+        store.updateField('address', data.org || data.city || '')
+        toast.success("Location auto-detected via IP!")
+      } else {
+        throw new Error("Invalid IP location data")
+      }
+    } catch (error) {
+      console.error("IP geolocation failed:", error)
+      try {
+        const response = await fetch('https://ip-api.com/json/')
+        const data = await response.json()
+        if (data && data.status === 'success') {
+          const countryCode = data.countryCode.toUpperCase()
+          const states = State.getStatesOfCountry(countryCode)
+          const cleanStateName = (data.regionName || '').replace(/ State$/i, '')
+          const matchedState = states.find(s =>
+            s.name.toLowerCase().includes(cleanStateName.toLowerCase()) ||
+            cleanStateName.toLowerCase().includes(s.name.toLowerCase()) ||
+            s.isoCode === data.region
+          )
+
+          const country = Country.getCountryByCode(countryCode)
+
+          if (country) {
+            store.updateField('country', country.name)
+            store.updateField('countryCode', country.isoCode)
+
+            if (matchedState) {
+              store.updateField('state', matchedState.name)
+              store.updateField('stateCode', matchedState.isoCode)
+
+              const cities = City.getCitiesOfState(countryCode, matchedState.isoCode)
+              const cleanCityName = (data.city || '').replace(/ (City|LGA|Local Government Area)$/i, '')
+              const matchedCity = cities.find(c =>
+                c.name.toLowerCase().includes(cleanCityName.toLowerCase()) ||
+                cleanCityName.toLowerCase().includes(c.name.toLowerCase())
+              )
+
+              if (matchedCity) {
+                store.updateField('city', matchedCity.name)
+              } else {
+                store.updateField('city', cleanCityName)
+              }
+            }
+          }
+
+          store.updateField('address', data.as || data.city || '')
+          toast.success("Location auto-detected via IP!")
+        } else {
+          toast.error("Failed to detect location. Please enter manually.")
+        }
+      } catch (err) {
+        console.error("Second IP geolocation failed:", err)
+        toast.error("Location access denied or blocked. Please enter manually.")
+      }
+    } finally {
+      setIsLocating(false)
+    }
+  }
+
   const handleUseGPS = () => {
     if (!navigator.geolocation) {
       toast.error("Geolocation is not supported by your browser")
       return
     }
 
+    navigator.permissions?.query({ name: 'geolocation' as PermissionName }).then(result => {
+      if (result.state === 'denied') {
+        fallbackToIPLocation()
+        return
+      }
+      startLocating()
+    }).catch(() => startLocating())
+  }
+
+  const startLocating = () => {
     setIsLocating(true)
     navigator.geolocation.getCurrentPosition(
       async (position) => {
@@ -169,7 +279,11 @@ export const ProfessionalSetupWizard = ({ onComplete, initialStep, isModal }: { 
       (error) => {
         setIsLocating(false)
         console.error("Geolocation error:", error)
-        toast.error("Location access denied or unavailable.")
+        if (error.code === 1) { // Location access denied
+          fallbackToIPLocation()
+        } else {
+          toast.error("Location access denied or unavailable.")
+        }
       }
     )
   }
@@ -271,6 +385,7 @@ export const ProfessionalSetupWizard = ({ onComplete, initialStep, isModal }: { 
       idType: store.idType,
       idNumber: store.idNumber,
       idDocument: store.idPhoto,
+      aboutMe: store.aboutMe || "",
       bankDetails: {
         accountName: store.accountName,
         bankName: store.bankName,
@@ -451,6 +566,16 @@ export const ProfessionalSetupWizard = ({ onComplete, initialStep, isModal }: { 
                     </button>
                   ))}
                 </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <Label>About you (Describe yourself and your qualifications) <span className="text-red-500">*</span></Label>
+                <textarea
+                  placeholder="Tell homeowners about your experience, qualifications, and the quality of service they can expect..."
+                  value={store.aboutMe}
+                  onChange={(e) => store.updateField('aboutMe', e.target.value)}
+                  className="w-full min-h-[120px] px-4 py-3 rounded-lg border border-zinc-200 text-sm focus:border-blue-700 outline-none resize-y transition-all bg-white"
+                />
               </div>
 
               <div className="space-y-1.5">
@@ -856,7 +981,7 @@ export const ProfessionalSetupWizard = ({ onComplete, initialStep, isModal }: { 
   }
 
   const isStepValid = () => {
-    const step1Valid = store.specialty && store.categoryId && store.assignedServices.length > 0 && store.experience && store.idType && store.idNumber && store.idPhoto
+    const step1Valid = store.specialty && store.categoryId && store.assignedServices.length > 0 && store.experience && store.aboutMe && store.idType && store.idNumber && store.idPhoto
     const step2Valid = store.state && store.city && store.address && store.landmark
     const step3Valid = store.guarantorName && store.guarantorEmail && store.guarantorPhone && store.guarantorRelationship && store.guarantorWorkPlace && store.accountName && store.bankName && store.bankCode && store.accountNumber
 
@@ -868,9 +993,9 @@ export const ProfessionalSetupWizard = ({ onComplete, initialStep, isModal }: { 
 
   if (store.currentStep === 4) {
     return (
-      <div className="w-full max-w-2xl mx-auto bg-white p-4 sm:p-8 rounded-2xl shadow-sm border border-zinc-200 mt-10">
+      <div className="fixed inset-0 z-[999] bg-white p-4 flex flex-col overflow-y-auto sm:relative sm:inset-auto sm:z-auto sm:w-full sm:max-w-2xl sm:mx-auto sm:p-8 sm:rounded-2xl sm:shadow-sm sm:border sm:border-zinc-200 sm:mt-10">
         {isAccountVerified ? (
-          <div className="flex flex-col items-center justify-center text-center py-6 space-y-6">
+          <div className="flex flex-col items-center justify-center text-center py-6 space-y-6 my-auto">
             <div className="w-20 h-20 bg-green-50 border-2 border-green-100 rounded-2xl flex items-center justify-center shadow-sm">
               <HiOutlineCheckCircle className="w-10 h-10 text-green-600" />
             </div>
@@ -888,26 +1013,29 @@ export const ProfessionalSetupWizard = ({ onComplete, initialStep, isModal }: { 
             </div>
           </div>
         ) : (
-          renderStep()
+          <div className="w-full max-w-md mx-auto my-auto py-6">
+            {renderStep()}
+          </div>
         )}
       </div>
     )
   }
 
   return (
-    <div className="w-full max-w-2xl mx-auto bg-white flex flex-col h-screen sm:h-auto sm:max-h-[90vh] rounded-none sm:rounded-2xl overflow-hidden shadow-sm border-0 sm:border border-zinc-200 mt-0 sm:mt-10">
+    <div className="fixed inset-0 z-[999] bg-white flex flex-col sm:relative sm:inset-auto sm:z-auto sm:w-full sm:max-w-2xl sm:mx-auto sm:h-auto sm:max-h-[90vh] sm:rounded-2xl sm:overflow-hidden sm:shadow-sm sm:border sm:border-zinc-200 sm:mt-10">
       {/* Header */}
       <div className="p-4 sm:p-6 border-b border-zinc-100">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-2xl font-semibold text-neutral-700">Complete set up</h2>
-          <button
-            onClick={() => store.prevStep()}
-            className="flex items-center gap-2 text-blue-700 disabled:opacity-30 disabled:cursor-not-allowed"
-            disabled={store.currentStep === 1}
-          >
-            <HiOutlineChevronLeft className="w-5 h-5" />
-            <span>Go Back</span>
-          </button>
+          {store.currentStep > 1 && (
+            <button
+              onClick={() => store.prevStep()}
+              className="flex items-center gap-2 text-blue-700 hover:text-blue-800 transition-colors"
+            >
+              <HiOutlineChevronLeft className="w-5 h-5" />
+              <span>Go Back</span>
+            </button>
+          )}
         </div>
 
         <div className="space-y-3">
