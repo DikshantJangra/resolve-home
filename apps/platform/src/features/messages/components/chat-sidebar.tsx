@@ -27,7 +27,7 @@ export const ChatSidebar = ({ initialTab }: { initialTab?: string }) => {
   }
 
   const isWorker = userProfile?.user?.role === 'worker' || userProfile?.role === 'worker'
-  const tabs = isWorker ? ['Inbox', 'Unread', 'Request'] : ['Inbox', 'Unread']
+  const tabs = ['Inbox', 'Unread', 'Request']
 
   const filteredChats = chats?.filter((chat: any) => {
     const isRequest = chat.booking && chat.booking.status === 'awaiting_engineer'
@@ -44,6 +44,8 @@ export const ChatSidebar = ({ initialTab }: { initialTab?: string }) => {
     }
   })
 
+  const requestCount = chats?.filter((chat: any) => chat.booking?.status === 'awaiting_engineer').length || 0
+
   return (
     <div className="w-full lg:w-[458px] h-full flex flex-col bg-neutral-50 rounded-[20px] outline outline-1 outline-offset-[-1px] outline-zinc-300 overflow-hidden">
       {/* Header Tabs */}
@@ -54,11 +56,16 @@ export const ChatSidebar = ({ initialTab }: { initialTab?: string }) => {
               key={tab}
               onClick={() => setActiveTab(tab)}
               className={cn(
-                "px-4 py-4 text-sm font-medium transition-colors relative flex items-center",
+                "px-4 py-4 text-sm font-medium transition-colors relative flex items-center gap-1.5",
                 activeTab === tab ? "text-blue-700" : "text-zinc-600 hover:text-zinc-900"
               )}
             >
               {tab}
+              {tab === 'Request' && requestCount > 0 && (
+                <span className="px-1.5 py-0.5 bg-rose-400 rounded-full text-[10px] text-white font-bold leading-none">
+                  {requestCount}
+                </span>
+              )}
               {activeTab === tab && (
                 <div className="absolute bottom-0 left-0 w-full h-0.5 bg-blue-700" />
               )}
