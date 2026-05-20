@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useEffect, useRef, useCallback } from 'react'
+import React, { useState, useEffect, useRef, useCallback } from 'react'
 import { HiOutlineStar, HiOutlineBriefcase, HiOutlineRefresh } from 'react-icons/hi'
 import { IoLocationOutline } from 'react-icons/io5'
 import { useBookingStore } from '@/store/booking-store'
