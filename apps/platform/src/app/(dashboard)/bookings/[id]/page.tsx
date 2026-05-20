@@ -46,6 +46,7 @@ export default function BookingDetailsPage() {
 
   const { mutate: selectEngineer, isPending: isSelectingEngineer, variables: selectVars } = useSelectEngineer()
   const [selectedEngineerId, setSelectedEngineerId] = React.useState<string | null>(null)
+  const [confirmingEngineerId, setConfirmingEngineerId] = React.useState<string | null>(null)
 
   const handleSelectEngineer = (engineerId: string) => {
     selectEngineer({ bookingId: id as string, engineerId }, {
@@ -486,18 +487,40 @@ export default function BookingDetailsPage() {
                           </div>
                         </div>
 
-                        {/* Select button */}
-                        <button
-                          onClick={() => !isSelected && handleSelectEngineer(eng.id)}
-                          disabled={isSelectingEngineer || isSelected}
-                          className={cn('w-full h-10 rounded-xl text-sm font-semibold transition-all',
-                            isSelected ? 'bg-emerald-600 text-white cursor-not-allowed'
-                              : isSelecting ? 'bg-blue-700 text-white opacity-70 cursor-not-allowed'
+                        {/* Select / Confirm buttons */}
+                        {confirmingEngineerId === eng.id ? (
+                          <div className="flex flex-col gap-2 p-3 bg-blue-50 rounded-xl border border-blue-100">
+                            <p className="text-xs font-semibold text-neutral-700 text-center">
+                              Confirm <span className="text-blue-700">{eng.name}</span> as your Pro Partner?
+                            </p>
+                            <div className="flex gap-2">
+                              <button
+                                onClick={() => setConfirmingEngineerId(null)}
+                                className="flex-1 h-9 rounded-xl text-sm font-semibold border border-zinc-300 text-zinc-600 hover:bg-zinc-100 transition-all"
+                              >
+                                Go Back
+                              </button>
+                              <button
+                                onClick={() => { setConfirmingEngineerId(null); handleSelectEngineer(eng.id) }}
+                                disabled={isSelecting}
+                                className="flex-1 h-9 rounded-xl text-sm font-semibold bg-blue-700 hover:bg-blue-800 text-white transition-all disabled:opacity-70"
+                              >
+                                {isSelecting ? 'Selecting...' : 'Confirm'}
+                              </button>
+                            </div>
+                          </div>
+                        ) : (
+                          <button
+                            onClick={() => !isSelected && setConfirmingEngineerId(eng.id)}
+                            disabled={isSelectingEngineer || isSelected}
+                            className={cn('w-full h-10 rounded-xl text-sm font-semibold transition-all',
+                              isSelected ? 'bg-emerald-600 text-white cursor-not-allowed'
                                 : 'bg-blue-700 hover:bg-blue-800 text-white active:scale-[0.98]'
-                          )}
-                        >
-                          {isSelected ? '✓ Selected' : isSelecting ? 'Selecting...' : 'Select Pro Partner'}
-                        </button>
+                            )}
+                          >
+                            {isSelected ? '✓ Selected' : 'Select Pro Partner'}
+                          </button>
+                        )}
                       </div>
                     )
                   })}

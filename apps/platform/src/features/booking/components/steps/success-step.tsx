@@ -18,6 +18,7 @@ function EngineerCard({ engineer, onSelect, isPending, selectedId, currentEngine
   selectedId: string | null
   currentEngineerId: string | null
 }) {
+  const [confirming, setConfirming] = useState(false)
   const isSelecting = isPending && selectedId === engineer.id
   const isAlreadySelected = currentEngineerId === engineer.id
 
@@ -136,21 +137,42 @@ function EngineerCard({ engineer, onSelect, isPending, selectedId, currentEngine
         </div>
       )}
 
-      {/* Select button */}
-      <button
-        onClick={() => !isAlreadySelected && onSelect(engineer.id)}
-        disabled={isPending || isAlreadySelected}
-        className={cn(
-          'w-full h-10 rounded-xl text-sm font-semibold transition-all',
-          isAlreadySelected
-            ? 'bg-emerald-600 text-white cursor-not-allowed'
-            : isSelecting
-              ? 'bg-blue-700 text-white opacity-70 cursor-not-allowed'
+      {/* Select / Confirm buttons */}
+      {confirming ? (
+        <div className="flex flex-col gap-2 p-3 bg-blue-50 rounded-xl border border-blue-100">
+          <p className="text-xs font-semibold text-neutral-700 text-center">
+            Confirm <span className="text-blue-700">{engineer.name}</span> as your Pro Partner?
+          </p>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setConfirming(false)}
+              className="flex-1 h-9 rounded-xl text-sm font-semibold border border-zinc-300 text-zinc-600 hover:bg-zinc-100 transition-all"
+            >
+              Go Back
+            </button>
+            <button
+              onClick={() => { setConfirming(false); onSelect(engineer.id) }}
+              disabled={isSelecting}
+              className="flex-1 h-9 rounded-xl text-sm font-semibold bg-blue-700 hover:bg-blue-800 text-white transition-all disabled:opacity-70"
+            >
+              {isSelecting ? 'Selecting...' : 'Confirm'}
+            </button>
+          </div>
+        </div>
+      ) : (
+        <button
+          onClick={() => !isAlreadySelected && setConfirming(true)}
+          disabled={isPending || isAlreadySelected}
+          className={cn(
+            'w-full h-10 rounded-xl text-sm font-semibold transition-all',
+            isAlreadySelected
+              ? 'bg-emerald-600 text-white cursor-not-allowed'
               : 'bg-blue-700 hover:bg-blue-800 text-white active:scale-[0.98]'
-        )}
-      >
-        {isAlreadySelected ? '✓ Selected' : isSelecting ? 'Selecting...' : 'Select Pro Partner'}
-      </button>
+          )}
+        >
+          {isAlreadySelected ? '✓ Selected' : 'Select Pro Partner'}
+        </button>
+      )}
     </div>
   )
 }
