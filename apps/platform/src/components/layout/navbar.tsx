@@ -2,13 +2,12 @@
 
 import React, { useState } from 'react'
 import {
-  HiOutlineSearch, HiOutlineMenuAlt1, HiOutlineMenu, HiOutlineBadgeCheck,
+  HiOutlineMenuAlt1, HiOutlineMenu, HiOutlineBadgeCheck,
   HiOutlineHome, HiOutlineChatAlt, HiOutlineUser, HiOutlineCreditCard,
   HiOutlineCog, HiOutlineLockClosed, HiOutlineClipboardCheck, HiOutlinePlusCircle,
   HiOutlineBell
 } from 'react-icons/hi'
 import { IoLogOutOutline, IoPerson } from 'react-icons/io5'
-import { Input } from '@resolve/ui'
 import { useUserProfile, useMySubscription, useNotifications, useMarkNotificationRead, useMarkAllNotificationsRead } from '@/hooks/api-hooks'
 import { motion, AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
@@ -78,16 +77,8 @@ export const Navbar = ({ onMenuClick }: NavbarProps) => {
           </Link>
         </div>
 
-        {/* Search */}
-        <div className="hidden sm:flex flex-1 ml-4 lg:ml-0">
-          <div className="relative w-full max-w-[160px] md:max-w-xs group">
-            <Input
-              placeholder="Search ResolvHome"
-              className="h-9 md:h-10 pl-3 md:pl-4 pr-10 border-zinc-300 rounded-lg text-xs md:text-sm placeholder:text-zinc-300 focus:border-blue-700 transition-all bg-slate-50/50"
-            />
-            <HiOutlineSearch className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 w-4 h-4 pointer-events-none" />
-          </div>
-        </div>
+        {/* Search — removed */}
+        <div className="hidden sm:flex flex-1 ml-4 lg:ml-0" />
 
         {/* Right: name + avatar + menu */}
         <div className="flex items-center gap-2 md:gap-3 ml-auto">

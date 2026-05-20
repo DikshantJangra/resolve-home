@@ -1,8 +1,8 @@
 'use client'
 
 import React from 'react'
-import { 
-  HiOutlineClock, 
+import {
+  HiOutlineClock,
   HiOutlineLocationMarker,
   HiOutlineExclamationCircle,
 } from 'react-icons/hi'
@@ -91,9 +91,9 @@ export const BookingRequestCard = ({ booking, isWorker = true }: BookingRequestC
                 )}
               </div>
               <div className="justify-start text-neutral-700 text-base font-semibold font-['Inter'] leading-6">
-                {booking.engineerId && booking.totalPrice > 0 
-                  ? `₦${booking.totalPrice.toLocaleString()}` 
-                  : 'Price to be quoted'}
+                {booking.engineerId && booking.totalPrice > 0
+                  ? `₦${booking.totalPrice.toLocaleString()}`
+                  : <span className="text-zinc-400 text-xs font-normal">Price to be quoted</span>}
               </div>
             </div>
           </div>
@@ -117,12 +117,12 @@ export const BookingRequestCard = ({ booking, isWorker = true }: BookingRequestC
 
         {/* Footer Info */}
         <div className="mt-2 pt-2 border-t border-stone-50 w-full flex items-center justify-between">
-           <span className="text-zinc-400 text-[10px] font-medium uppercase tracking-wider">RH-{booking.id.slice(-4).toUpperCase()}</span>
-           <div className="w-4 h-4 text-zinc-300">
-             <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
-               <path d="M6 12L10 8L6 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-             </svg>
-           </div>
+          <span className="text-zinc-400 text-[10px] font-medium uppercase tracking-wider">RH-{booking.id.slice(-4).toUpperCase()}</span>
+          <div className="w-4 h-4 text-zinc-300">
+            <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
+              <path d="M6 12L10 8L6 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </div>
         </div>
       </div>
     </Link>
