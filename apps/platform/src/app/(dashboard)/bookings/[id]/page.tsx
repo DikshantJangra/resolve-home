@@ -37,7 +37,8 @@ export default function BookingDetailsPage() {
   const engineer = !isLoading && booking
     ? (booking.engineer || booking.engineers?.[0] || null)
     : null
-  const hasNoEngineer = !isLoading && !!booking && !engineer
+  // Only show available engineers list when truly no engineer is assigned yet
+  const hasNoEngineer = !isLoading && !!booking && !engineer && !['awaiting_engineer', 'confirmed', 'on_the_way', 'arrived', 'in_progress', 'in-progress', 'completed'].includes(booking?.status ?? '')
 
   const { data: availableEngineersData, refetch: refetchEngineers, isFetching: isRefetchingEngineers } = useAvailableEngineers(
     hasNoEngineer ? id as string : ''
@@ -47,12 +48,14 @@ export default function BookingDetailsPage() {
   const { mutate: selectEngineer, isPending: isSelectingEngineer, variables: selectVars } = useSelectEngineer()
   const [selectedEngineerId, setSelectedEngineerId] = React.useState<string | null>(null)
   const [confirmingEngineerId, setConfirmingEngineerId] = React.useState<string | null>(null)
+  const [reselecting, setReselecting] = React.useState(false)
 
   const handleSelectEngineer = (engineerId: string) => {
     selectEngineer({ bookingId: id as string, engineerId }, {
       onSuccess: () => {
         toast.dismiss('select-engineer')
         setSelectedEngineerId(engineerId)
+        setReselecting(false)
         toast.success('Pro Partner selected!')
         refetch()
       },
@@ -186,7 +189,7 @@ export default function BookingDetailsPage() {
   const statusSteps: ProgressStep[] = [
     {
       label: 'Pro Matched',
-      status: (['confirmed', 'on_the_way', 'arrived', 'awaiting_quotation_approval', 'payment_pending', 'payment_completed', 'in_progress', 'in-progress', 'completed'].includes(booking.status) ? 'completed' : 'pending') as any
+      status: (['awaiting_engineer', 'confirmed', 'on_the_way', 'arrived', 'awaiting_quotation_approval', 'payment_pending', 'payment_completed', 'in_progress', 'in-progress', 'completed'].includes(booking.status) ? 'completed' : 'pending') as any
     },
     {
       label: 'On the way',
@@ -388,7 +391,19 @@ export default function BookingDetailsPage() {
 
         {/* Profile and Review Sidebar */}
         <div className="lg:col-span-7 flex flex-col gap-6">
-          {!engineer ? (
+          {booking.status === 'awaiting_engineer' && !engineer ? (
+            /* Pro selected, waiting for acceptance */
+            <div className="p-6 bg-blue-50 rounded-2xl flex flex-col items-center justify-center gap-4 border border-blue-100 shadow-sm text-center">
+              <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center">
+                <div className="w-6 h-6 border-4 border-blue-700 border-t-transparent rounded-full animate-spin" />
+              </div>
+              <h3 className="text-base font-bold text-neutral-700">Waiting for Pro Partner</h3>
+              <p className="text-zinc-500 text-sm">Your request has been sent. Waiting for the Pro Partner to accept.</p>
+              <Button onClick={handleRefetch} variant="outline" className="flex items-center gap-2 text-xs h-8 px-3">
+                <HiOutlineRefresh className="w-3.5 h-3.5" /> Refresh
+              </Button>
+            </div>
+          ) : (!engineer || reselecting) ? (
             <div className="flex flex-col gap-4">
               {/* Header */}
               <div className="flex items-center justify-between">
@@ -402,11 +417,19 @@ export default function BookingDetailsPage() {
                     <p className="text-xs text-zinc-500">Select one to get started</p>
                   )}
                 </div>
-                <Button onClick={handleRefreshPro} disabled={isRefetchingEngineers} variant="outline"
-                  className="h-8 px-3 text-xs flex items-center gap-1.5">
-                  <HiOutlineRefresh className={cn('w-3.5 h-3.5', isRefetchingEngineers && 'animate-spin')} />
-                  Refresh
-                </Button>
+                <div className="flex items-center gap-2">
+                  {reselecting && engineer && (
+                    <Button onClick={() => setReselecting(false)} variant="outline"
+                      className="h-8 px-3 text-xs flex items-center gap-1.5">
+                      ← Back
+                    </Button>
+                  )}
+                  <Button onClick={handleRefreshPro} disabled={isRefetchingEngineers} variant="outline"
+                    className="h-8 px-3 text-xs flex items-center gap-1.5">
+                    <HiOutlineRefresh className={cn('w-3.5 h-3.5', isRefetchingEngineers && 'animate-spin')} />
+                    Refresh
+                  </Button>
+                </div>
               </div>
 
               {availableEngineers.length === 0 ? (
@@ -554,18 +577,18 @@ export default function BookingDetailsPage() {
           ) : (
             <div className="p-6 bg-stone-50 rounded-2xl flex flex-col gap-8 border border-zinc-100 shadow-sm">
               {/* User Profile Header */}
-              <div className="flex items-center gap-4">
+              <div className="flex items-start gap-4">
                 <img
                   src={displayImage}
                   alt={displayName}
-                  className="w-20 h-20 rounded-full object-cover border-4 border-white shadow-md"
+                  className="w-20 h-20 rounded-full object-cover border-4 border-white shadow-md shrink-0"
                 />
-                <div className="flex flex-col gap-2">
-                  <div className="flex items-center gap-2">
+                <div className="flex flex-col gap-2 flex-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
                     <h3 className="text-neutral-700 text-base font-bold">{displayName}</h3>
                     <span className="px-2 py-0.5 bg-orange-100 text-orange-600 text-[10px] font-bold rounded">Pro Verified</span>
                   </div>
-                  <div className="flex items-center gap-1.5">
+                  <div className="flex items-center gap-1.5 flex-wrap">
                     <span className="text-zinc-600 text-xs">{userRole}</span>
                     <div className="w-1 h-1 bg-blue-700 rounded-full" />
                     <div className="flex items-center gap-1">
@@ -573,14 +596,31 @@ export default function BookingDetailsPage() {
                       <span className="text-zinc-600 text-xs font-medium">{engineer?.rating || 0} Rating</span>
                     </div>
                   </div>
-                  <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-4 flex-wrap">
                     <div className="flex items-center gap-1.5 text-zinc-500 text-xs">
                       <HiOutlineBriefcase className="w-4 h-4" />
                       <span>{engineer?.completedJobs || 0} Jobs Completed</span>
                     </div>
+                    {(engineer?.location?.city || engineer?.location?.state) && (
+                      <div className="flex items-center gap-1 text-zinc-500 text-xs">
+                        <HiOutlineLocationMarker className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+                        <span>{[engineer.location.city, engineer.location.state].filter(Boolean).join(', ')}</span>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
+
+              {/* Re-select button — only when awaiting engineer acceptance */}
+              {booking.status === 'awaiting_engineer' && !isWorker && (
+                <button
+                  onClick={() => setReselecting(true)}
+                  className="w-full h-9 rounded-xl text-xs font-semibold border border-zinc-300 text-zinc-600 hover:bg-zinc-50 transition-all flex items-center justify-center gap-2"
+                >
+                  <HiOutlineRefresh className="w-3.5 h-3.5" />
+                  Re-select Pro Partner
+                </button>
+              )}
 
               {/* Contact Buttons */}
               <div className="flex gap-4">
