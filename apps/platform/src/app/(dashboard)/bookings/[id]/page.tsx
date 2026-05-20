@@ -356,7 +356,7 @@ export default function BookingDetailsPage() {
       {/* Main Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         {/* Map Visualization */}
-        <div className="lg:col-span-5 h-[520px] rounded-2xl relative overflow-hidden shadow-sm border border-zinc-100">
+        <div className="lg:col-span-5 lg:sticky lg:top-6 h-[520px] rounded-2xl relative overflow-hidden shadow-sm border border-zinc-100">
           <Map viewport={mapViewport} onViewportChange={setMapViewport} markers={mapMarkers} />
           <div className="absolute top-3 left-3 z-10 px-3 py-1.5 bg-white/95 backdrop-blur-md rounded-xl shadow-lg border border-zinc-100 flex items-center gap-2">
             {trackingActive ? (
@@ -419,7 +419,7 @@ export default function BookingDetailsPage() {
                   )}
                 </div>
               ) : (
-                <div className="flex flex-col gap-3 max-h-[520px] overflow-y-auto pr-1 no-scrollbar">
+                <div className="flex flex-col gap-3">
                   {availableEngineers.map((eng: any) => {
                     const isSelecting = isSelectingEngineer && (selectVars as any)?.engineerId === eng.id
                     const isSelected = selectedEngineerId === eng.id
