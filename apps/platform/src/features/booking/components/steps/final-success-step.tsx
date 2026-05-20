@@ -13,7 +13,7 @@ export const FinalSuccessStep = () => {
   const handleViewBooking = () => {
     const bid = bookingId
     resetBooking()
-    router.push(`/bookings/${bid}`)
+    router.push(`/messages?tab=Request&bookingId=${bid}`)
   }
 
   const handleSelectAnother = () => {

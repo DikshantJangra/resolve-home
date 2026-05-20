@@ -1,6 +1,7 @@
 'use client'
 
 import React from 'react'
+import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { ChatSidebar } from "@/features/messages/components/chat-sidebar"
 import { ChatWindow } from "@/features/messages/components/chat-window"
@@ -9,6 +10,7 @@ import { useUserChats } from '@/hooks/api-hooks'
 import { useChatStore } from '@/store/use-chat-store'
 import { cn } from "@resolve/ui"
 import { useUserProfile } from '@/hooks/api-hooks'
+import { HiOutlineArrowLeft } from 'react-icons/hi'
 
 export default function MessagesPage() {
   const [mounted, setMounted] = React.useState(false)
@@ -46,7 +48,21 @@ export default function MessagesPage() {
   return (
     <div className="h-[calc(100vh-130px)] lg:h-[calc(100vh-140px)] flex flex-col gap-4 md:gap-6 overflow-hidden">
       <div className="flex flex-col gap-1 shrink-0">
-        <h1 className="text-neutral-700 text-xl md:text-2xl font-bold font-['Plus_Jakarta_Sans'] leading-8">Messages</h1>
+        <div className="flex items-center justify-between">
+          <h1 className="text-neutral-700 text-xl md:text-2xl font-bold font-['Plus_Jakarta_Sans'] leading-8">Messages</h1>
+          {tabParam === 'Request' && (
+            <Link
+              href="/bookings"
+              className="flex items-center gap-1.5 text-sm font-medium text-zinc-500 hover:text-blue-700 transition-colors"
+            >
+              <HiOutlineArrowLeft className="w-4 h-4" />
+              Back to Bookings
+            </Link>
+          )}
+        </div>
+        {tabParam === 'Request' && (
+          <p className="text-zinc-500 text-sm">Waiting for confirmation from your Pro Partner.</p>
+        )}
       </div>
 
       <div className="flex-1 flex gap-5 overflow-hidden relative min-h-0">

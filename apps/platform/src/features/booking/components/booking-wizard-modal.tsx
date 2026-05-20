@@ -28,11 +28,11 @@ export function BookingWizardModal() {
     if (currentStep > 1 && !bookingId) {
       saveDraft()
     }
-    // If a booking was created and a pro was selected (step 8), redirect to that booking
+    // If a booking was created and a pro was selected (step 8), redirect to messages request tab
     const bid = bookingId
     resetBooking()
     if (bid && currentStep >= 8) {
-      router.push(`/bookings/${bid}`)
+      router.push(`/messages?tab=Request&bookingId=${bid}`)
     }
   }
 
