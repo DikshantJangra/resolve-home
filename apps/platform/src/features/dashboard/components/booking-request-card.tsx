@@ -24,11 +24,9 @@ export const BookingRequestCard = ({ booking, isWorker = true }: BookingRequestC
   const displayUser = isWorker ? booking.user : (booking.engineer || booking.engineers?.[0])
   const displayName = displayUser?.name || null
 
-  const categoryName = booking.service?.category?.name || booking.categoryName || null
+  // Category: use category name if available, otherwise blank (don't duplicate service name)
+  const categoryName = booking.service?.category?.name || booking.category?.name || null
   const serviceName = booking.service?.name || 'Service details'
-  // If no category, just show service name as the title — don't show it twice
-  const titleText = categoryName || serviceName
-  const subtitleText = categoryName ? serviceName : null
   const href = isWorker ? `/engineer/jobs/${booking.id}` : `/bookings/${booking.id}`
 
   return (
@@ -51,15 +49,18 @@ export const BookingRequestCard = ({ booking, isWorker = true }: BookingRequestC
                 </div>
                 <div className="flex-1 inline-flex flex-col justify-start items-start gap-0.5 min-w-0">
                   <div className="flex items-center gap-2">
-                    <div className="justify-start text-slate-900 text-sm font-semibold font-['Inter'] leading-5 truncate">{titleText}</div>
+                    <div className="justify-start text-slate-900 text-sm font-semibold font-['Inter'] leading-5 truncate">
+                      {categoryName || serviceName}
+                    </div>
                     {isEmergency && (
                       <div className="px-[6px] py-[2px] bg-red-600 rounded">
                         <div className="text-white text-[9px] font-medium font-['Inter'] leading-3">EMERGENCY</div>
                       </div>
                     )}
                   </div>
-                  {subtitleText && (
-                    <div className="justify-start text-zinc-600 text-xs font-normal font-['Inter'] leading-4 line-clamp-1">{subtitleText}</div>
+                  {/* Only show service name below if it differs from category */}
+                  {categoryName && categoryName !== serviceName && (
+                    <div className="justify-start text-zinc-600 text-xs font-normal font-['Inter'] leading-4 line-clamp-1">{serviceName}</div>
                   )}
                 </div>
               </div>
@@ -91,8 +92,10 @@ export const BookingRequestCard = ({ booking, isWorker = true }: BookingRequestC
                       )}
                     </div>
                   </>
+                ) : isWorker ? (
+                  <div className="text-zinc-400 text-xs font-['Inter']">Customer info unavailable</div>
                 ) : (
-                  <div className="text-zinc-400 text-xs font-['Inter']">No Pro Partner Assigned</div>
+                  <div className="text-amber-600 text-xs font-medium font-['Inter']">Awaiting Pro Partner</div>
                 )}
               </div>
               <div className="justify-start text-neutral-700 text-base font-semibold font-['Inter'] leading-6">
