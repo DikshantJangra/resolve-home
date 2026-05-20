@@ -797,70 +797,72 @@ export default function JobDetailsPage() {
           document.body
         )}
       </div>
+    </div>
+  )
 }
 
-      function JobLocationMap({job, engineerCoords}: {job: any; engineerCoords: [number, number] | null }) {
+function JobLocationMap({ job, engineerCoords }: { job: any; engineerCoords: [number, number] | null }) {
   const customerLat = job.customerDetails?.latitude ?? job.location?.latitude ?? job.address?.latitude
-      const customerLng = job.customerDetails?.longitude ?? job.location?.longitude ?? job.address?.longitude
-      const hasCustomerLocation = customerLat != null && customerLng != null
+  const customerLng = job.customerDetails?.longitude ?? job.location?.longitude ?? job.address?.longitude
+  const hasCustomerLocation = customerLat != null && customerLng != null
 
-      const defaultCenter: [number, number] = engineerCoords ?? (hasCustomerLocation ? [customerLng, customerLat] : [3.3792, 6.5244])
-      const [mapCenter, setMapCenter] = React.useState<[number, number]>(defaultCenter)
+  const defaultCenter: [number, number] = engineerCoords ?? (hasCustomerLocation ? [customerLng, customerLat] : [3.3792, 6.5244])
+  const [mapCenter, setMapCenter] = React.useState<[number, number]>(defaultCenter)
 
   React.useEffect(() => {
     if (engineerCoords) setMapCenter(engineerCoords)
   }, [engineerCoords])
 
-      const markers: MapMarker[] = []
-      if (hasCustomerLocation) {
-        markers.push({ lngLat: [customerLng, customerLat], color: '#dc2626', label: 'Homeowner Location' })
-      }
-      if (engineerCoords) {
-        markers.push({ lngLat: engineerCoords, color: '#1d4ed8', label: 'Your Location' })
-      }
+  const markers: MapMarker[] = []
+  if (hasCustomerLocation) {
+    markers.push({ lngLat: [customerLng, customerLat], color: '#dc2626', label: 'Homeowner Location' })
+  }
+  if (engineerCoords) {
+    markers.push({ lngLat: engineerCoords, color: '#1d4ed8', label: 'Your Location' })
+  }
 
-      if (!hasCustomerLocation && !engineerCoords) {
+  if (!hasCustomerLocation && !engineerCoords) {
     return (
       <div className="w-full h-56 rounded-xl bg-zinc-50 border border-zinc-200 flex items-center justify-center">
         <p className="text-sm text-zinc-400">Location data unavailable</p>
       </div>
-      )
+    )
   }
 
-      return (
-      <div className="flex flex-col gap-2">
-        <div className="flex items-center justify-between">
-          <p className="text-sm font-semibold text-neutral-800">Live Location</p>
-          <div className="flex items-center gap-3 text-xs text-zinc-500">
-            {hasCustomerLocation && (
-              <button
-                onClick={() => setMapCenter([customerLng, customerLat])}
-                className="flex items-center gap-1 hover:text-red-600 transition-colors"
-                title="Center on Homeowner"
-              >
-                <span className="w-2 h-2 rounded-full bg-red-600 inline-block" />
-                Homeowner
-              </button>
-            )}
-            {engineerCoords && (
-              <button
-                onClick={() => setMapCenter(engineerCoords)}
-                className="flex items-center gap-1 hover:text-blue-700 transition-colors"
-                title="Center Map"
-              >
-                <span className="w-2 h-2 rounded-full bg-blue-700 inline-block" />
-                You
-              </button>
-            )}
-          </div>
-        </div>
-        <div className="w-full h-64 rounded-xl overflow-hidden border border-zinc-200">
-          <Map
-            viewport={{ center: mapCenter, zoom: 13, bearing: 0, pitch: 0 }}
-            markers={markers}
-            className="w-full h-full"
-          />
+  return (
+    <div className="flex flex-col gap-2">
+      <div className="flex items-center justify-between">
+        <p className="text-sm font-semibold text-neutral-800">Live Location</p>
+        <div className="flex items-center gap-3 text-xs text-zinc-500">
+          {hasCustomerLocation && (
+            <button
+              onClick={() => setMapCenter([customerLng, customerLat])}
+              className="flex items-center gap-1 hover:text-red-600 transition-colors"
+              title="Center on Homeowner"
+            >
+              <span className="w-2 h-2 rounded-full bg-red-600 inline-block" />
+              Homeowner
+            </button>
+          )}
+          {engineerCoords && (
+            <button
+              onClick={() => setMapCenter(engineerCoords)}
+              className="flex items-center gap-1 hover:text-blue-700 transition-colors"
+              title="Center Map"
+            >
+              <span className="w-2 h-2 rounded-full bg-blue-700 inline-block" />
+              You
+            </button>
+          )}
         </div>
       </div>
-      )
+      <div className="w-full h-64 rounded-xl overflow-hidden border border-zinc-200">
+        <Map
+          viewport={{ center: mapCenter, zoom: 13, bearing: 0, pitch: 0 }}
+          markers={markers}
+          className="w-full h-full"
+        />
+      </div>
+    </div>
+  )
 }
