@@ -4,9 +4,11 @@ import React from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { BookingWizard } from './booking-wizard'
 import { useBookingStore } from '@/store/booking-store'
+import { useRouter } from 'next/navigation'
 
 export function BookingWizardModal() {
   const { isOpen, resetBooking, saveDraft, currentStep, bookingId } = useBookingStore()
+  const router = useRouter()
 
   React.useEffect(() => {
     if (isOpen) {
@@ -26,7 +28,12 @@ export function BookingWizardModal() {
     if (currentStep > 1 && !bookingId) {
       saveDraft()
     }
+    // If a booking was created and a pro was selected (step 8), redirect to that booking
+    const bid = bookingId
     resetBooking()
+    if (bid && currentStep >= 8) {
+      router.push(`/bookings/${bid}`)
+    }
   }
 
   if (!isOpen) return null
