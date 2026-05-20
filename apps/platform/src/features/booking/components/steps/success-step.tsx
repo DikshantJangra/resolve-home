@@ -84,21 +84,23 @@ function EngineerCard({ engineer, onSelect, isPending, selectedId, currentEngine
 
       {/* Distance + Address */}
       {(engineer.distance !== null && engineer.distance !== undefined) || engineer.location?.city ? (
-        <div className="flex items-center gap-2 flex-wrap">
-          <IoLocationOutline className="w-3.5 h-3.5 text-blue-600 shrink-0" />
-          {engineer.distance !== null && engineer.distance !== undefined && (
-            <span className="text-blue-600 text-xs font-semibold">{engineer.distance}km away</span>
-          )}
-          {engineer.location?.city && (
-            <>
-              {engineer.distance !== null && engineer.distance !== undefined && (
-                <span className="text-zinc-300 text-xs">·</span>
-              )}
+        <div className="flex items-start gap-2 flex-wrap">
+          <IoLocationOutline className="w-3.5 h-3.5 text-blue-600 shrink-0 mt-0.5" />
+          <div className="flex flex-col gap-0.5">
+            {engineer.distance !== null && engineer.distance !== undefined && (
+              <span className="text-blue-600 text-xs font-semibold">{engineer.distance}km away</span>
+            )}
+            {(engineer.location?.streetAddress || engineer.location?.nearestLandmark || engineer.location?.city) && (
               <span className="text-zinc-500 text-xs">
-                {[engineer.location.city, engineer.location.state].filter(Boolean).join(', ')}
+                {[
+                  engineer.location?.streetAddress,
+                  engineer.location?.nearestLandmark,
+                  engineer.location?.city,
+                  engineer.location?.state,
+                ].filter(Boolean).join(', ')}
               </span>
-            </>
-          )}
+            )}
+          </div>
         </div>
       ) : null}
 

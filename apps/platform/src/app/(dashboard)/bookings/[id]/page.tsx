@@ -91,6 +91,12 @@ export default function BookingDetailsPage() {
     }
   }
 
+  const handleStartReselect = async () => {
+    // Invalidate stale cache so fresh engineers are fetched
+    await queryClient.invalidateQueries({ queryKey: ['available-engineers', id] })
+    setReselecting(true)
+  }
+
   const isWorker = userProfile?.user?.role === 'worker'
 
   const trackingActive = !!engineer && ['confirmed', 'on_the_way', 'arrived', 'in_progress', 'in-progress'].includes(booking?.status ?? '')
@@ -404,7 +410,7 @@ export default function BookingDetailsPage() {
                 <Button onClick={handleRefetch} variant="outline" className="flex-1 flex items-center justify-center gap-2 text-xs h-9">
                   <HiOutlineRefresh className="w-3.5 h-3.5" /> Refresh
                 </Button>
-                <Button onClick={() => setReselecting(true)} variant="outline" className="flex-1 text-xs h-9">
+                <Button onClick={handleStartReselect} variant="outline" className="flex-1 text-xs h-9">
                   Re-select Pro
                 </Button>
               </div>
@@ -491,17 +497,16 @@ export default function BookingDetailsPage() {
                                 <span className="text-zinc-500 text-xs">{eng.completedJobs || 0} jobs</span>
                               </div>
                               {eng.distance != null && (
-                                <div className="flex items-center gap-1.5 flex-wrap">
-                                  <HiOutlineLocationMarker className="w-3 h-3 text-blue-600 shrink-0" />
-                                  <span className="text-blue-600 text-xs font-semibold">{eng.distance}km away</span>
-                                  {eng.location?.city && (
-                                    <>
-                                      <span className="text-zinc-300 text-xs">·</span>
+                                <div className="flex items-start gap-1.5 flex-wrap">
+                                  <HiOutlineLocationMarker className="w-3 h-3 text-blue-600 shrink-0 mt-0.5" />
+                                  <div className="flex flex-col gap-0.5">
+                                    <span className="text-blue-600 text-xs font-semibold">{eng.distance}km away</span>
+                                    {(eng.location?.streetAddress || eng.location?.nearestLandmark || eng.location?.city) && (
                                       <span className="text-zinc-500 text-xs">
-                                        {[eng.location.city, eng.location.state].filter(Boolean).join(', ')}
+                                        {[eng.location?.streetAddress, eng.location?.nearestLandmark, eng.location?.city, eng.location?.state].filter(Boolean).join(', ')}
                                       </span>
-                                    </>
-                                  )}
+                                    )}
+                                  </div>
                                 </div>
                               )}
                             </div>
@@ -607,10 +612,10 @@ export default function BookingDetailsPage() {
                       <HiOutlineBriefcase className="w-4 h-4" />
                       <span>{engineer?.completedJobs || 0} Jobs Completed</span>
                     </div>
-                    {(engineer?.location?.city || engineer?.location?.state) && (
-                      <div className="flex items-center gap-1 text-zinc-500 text-xs">
-                        <HiOutlineLocationMarker className="w-3.5 h-3.5 text-blue-600 shrink-0" />
-                        <span>{[engineer.location.city, engineer.location.state].filter(Boolean).join(', ')}</span>
+                    {(engineer?.location?.city || engineer?.location?.state || engineer?.location?.streetAddress) && (
+                      <div className="flex items-start gap-1 text-zinc-500 text-xs">
+                        <HiOutlineLocationMarker className="w-3.5 h-3.5 text-blue-600 shrink-0 mt-0.5" />
+                        <span>{[engineer.location?.streetAddress, engineer.location?.nearestLandmark, engineer.location?.city, engineer.location?.state].filter(Boolean).join(', ')}</span>
                       </div>
                     )}
                   </div>
@@ -624,7 +629,7 @@ export default function BookingDetailsPage() {
                   className="w-full h-9 rounded-xl text-xs font-semibold border border-zinc-300 text-zinc-600 hover:bg-zinc-50 transition-all flex items-center justify-center gap-2"
                 >
                   <HiOutlineRefresh className="w-3.5 h-3.5" />
-                  Re-select Pro Partner
+                  Re-select another Pro Partner
                 </button>
               )}
 
