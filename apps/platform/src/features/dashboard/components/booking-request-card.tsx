@@ -21,7 +21,7 @@ export const BookingRequestCard = ({ booking, isWorker = true }: BookingRequestC
   const isUpcoming = ['PENDING', 'CONFIRMED'].includes(booking.status?.toUpperCase())
   const isInProgress = booking.status?.toUpperCase() === 'IN_PROGRESS'
 
-  const displayUser = isWorker ? booking.user : (booking.engineer || booking.engineers?.[0])
+  const displayUser = isWorker ? (booking.user || booking.customer) : (booking.engineer || booking.engineers?.[0])
   const displayName = displayUser?.name || null
 
   // Category: use category name if available, otherwise blank (don't duplicate service name)
