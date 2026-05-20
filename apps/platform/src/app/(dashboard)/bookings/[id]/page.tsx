@@ -37,18 +37,22 @@ export default function BookingDetailsPage() {
   const engineer = !isLoading && booking
     ? (booking.engineer || booking.engineers?.[0] || null)
     : null
-  // Only show available engineers list when truly no engineer is assigned yet
-  const hasNoEngineer = !isLoading && !!booking && !engineer && !['awaiting_engineer', 'confirmed', 'on_the_way', 'arrived', 'in_progress', 'in-progress', 'completed'].includes(booking?.status ?? '')
+
+  const isAwaitingEngineer = booking?.status === 'awaiting_engineer'
+  const [reselecting, setReselecting] = React.useState(false)
+
+  // Only fetch available engineers when: truly no engineer assigned, OR user is actively reselecting
+  const hasNoEngineer = !isLoading && !!booking && !engineer &&
+    !['awaiting_engineer', 'confirmed', 'on_the_way', 'arrived', 'in_progress', 'in-progress', 'completed'].includes(booking?.status ?? '')
 
   const { data: availableEngineersData, refetch: refetchEngineers, isFetching: isRefetchingEngineers } = useAvailableEngineers(
-    hasNoEngineer ? id as string : ''
+    (hasNoEngineer || reselecting) ? id as string : ''
   )
   const availableEngineers: any[] = availableEngineersData?.engineers || []
 
   const { mutate: selectEngineer, isPending: isSelectingEngineer, variables: selectVars } = useSelectEngineer()
   const [selectedEngineerId, setSelectedEngineerId] = React.useState<string | null>(null)
   const [confirmingEngineerId, setConfirmingEngineerId] = React.useState<string | null>(null)
-  const [reselecting, setReselecting] = React.useState(false)
 
   const handleSelectEngineer = (engineerId: string) => {
     selectEngineer({ bookingId: id as string, engineerId }, {
@@ -82,11 +86,8 @@ export default function BookingDetailsPage() {
 
   const handleRefreshPro = async () => {
     await queryClient.invalidateQueries({ queryKey: ['booking-detail', id] })
-    if (hasNoEngineer) {
-      const result = await refetchEngineers()
-      if (result.data?.engineers?.length > 0) {
-        await queryClient.invalidateQueries({ queryKey: ['booking-detail', id] })
-      }
+    if (hasNoEngineer || reselecting) {
+      await refetchEngineers()
     }
   }
 
@@ -391,7 +392,7 @@ export default function BookingDetailsPage() {
 
         {/* Profile and Review Sidebar */}
         <div className="lg:col-span-7 flex flex-col gap-6">
-          {booking.status === 'awaiting_engineer' && !engineer ? (
+          {(booking.status === 'awaiting_engineer' && !engineer && !reselecting) ? (
             /* Pro selected, waiting for acceptance */
             <div className="p-6 bg-blue-50 rounded-2xl flex flex-col items-center justify-center gap-4 border border-blue-100 shadow-sm text-center">
               <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center">
@@ -399,9 +400,14 @@ export default function BookingDetailsPage() {
               </div>
               <h3 className="text-base font-bold text-neutral-700">Waiting for Pro Partner</h3>
               <p className="text-zinc-500 text-sm">Your request has been sent. Waiting for the Pro Partner to accept.</p>
-              <Button onClick={handleRefetch} variant="outline" className="flex items-center gap-2 text-xs h-8 px-3">
-                <HiOutlineRefresh className="w-3.5 h-3.5" /> Refresh
-              </Button>
+              <div className="flex gap-2 w-full">
+                <Button onClick={handleRefetch} variant="outline" className="flex-1 flex items-center justify-center gap-2 text-xs h-9">
+                  <HiOutlineRefresh className="w-3.5 h-3.5" /> Refresh
+                </Button>
+                <Button onClick={() => setReselecting(true)} variant="outline" className="flex-1 text-xs h-9">
+                  Re-select Pro
+                </Button>
+              </div>
             </div>
           ) : (!engineer || reselecting) ? (
             <div className="flex flex-col gap-4">
