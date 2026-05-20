@@ -20,7 +20,7 @@ import { ReviewForm } from '@/features/booking/components/review-form'
 import { QuotationView } from '@/features/booking/components/quotation-view'
 import { Map, type MapViewport, type MapMarker } from '@/components/ui/map'
 import { Button, cn, formatImageUrl, LoadingSpinner } from "@resolve/ui"
-import { useBookingDetail, useCancelBooking, useBookingQuotation, useUserProfile, useAvailableEngineers, useEngineerLocation } from '@/hooks/api-hooks'
+import { useBookingDetail, useCancelBooking, useBookingQuotation, useUserProfile, useAvailableEngineers, useEngineerLocation, useSelectEngineer } from '@/hooks/api-hooks'
 import { useQueryClient } from '@tanstack/react-query'
 import { format } from 'date-fns'
 import { toast } from 'sonner'
@@ -39,9 +39,24 @@ export default function BookingDetailsPage() {
     : null
   const hasNoEngineer = !isLoading && !!booking && !engineer
 
-  const { refetch: refetchEngineers, isFetching: isRefetchingEngineers } = useAvailableEngineers(
+  const { data: availableEngineersData, refetch: refetchEngineers, isFetching: isRefetchingEngineers } = useAvailableEngineers(
     hasNoEngineer ? id as string : ''
   )
+  const availableEngineers: any[] = availableEngineersData?.engineers || []
+
+  const { mutate: selectEngineer, isPending: isSelectingEngineer, variables: selectVars } = useSelectEngineer()
+  const [selectedEngineerId, setSelectedEngineerId] = React.useState<string | null>(null)
+
+  const handleSelectEngineer = (engineerId: string) => {
+    selectEngineer({ bookingId: id as string, engineerId }, {
+      onSuccess: () => {
+        setSelectedEngineerId(engineerId)
+        toast.success('Pro Partner selected!')
+        refetch()
+      },
+      onError: (err: any) => toast.error(err?.message || 'Failed to select engineer')
+    })
+  }
 
   const handleRefetch = async () => {
     toast.promise(
@@ -196,11 +211,11 @@ export default function BookingDetailsPage() {
 
   const displayUser = isWorker ? customer : engineer
   const displayName = displayUser?.name || (isWorker ? 'Homeowner' : 'Pro Partner')
-  const displayImage = displayUser?.image 
-    ? formatImageUrl(displayUser.image) 
-    : (displayUser?.idDocument 
-        ? formatImageUrl(displayUser.idDocument) 
-        : `https://api.dicebear.com/7.x/avataaars/svg?seed=${displayName}`)
+  const displayImage = displayUser?.image
+    ? formatImageUrl(displayUser.image)
+    : (displayUser?.idDocument
+      ? formatImageUrl(displayUser.idDocument)
+      : `https://api.dicebear.com/7.x/avataaars/svg?seed=${displayName}`)
   const userRole = isWorker ? 'Homeowner' : (engineer?.role || 'Pro Partner')
 
   return (
@@ -369,27 +384,124 @@ export default function BookingDetailsPage() {
         {/* Profile and Review Sidebar */}
         <div className="lg:col-span-7 flex flex-col gap-6">
           {!engineer ? (
-            <div className="p-6 bg-stone-50 rounded-2xl flex flex-col items-center justify-center gap-4 border border-zinc-100 shadow-sm text-center">
-              <div className="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center text-blue-700">
-                <HiOutlineBriefcase className="w-8 h-8" />
+            <div className="flex flex-col gap-4">
+              {/* Header */}
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-semibold text-neutral-700">
+                    {availableEngineers.length > 0
+                      ? `${availableEngineers.length} Pro Partner${availableEngineers.length > 1 ? 's' : ''} available`
+                      : 'Searching for Pro Partners...'}
+                  </p>
+                  {availableEngineers.length > 0 && (
+                    <p className="text-xs text-zinc-500">Select one to get started</p>
+                  )}
+                </div>
+                <Button onClick={handleRefreshPro} disabled={isRefetchingEngineers} variant="outline"
+                  className="h-8 px-3 text-xs flex items-center gap-1.5">
+                  <HiOutlineRefresh className={cn('w-3.5 h-3.5', isRefetchingEngineers && 'animate-spin')} />
+                  Refresh
+                </Button>
               </div>
-              <h3 className="text-lg font-bold text-neutral-700">No Pro Partner Assigned Yet</h3>
-              <p className="text-zinc-600 text-sm">We're still finding the best Pro Partner for your request.</p>
-              <Button
-                onClick={handleRefreshPro}
-                disabled={isRefetchingEngineers}
-                variant="outline"
-                className="flex items-center gap-2"
-              >
-                <svg className={cn('w-4 h-4', isRefetchingEngineers && 'animate-spin')} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-                {isRefetchingEngineers ? 'Checking...' : 'Refresh'}
-              </Button>
-              {isCancelling ? (
-                <Button disabled>Cancelling...</Button>
+
+              {availableEngineers.length === 0 ? (
+                <div className="p-6 bg-stone-50 rounded-2xl flex flex-col items-center justify-center gap-4 border border-zinc-100 shadow-sm text-center">
+                  <div className="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center text-blue-700">
+                    <HiOutlineBriefcase className="w-8 h-8" />
+                  </div>
+                  <h3 className="text-base font-bold text-neutral-700">No Pro Partners Found Yet</h3>
+                  <p className="text-zinc-500 text-sm">We're still searching nearby. Check back in a moment.</p>
+                  {!isCancelling ? (
+                    <Button onClick={() => cancelBooking(id as string)} variant="outline"
+                      className="border-red-200 text-red-600 hover:bg-red-50">Cancel Booking</Button>
+                  ) : (
+                    <Button disabled>Cancelling...</Button>
+                  )}
+                </div>
               ) : (
-                <Button onClick={() => cancelBooking(id as string)} variant="outline" className="border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700">Cancel Booking</Button>
+                <div className="flex flex-col gap-3 max-h-[520px] overflow-y-auto pr-1 no-scrollbar">
+                  {availableEngineers.map((eng: any) => {
+                    const isSelecting = isSelectingEngineer && (selectVars as any)?.engineerId === eng.id
+                    const isSelected = selectedEngineerId === eng.id
+                    return (
+                      <div key={eng.id} className="bg-white rounded-2xl border border-zinc-200 p-4 flex flex-col gap-3 shadow-sm">
+                        {/* Header */}
+                        <div className="flex items-start gap-3">
+                          <div className="relative shrink-0">
+                            {eng.image ? (
+                              <img src={formatImageUrl(eng.image)} alt={eng.name}
+                                className="w-12 h-12 rounded-full object-cover border-2 border-white shadow-sm" />
+                            ) : (
+                              <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 text-lg font-bold">
+                                {eng.name?.[0] || 'P'}
+                              </div>
+                            )}
+                            <span className={cn('absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-white',
+                              eng.isOnline ? 'bg-green-500' : 'bg-zinc-400')} />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span className="text-neutral-700 text-sm font-bold uppercase">{eng.name}</span>
+                              <span className="px-1.5 py-0.5 border border-orange-400 text-orange-500 text-[9px] font-bold rounded">✦ PRO VERIFIED</span>
+                            </div>
+                            <span className="text-blue-600 text-xs font-medium">Professional Partner</span>
+                            <div className="flex items-center gap-3 mt-1 flex-wrap">
+                              <div className="flex items-center gap-1">
+                                {[1, 2, 3, 4, 5].map(s => (
+                                  <HiOutlineStar key={s} className={cn('w-3 h-3', s <= Math.round(eng.rating || 0) ? 'text-amber-400 fill-amber-400' : 'text-zinc-200 fill-zinc-200')} />
+                                ))}
+                                <span className="text-zinc-500 text-xs ml-1">{(eng.rating || 0).toFixed(1)} ({eng.reviews?.length || 0})</span>
+                              </div>
+                              <div className="flex items-center gap-1">
+                                <HiOutlineBriefcase className="w-3 h-3 text-zinc-400" />
+                                <span className="text-zinc-500 text-xs">{eng.completedJobs || 0} jobs</span>
+                              </div>
+                              {eng.distance != null && (
+                                <div className="flex items-center gap-1">
+                                  <HiOutlineLocationMarker className="w-3 h-3 text-blue-600" />
+                                  <span className="text-blue-600 text-xs font-semibold">{eng.distance}km away</span>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Services + Bio */}
+                        <div className="grid grid-cols-2 gap-3 pt-2 border-t border-zinc-100">
+                          <div className="flex flex-col gap-1">
+                            <span className="text-[9px] text-zinc-400 font-semibold uppercase tracking-wide">Services Offered</span>
+                            {eng.assignedServicesDetail?.length > 0 ? (
+                              <div className="flex flex-wrap gap-1">
+                                {eng.assignedServicesDetail.map((s: any, i: number) => (
+                                  <span key={i} className="px-2 py-0.5 bg-zinc-100 text-zinc-600 text-[10px] rounded-full border border-zinc-200">{s.name}</span>
+                                ))}
+                              </div>
+                            ) : <span className="text-zinc-400 text-xs italic">Not specified</span>}
+                          </div>
+                          <div className="flex flex-col gap-1">
+                            <span className="text-[9px] text-zinc-400 font-semibold uppercase tracking-wide">About Me</span>
+                            <p className="text-zinc-500 text-xs leading-relaxed line-clamp-3">
+                              {eng.aboutMe || 'No introduction provided yet.'}
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* Select button */}
+                        <button
+                          onClick={() => !isSelected && handleSelectEngineer(eng.id)}
+                          disabled={isSelectingEngineer || isSelected}
+                          className={cn('w-full h-10 rounded-xl text-sm font-semibold transition-all',
+                            isSelected ? 'bg-emerald-600 text-white cursor-not-allowed'
+                              : isSelecting ? 'bg-blue-700 text-white opacity-70 cursor-not-allowed'
+                                : 'bg-blue-700 hover:bg-blue-800 text-white active:scale-[0.98]'
+                          )}
+                        >
+                          {isSelected ? '✓ Selected' : isSelecting ? 'Selecting...' : 'Select Pro Partner'}
+                        </button>
+                      </div>
+                    )
+                  })}
+                </div>
               )}
             </div>
           ) : (
