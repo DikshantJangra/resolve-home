@@ -1,7 +1,7 @@
 'use client'
 
-import React, { useState, useEffect, useRef, useCallback } from 'react'
-import { HiOutlineStar, HiOutlineBriefcase, HiOutlineChevronDown, HiOutlineChevronUp, HiOutlineRefresh } from 'react-icons/hi'
+import React, { useEffect, useRef, useCallback } from 'react'
+import { HiOutlineStar, HiOutlineBriefcase, HiOutlineRefresh } from 'react-icons/hi'
 import { IoLocationOutline } from 'react-icons/io5'
 import { useBookingStore } from '@/store/booking-store'
 import { Button, cn, formatImageUrl } from '@resolve/ui'
@@ -18,14 +18,14 @@ function EngineerCard({ engineer, onSelect, isPending, selectedId, currentEngine
   selectedId: string | null
   currentEngineerId: string | null
 }) {
-  const [reviewsOpen, setReviewsOpen] = useState(false)
   const isSelecting = isPending && selectedId === engineer.id
   const isAlreadySelected = currentEngineerId === engineer.id
 
   return (
     <div className="bg-white rounded-2xl border border-zinc-200 p-4 flex flex-col gap-4 shadow-sm">
-      {/* Header */}
+      {/* Header row */}
       <div className="flex items-start gap-3">
+        {/* Avatar */}
         <div className="relative shrink-0">
           {engineer.image ? (
             <img src={formatImageUrl(engineer.image)} alt={engineer.name}
@@ -35,63 +35,104 @@ function EngineerCard({ engineer, onSelect, isPending, selectedId, currentEngine
               {engineer.name?.[0] || 'P'}
             </div>
           )}
-          {/* Online indicator */}
           <span className={cn(
             "absolute bottom-0 right-0 w-3.5 h-3.5 rounded-full border-2 border-white",
             engineer.isOnline ? "bg-green-500" : "bg-zinc-400"
           )} title={engineer.isOnline ? "Online" : "Offline"} />
         </div>
+
+        {/* Name + badge + stats */}
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-neutral-700 text-sm font-bold">{engineer.name}</span>
-            <span className="px-1.5 py-0.5 bg-orange-50 text-orange-600 text-[9px] font-bold rounded">Pro Verified</span>
+            <span className="text-neutral-700 text-sm font-bold uppercase">{engineer.name}</span>
+            <span className="flex items-center gap-1 px-1.5 py-0.5 border border-orange-400 text-orange-500 text-[9px] font-bold rounded">
+              ✦ PRO VERIFIED
+            </span>
           </div>
-          <span className="text-zinc-500 text-xs">{engineer.categoryName || engineer.specialty || 'Professional'}</span>
-          <div className="flex items-center gap-3 mt-1.5 flex-wrap">
-            <div className="flex items-center gap-1">
-              <HiOutlineStar className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
-              <span className="text-zinc-600 text-xs font-semibold">{engineer.rating || 0}</span>
-              <span className="text-zinc-400 text-xs">({engineer.reviews?.length || 0})</span>
+          <span className="text-blue-600 text-xs font-medium">Professional Partner</span>
+
+          {/* Rating row */}
+          <div className="flex items-center gap-1 mt-1">
+            {[1, 2, 3, 4, 5].map(s => (
+              <HiOutlineStar key={s} className={cn('w-3 h-3', s <= Math.round(engineer.rating || 0) ? 'text-amber-400 fill-amber-400' : 'text-zinc-200 fill-zinc-200')} />
+            ))}
+            <span className="text-zinc-500 text-xs ml-1">{(engineer.rating || 0).toFixed(1)} ({engineer.reviews?.length || 0})</span>
+          </div>
+        </div>
+
+        {/* Jobs done + rating boxes */}
+        <div className="flex flex-col gap-1.5 shrink-0">
+          <div className="flex flex-col items-center bg-zinc-50 border border-zinc-100 rounded-lg px-3 py-1.5 min-w-[64px]">
+            <span className="text-[9px] text-zinc-400 font-semibold uppercase tracking-wide">Jobs Done</span>
+            <div className="flex items-center gap-1 mt-0.5">
+              <HiOutlineBriefcase className="w-3 h-3 text-zinc-500" />
+              <span className="text-sm font-bold text-neutral-700">{engineer.completedJobs || 0}</span>
             </div>
-            <div className="flex items-center gap-1">
-              <HiOutlineBriefcase className="w-3.5 h-3.5 text-zinc-400" />
-              <span className="text-zinc-600 text-xs">{engineer.completedJobs || 0} jobs</span>
+          </div>
+          <div className="flex flex-col items-center bg-zinc-50 border border-zinc-100 rounded-lg px-3 py-1.5 min-w-[64px]">
+            <span className="text-[9px] text-zinc-400 font-semibold uppercase tracking-wide">Rating</span>
+            <div className="flex items-center gap-1 mt-0.5">
+              <HiOutlineStar className="w-3 h-3 text-zinc-500" />
+              <span className="text-sm font-bold text-neutral-700">
+                {engineer.rating ? engineer.rating.toFixed(1) : '—'}
+              </span>
             </div>
-            {engineer.distance !== null && engineer.distance !== undefined && (
-              <div className="flex items-center gap-1">
-                <IoLocationOutline className="w-3.5 h-3.5 text-blue-600" />
-                <span className="text-blue-600 text-xs font-semibold">{engineer.distance}km away</span>
-              </div>
-            )}
           </div>
         </div>
       </div>
 
-      {/* Reviews toggle */}
-      {engineer.reviews?.length > 0 && (
-        <div className="flex flex-col gap-2">
-          <button
-            onClick={() => setReviewsOpen(v => !v)}
-            className="flex items-center gap-1 text-xs text-zinc-500 hover:text-blue-700 transition-colors"
-          >
-            {reviewsOpen ? <HiOutlineChevronUp className="w-3.5 h-3.5" /> : <HiOutlineChevronDown className="w-3.5 h-3.5" />}
-            {reviewsOpen ? 'Hide reviews' : `See ${engineer.reviews.length} review${engineer.reviews.length > 1 ? 's' : ''}`}
-          </button>
-          {reviewsOpen && (
-            <div className="flex flex-col gap-2 max-h-40 overflow-y-auto pr-1 no-scrollbar">
-              {engineer.reviews.map((r: any, i: number) => (
-                <div key={i} className="p-3 bg-stone-50 rounded-xl border border-zinc-100">
-                  <div className="flex items-center gap-1 mb-1">
-                    {[1, 2, 3, 4, 5].map(s => (
-                      <HiOutlineStar key={s} className={cn('w-3 h-3', s <= r.rating ? 'text-amber-500 fill-amber-500' : 'text-zinc-200')} />
-                    ))}
-                    <span className="text-zinc-400 text-[10px] ml-1">{r.customerName}</span>
-                  </div>
-                  <p className="text-zinc-600 text-xs leading-relaxed">{r.comment}</p>
-                </div>
+      {/* Distance */}
+      {engineer.distance !== null && engineer.distance !== undefined && (
+        <div className="flex items-center gap-1">
+          <IoLocationOutline className="w-3.5 h-3.5 text-blue-600" />
+          <span className="text-blue-600 text-xs font-semibold">{engineer.distance}km away</span>
+        </div>
+      )}
+
+      {/* Services + Bio */}
+      <div className="grid grid-cols-2 gap-3 pt-1 border-t border-zinc-100">
+        {/* Services offered */}
+        <div className="flex flex-col gap-1.5">
+          <span className="text-[9px] text-zinc-400 font-semibold uppercase tracking-wide">Services Offered</span>
+          {(engineer.assignedServicesDetail?.length > 0 || engineer.services?.length > 0) ? (
+            <div className="flex flex-wrap gap-1">
+              {(engineer.assignedServicesDetail?.length > 0
+                ? engineer.assignedServicesDetail.map((s: any) => s.name)
+                : engineer.services
+              ).map((name: string, i: number) => (
+                <span key={i} className="px-2 py-0.5 bg-zinc-100 text-zinc-600 text-[10px] rounded-full border border-zinc-200">
+                  {name}
+                </span>
               ))}
             </div>
+          ) : (
+            <span className="text-zinc-400 text-xs italic">Not specified</span>
           )}
+        </div>
+
+        {/* About me */}
+        <div className="flex flex-col gap-1.5">
+          <span className="text-[9px] text-zinc-400 font-semibold uppercase tracking-wide">About Me</span>
+          <p className="text-zinc-500 text-xs leading-relaxed line-clamp-3">
+            {engineer.aboutMe || engineer.bio || 'No introduction provided yet by this Pro Partner.'}
+          </p>
+        </div>
+      </div>
+
+      {/* Reviews */}
+      {engineer.reviews?.length > 0 && (
+        <div className="flex flex-col gap-2 max-h-32 overflow-y-auto pr-1 no-scrollbar border-t border-zinc-100 pt-2">
+          {engineer.reviews.slice(0, 2).map((r: any, i: number) => (
+            <div key={i} className="p-2.5 bg-stone-50 rounded-xl border border-zinc-100">
+              <div className="flex items-center gap-1 mb-1">
+                {[1, 2, 3, 4, 5].map(s => (
+                  <HiOutlineStar key={s} className={cn('w-3 h-3', s <= r.rating ? 'text-amber-500 fill-amber-500' : 'text-zinc-200')} />
+                ))}
+                <span className="text-zinc-400 text-[10px] ml-1">{r.customerName}</span>
+              </div>
+              <p className="text-zinc-600 text-xs leading-relaxed">{r.comment}</p>
+            </div>
+          ))}
         </div>
       )}
 
