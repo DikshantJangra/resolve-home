@@ -40,7 +40,7 @@ export const FinalSuccessStep = () => {
           onClick={handleViewBooking}
           className="w-full h-12 bg-blue-700 hover:bg-blue-800 text-white rounded-xl font-medium"
         >
-          Go to Booking
+          See Request
         </Button>
         <Button
           variant="outline"
