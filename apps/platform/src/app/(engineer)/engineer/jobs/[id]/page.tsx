@@ -272,11 +272,11 @@ export default function JobDetailsPage() {
           {/* Breadcrumb & Refresh */}
           <div className="flex justify-between items-center">
             <Link
-              href="/engineer"
+              href="/bookings"
               className="inline-flex items-center gap-1 text-zinc-600 hover:text-blue-700 transition-colors w-fit group"
             >
               <HiOutlineChevronLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
-              <span className="text-sm font-medium">Back to Jobs</span>
+              <span className="text-sm font-medium">Back to Bookings</span>
             </Link>
             <Button
               variant="outline"
@@ -732,7 +732,7 @@ export default function JobDetailsPage() {
             <div className="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center text-blue-700">
               <HiOutlineCheckCircle className="w-6 h-6" />
             </div>
-            
+
             <div className="flex flex-col gap-1.5">
               <h3 className="text-lg font-bold text-neutral-800">Complete Job?</h3>
               <p className="text-sm text-zinc-500 px-4">
@@ -741,14 +741,14 @@ export default function JobDetailsPage() {
             </div>
 
             <div className="flex gap-3 w-full mt-4">
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 onClick={() => setShowCompleteModal(false)}
                 className="flex-1 h-11 border-zinc-200 text-zinc-700 font-semibold"
               >
                 Cancel
               </Button>
-              <Button 
+              <Button
                 onClick={() => {
                   completeJob(job.id, {
                     onSuccess: () => {
