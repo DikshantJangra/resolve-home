@@ -37,11 +37,11 @@ export const LocationStep = () => {
     }
   }, [])
 
-  const nigerianStates = useMemo(() => 
+  const nigerianStates = useMemo(() =>
     formData.countryCode ? State.getStatesOfCountry(formData.countryCode) : [],
     [formData.countryCode]
   )
-  const citiesOfState = useMemo(() => 
+  const citiesOfState = useMemo(() =>
     (formData.countryCode && formData.stateCode) ? City.getCitiesOfState(formData.countryCode, formData.stateCode) : [],
     [formData.countryCode, formData.stateCode]
   )
@@ -115,7 +115,7 @@ export const LocationStep = () => {
         )
 
         const countryObj = Country.getCountryByCode(countryCode)
-        
+
         setFormData(prev => ({
           ...prev,
           country: countryObj?.name || prev.country,
@@ -200,29 +200,31 @@ export const LocationStep = () => {
             `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=18&addressdetails=1`
           )
           const data = await response.json()
-          
+
           if (data && data.address) {
-            const { state, city, town, village, road, neighbourhood, suburb, country_code } = data.address
+            const { state, city, town, village, road, neighbourhood, suburb, county, country_code } = data.address
             const detectedCountryCode = (country_code || 'NG').toUpperCase()
-            
+
             const states = State.getStatesOfCountry(detectedCountryCode)
-            const cleanStateName = (state || '').replace(/ State$/i, '')
+            const rawState = (state || county || '').replace(/ State$/i, '').trim()
             const matchedState = states.find(s =>
-              s.name.toLowerCase().includes(cleanStateName.toLowerCase()) ||
-              cleanStateName.toLowerCase().includes(s.name.toLowerCase())
+              s.name.toLowerCase() === rawState.toLowerCase() ||
+              s.name.toLowerCase().includes(rawState.toLowerCase()) ||
+              rawState.toLowerCase().includes(s.name.toLowerCase())
             )
 
             const country = Country.getCountryByCode(detectedCountryCode)
-            const cleanCityName = (city || town || village || suburb || '').replace(/ (City|LGA|Local Government Area)$/i, '')
+            // Use the most specific place name available for city
+            const rawCity = (city || town || county || village || suburb || neighbourhood || '').replace(/ (City|LGA|Local Government Area)$/i, '').trim()
 
             setFormData(prev => ({
               ...prev,
               country: country?.name || prev.country,
               countryCode: detectedCountryCode,
-              state: matchedState?.name || cleanStateName,
+              state: matchedState?.name || rawState,
               stateCode: matchedState?.isoCode || '',
-              city: cleanCityName,
-              streetAddress: road || neighbourhood || data.display_name.split(',')[0] || '',
+              city: rawCity,
+              streetAddress: road || neighbourhood || suburb || data.display_name.split(',')[0] || '',
               landmark: '',
               latitude,
               longitude,
@@ -263,7 +265,7 @@ export const LocationStep = () => {
     if (!navigator.geolocation) return
     navigator.geolocation.getCurrentPosition(
       (pos) => setCurrentGPS([pos.coords.longitude, pos.coords.latitude]),
-      () => {}
+      () => { }
     )
   }, [])
 
@@ -276,8 +278,8 @@ export const LocationStep = () => {
       (formData.longitude && formData.latitude)
         ? [formData.longitude, formData.latitude]
         : currentGPS
-        ? currentGPS
-        : [3.3792, 6.5244]
+          ? currentGPS
+          : [3.3792, 6.5244]
 
     const map = new maplibregl.Map({
       container: mapContainerRef.current,
@@ -317,7 +319,7 @@ export const LocationStep = () => {
           }))
           toast.success('Address updated from pin')
         }
-      } catch {}
+      } catch { }
     })
 
     // Click to move marker
@@ -345,9 +347,9 @@ export const LocationStep = () => {
     const name = profile?.name || profile?.user?.name;
     const email = profile?.email || profile?.user?.email;
     const phone = profile?.phone || profile?.user?.phone || profile?.phoneNumber;
-    
+
     const isProfileComplete = !!(name && email && phone);
-    
+
     if (!isProfileComplete) {
       toast.error("Please complete your profile (name, email, phone) before booking", {
         description: "You can update these details in your settings.",
@@ -383,14 +385,14 @@ export const LocationStep = () => {
     <div className="flex flex-col h-full bg-white min-h-0">
       <div className="flex-1 px-5 pt-8 overflow-y-auto overflow-x-hidden scrollbar-thin">
         <div className="flex flex-col justify-start items-start gap-8 pb-10">
-          
+
           {isEmergency && (
             <div className="w-full p-4 bg-blue-50 border border-blue-100 rounded-2xl flex gap-3 animate-in fade-in slide-in-from-top-2">
               <HiOutlineLightningBolt className="w-5 h-5 text-blue-700 shrink-0 mt-0.5" />
               <div className="space-y-1">
                 <p className="text-blue-900 text-sm font-semibold">Emergency Priority Set</p>
                 <p className="text-blue-800 text-xs leading-relaxed">
-                  We've automatically scheduled your service for <span className="font-bold">Today</span> within the next <span className="font-bold">60 minutes</span>. 
+                  We've automatically scheduled your service for <span className="font-bold">Today</span> within the next <span className="font-bold">60 minutes</span>.
                   Our nearest professional is being alerted for immediate response.
                 </p>
               </div>
@@ -440,174 +442,183 @@ export const LocationStep = () => {
             </div>
           )}
 
-        <div className="w-full flex flex-col justify-start items-start gap-6">
-          {/* Country */}
-          <div className="w-full flex flex-col justify-start items-start gap-1.5">
-            <div className="w-full inline-flex justify-start items-start gap-0.5">
-              <Label className="text-zinc-600 text-sm font-medium font-['Inter'] leading-5">Country</Label>
-              <span className="text-red-600 text-sm font-medium font-['Inter'] leading-5">*</span>
-            </div>
-            <div className="w-full relative">
-              <select
-                value={formData.countryCode}
-                onChange={(e) => {
-                  const country = Country.getCountryByCode(e.target.value)
-                  if (country) {
-                    setFormData(prev => ({
-                      ...prev,
-                      country: country.name,
-                      countryCode: country.isoCode,
-                      state: '',
-                      stateCode: '',
-                      city: ''
-                    }))
-                  }
-                }}
-                className="w-full h-12 px-4 rounded-lg border border-zinc-300 bg-white text-sm text-zinc-600 focus:border-blue-700 outline-none appearance-none cursor-pointer"
-              >
-                {Country.getAllCountries().map((c) => (
-                  <option key={c.isoCode} value={c.isoCode}>{c.name}</option>
-                ))}
-              </select>
-              <HiChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-600 w-5 h-5 pointer-events-none" />
-            </div>
-          </div>
-
-          <div className="w-full grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {/* State */}
+          <div className="w-full flex flex-col justify-start items-start gap-6">
+            {/* Country */}
             <div className="w-full flex flex-col justify-start items-start gap-1.5">
               <div className="w-full inline-flex justify-start items-start gap-0.5">
-                <Label className="text-zinc-600 text-sm font-medium font-['Inter'] leading-5">State</Label>
+                <Label className="text-zinc-600 text-sm font-medium font-['Inter'] leading-5">Country</Label>
                 <span className="text-red-600 text-sm font-medium font-['Inter'] leading-5">*</span>
               </div>
               <div className="w-full relative">
                 <select
-                  value={formData.stateCode}
-                  onChange={(e) => handleStateChange(e.target.value)}
+                  value={formData.countryCode}
+                  onChange={(e) => {
+                    const country = Country.getCountryByCode(e.target.value)
+                    if (country) {
+                      setFormData(prev => ({
+                        ...prev,
+                        country: country.name,
+                        countryCode: country.isoCode,
+                        state: '',
+                        stateCode: '',
+                        city: ''
+                      }))
+                    }
+                  }}
                   className="w-full h-12 px-4 rounded-lg border border-zinc-300 bg-white text-sm text-zinc-600 focus:border-blue-700 outline-none appearance-none cursor-pointer"
                 >
-                  <option value="">Select State</option>
-                  {nigerianStates.map((s) => (
-                    <option key={s.isoCode} value={s.isoCode}>{s.name}</option>
+                  {Country.getAllCountries().map((c) => (
+                    <option key={c.isoCode} value={c.isoCode}>{c.name}</option>
                   ))}
                 </select>
                 <HiChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-600 w-5 h-5 pointer-events-none" />
               </div>
             </div>
 
-            {/* City */}
-            <div className="w-full flex flex-col justify-start items-start gap-1.5">
-              <div className="w-full inline-flex justify-start items-start gap-0.5">
-                <Label className="text-zinc-600 text-sm font-medium font-['Inter'] leading-5">City / Area</Label>
-                <span className="text-red-600 text-sm font-medium font-['Inter'] leading-5">*</span>
+            <div className="w-full grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {/* State */}
+              <div className="w-full flex flex-col justify-start items-start gap-1.5">
+                <div className="w-full inline-flex justify-start items-start gap-0.5">
+                  <Label className="text-zinc-600 text-sm font-medium font-['Inter'] leading-5">State</Label>
+                  <span className="text-red-600 text-sm font-medium font-['Inter'] leading-5">*</span>
+                </div>
+                <div className="w-full relative">
+                  <select
+                    value={formData.stateCode}
+                    onChange={(e) => handleStateChange(e.target.value)}
+                    className="w-full h-12 px-4 rounded-lg border border-zinc-300 bg-white text-sm text-zinc-600 focus:border-blue-700 outline-none appearance-none cursor-pointer"
+                  >
+                    <option value="">Select State</option>
+                    {nigerianStates.map((s) => (
+                      <option key={s.isoCode} value={s.isoCode}>{s.name}</option>
+                    ))}
+                  </select>
+                  <HiChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-600 w-5 h-5 pointer-events-none" />
+                </div>
               </div>
-              <div className="w-full relative">
-                <select
-                  value={formData.city}
-                  onChange={(e) => handleChange('city', e.target.value)}
-                  disabled={!formData.stateCode}
-                  className="w-full h-12 px-4 rounded-lg border border-zinc-300 bg-white text-sm text-zinc-600 focus:border-blue-700 outline-none appearance-none cursor-pointer disabled:bg-zinc-50"
-                >
-                  <option value="">Select City / Area</option>
-                  {citiesOfState.map((c) => (
-                    <option key={c.name} value={c.name}>{c.name}</option>
-                  ))}
-                  {formData.stateCode && <option value="Other">Other...</option>}
-                </select>
-                <HiChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-600 w-5 h-5 pointer-events-none" />
-              </div>
-            </div>
-          </div>
 
-          {/* Manual City Entry if "Other" is selected */}
-          {formData.city === 'Other' && (
-            <div className="self-stretch flex flex-col justify-start items-start gap-1.5 animate-in fade-in slide-in-from-top-2">
-              <Input
-                onChange={(e) => handleChange('city', e.target.value)}
-                placeholder="Enter your specific area"
-                className="w-full h-12"
-              />
-            </div>
-          )}
-
-          {/* Street Address */}
-          <div className="self-stretch flex flex-col justify-start items-start gap-1.5">
-            <div className="self-stretch inline-flex justify-start items-start gap-0.5">
-              <Label className="text-zinc-600 text-sm font-medium font-['Inter'] leading-5">Street Address</Label>
-              <span className="text-red-600 text-sm font-medium font-['Inter'] leading-5">*</span>
-            </div>
-            <Input
-              value={formData.streetAddress}
-              onChange={(e) => handleChange('streetAddress', e.target.value)}
-              placeholder="Enter Street Address"
-              className="w-full px-4 py-3 rounded-lg outline outline-[1.50px] outline-offset-[-1.50px] outline-stone-300 border-none focus:outline-blue-700 text-zinc-600 text-sm font-normal font-['Inter'] leading-5"
-            />
-          </div>
-
-          {/* Landmark */}
-          <div className="self-stretch flex flex-col justify-start items-start gap-1.5">
-            <div className="self-stretch inline-flex justify-start items-start gap-0.5">
-              <Label className="text-zinc-600 text-sm font-medium font-['Inter'] leading-5">Nearest Landmark/Area</Label>
-              <span className="text-red-600 text-sm font-medium font-['Inter'] leading-5">*</span>
-            </div>
-            <Input
-              value={formData.landmark}
-              onChange={(e) => handleChange('landmark', e.target.value)}
-              placeholder="e.g Near ikeja mall"
-              className="w-full px-4 py-3 rounded-lg outline outline-[1.50px] outline-offset-[-1.50px] outline-stone-300 border-none focus:outline-blue-700 text-zinc-600 text-sm font-normal font-['Inter'] leading-5"
-            />
-          </div>
-
-          {/* Date & Time */}
-          <div className="w-full grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="w-full flex flex-col justify-start items-start gap-1.5">
-              <div className="w-full inline-flex justify-start items-start gap-0.5">
-                <Label className="text-zinc-600 text-sm font-medium font-['Inter'] leading-5">Date</Label>
-                <span className="text-red-600 text-sm font-medium font-['Inter'] leading-5">*</span>
-              </div>
-              <Input
-                type="date"
-                disabled={isEmergency}
-                min={new Date().toISOString().split('T')[0]}
-                value={useBookingStore.getState().scheduledDate || ''}
-                onChange={(e) => useBookingStore.getState().setScheduledDate(e.target.value)}
-                className="w-full px-4 py-3 rounded-lg outline outline-[1.50px] outline-offset-[-1.50px] outline-stone-300 border-none focus:outline-blue-700 text-zinc-600 text-sm font-normal font-['Inter'] leading-5 disabled:bg-zinc-50"
-              />
-            </div>
-            <div className="w-full flex flex-col justify-start items-start gap-1.5">
-              <div className="w-full inline-flex justify-start items-start gap-0.5">
-                <Label className="text-zinc-600 text-sm font-medium font-['Inter'] leading-5">Time</Label>
-                <span className="text-red-600 text-sm font-medium font-['Inter'] leading-5">*</span>
-              </div>
-              <div className="relative w-full">
-                <Input
-                  type={isEmergency ? "text" : "time"}
-                  disabled={isEmergency}
-                  value={useBookingStore.getState().scheduledTime || ''}
-                  onChange={(e) => useBookingStore.getState().setScheduledTime(e.target.value)}
-                  className="w-full px-4 py-3 rounded-lg outline outline-[1.50px] outline-offset-[-1.50px] outline-stone-300 border-none focus:outline-blue-700 text-zinc-600 text-sm font-normal font-['Inter'] leading-5 disabled:bg-zinc-50 disabled:text-blue-700 disabled:font-bold"
-                />
-                {isEmergency && (
-                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded-full font-bold">
-                    AUTO-SET
-                  </span>
+              {/* City */}
+              <div className="w-full flex flex-col justify-start items-start gap-1.5">
+                <div className="w-full inline-flex justify-start items-start gap-0.5">
+                  <Label className="text-zinc-600 text-sm font-medium font-['Inter'] leading-5">City / Area</Label>
+                  <span className="text-red-600 text-sm font-medium font-['Inter'] leading-5">*</span>
+                </div>
+                {/* Show text input when GPS set a city not in the dropdown */}
+                {formData.city && formData.city !== 'Other' && !citiesOfState.find(c => c.name === formData.city) ? (
+                  <Input
+                    value={formData.city}
+                    onChange={(e) => handleChange('city', e.target.value)}
+                    placeholder="City / Area"
+                    className="w-full h-12 border-zinc-300 focus:border-blue-700"
+                  />
+                ) : (
+                  <div className="w-full relative">
+                    <select
+                      value={formData.city}
+                      onChange={(e) => handleChange('city', e.target.value)}
+                      disabled={!formData.stateCode}
+                      className="w-full h-12 px-4 rounded-lg border border-zinc-300 bg-white text-sm text-zinc-600 focus:border-blue-700 outline-none appearance-none cursor-pointer disabled:bg-zinc-50"
+                    >
+                      <option value="">Select City / Area</option>
+                      {citiesOfState.map((c) => (
+                        <option key={c.name} value={c.name}>{c.name}</option>
+                      ))}
+                      {formData.stateCode && <option value="Other">Other...</option>}
+                    </select>
+                    <HiChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-600 w-5 h-5 pointer-events-none" />
+                  </div>
                 )}
               </div>
             </div>
+
+            {/* Manual City Entry if "Other" is selected */}
+            {formData.city === 'Other' && (
+              <div className="self-stretch flex flex-col justify-start items-start gap-1.5 animate-in fade-in slide-in-from-top-2">
+                <Input
+                  onChange={(e) => handleChange('city', e.target.value)}
+                  placeholder="Enter your specific area"
+                  className="w-full h-12"
+                />
+              </div>
+            )}
+
+            {/* Street Address */}
+            <div className="self-stretch flex flex-col justify-start items-start gap-1.5">
+              <div className="self-stretch inline-flex justify-start items-start gap-0.5">
+                <Label className="text-zinc-600 text-sm font-medium font-['Inter'] leading-5">Street Address</Label>
+                <span className="text-red-600 text-sm font-medium font-['Inter'] leading-5">*</span>
+              </div>
+              <Input
+                value={formData.streetAddress}
+                onChange={(e) => handleChange('streetAddress', e.target.value)}
+                placeholder="Enter Street Address"
+                className="w-full px-4 py-3 rounded-lg outline outline-[1.50px] outline-offset-[-1.50px] outline-stone-300 border-none focus:outline-blue-700 text-zinc-600 text-sm font-normal font-['Inter'] leading-5"
+              />
+            </div>
+
+            {/* Landmark */}
+            <div className="self-stretch flex flex-col justify-start items-start gap-1.5">
+              <div className="self-stretch inline-flex justify-start items-start gap-0.5">
+                <Label className="text-zinc-600 text-sm font-medium font-['Inter'] leading-5">Nearest Landmark/Area</Label>
+                <span className="text-red-600 text-sm font-medium font-['Inter'] leading-5">*</span>
+              </div>
+              <Input
+                value={formData.landmark}
+                onChange={(e) => handleChange('landmark', e.target.value)}
+                placeholder="e.g Near ikeja mall"
+                className="w-full px-4 py-3 rounded-lg outline outline-[1.50px] outline-offset-[-1.50px] outline-stone-300 border-none focus:outline-blue-700 text-zinc-600 text-sm font-normal font-['Inter'] leading-5"
+              />
+            </div>
+
+            {/* Date & Time */}
+            <div className="w-full grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="w-full flex flex-col justify-start items-start gap-1.5">
+                <div className="w-full inline-flex justify-start items-start gap-0.5">
+                  <Label className="text-zinc-600 text-sm font-medium font-['Inter'] leading-5">Date</Label>
+                  <span className="text-red-600 text-sm font-medium font-['Inter'] leading-5">*</span>
+                </div>
+                <Input
+                  type="date"
+                  disabled={isEmergency}
+                  min={new Date().toISOString().split('T')[0]}
+                  value={useBookingStore.getState().scheduledDate || ''}
+                  onChange={(e) => useBookingStore.getState().setScheduledDate(e.target.value)}
+                  className="w-full px-4 py-3 rounded-lg outline outline-[1.50px] outline-offset-[-1.50px] outline-stone-300 border-none focus:outline-blue-700 text-zinc-600 text-sm font-normal font-['Inter'] leading-5 disabled:bg-zinc-50"
+                />
+              </div>
+              <div className="w-full flex flex-col justify-start items-start gap-1.5">
+                <div className="w-full inline-flex justify-start items-start gap-0.5">
+                  <Label className="text-zinc-600 text-sm font-medium font-['Inter'] leading-5">Time</Label>
+                  <span className="text-red-600 text-sm font-medium font-['Inter'] leading-5">*</span>
+                </div>
+                <div className="relative w-full">
+                  <Input
+                    type={isEmergency ? "text" : "time"}
+                    disabled={isEmergency}
+                    value={useBookingStore.getState().scheduledTime || ''}
+                    onChange={(e) => useBookingStore.getState().setScheduledTime(e.target.value)}
+                    className="w-full px-4 py-3 rounded-lg outline outline-[1.50px] outline-offset-[-1.50px] outline-stone-300 border-none focus:outline-blue-700 text-zinc-600 text-sm font-normal font-['Inter'] leading-5 disabled:bg-zinc-50 disabled:text-blue-700 disabled:font-bold"
+                  />
+                  {isEmergency && (
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded-full font-bold">
+                      AUTO-SET
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
+
+
           </div>
-
-
         </div>
       </div>
-    </div>
 
       <div className="p-5 mt-auto bg-white border-t border-zinc-100">
         <button
           disabled={!isFormValid}
           onClick={handleContinue}
-          className={`w-full h-11 px-6 py-3 bg-blue-700 rounded-xl flex justify-between items-center transition-all ${
-            !isFormValid ? 'opacity-40 cursor-not-allowed' : 'hover:bg-blue-800'
-          }`}
+          className={`w-full h-11 px-6 py-3 bg-blue-700 rounded-xl flex justify-between items-center transition-all ${!isFormValid ? 'opacity-40 cursor-not-allowed' : 'hover:bg-blue-800'
+            }`}
         >
           <div className="justify-start text-neutral-50 text-sm font-medium font-['Inter'] leading-5">Continue</div>
         </button>
