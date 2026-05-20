@@ -9,11 +9,13 @@ import { toast } from 'sonner'
 import { Country, State, City } from 'country-state-city'
 import maplibregl from 'maplibre-gl'
 import 'maplibre-gl/dist/maplibre-gl.css'
+import { LocationBlockedModal } from '@/components/shared/location-blocked-modal'
 
 export const LocationStep = () => {
   const { location, setLocation, setStep, priority } = useBookingStore()
   const { data: profile } = useUserProfile()
   const isEmergency = priority === 'Emergency'
+  const [isBlockedModalOpen, setIsBlockedModalOpen] = useState(false)
   const [formData, setFormData] = useState({
     country: location?.country || 'Nigeria',
     countryCode: location?.countryCode || 'NG',
@@ -98,82 +100,6 @@ export const LocationStep = () => {
     }
   }
 
-  const fallbackToIPLocation = async () => {
-    setIsLocating(true)
-    toast.info("Location permission blocked or denied. Falling back to IP-based location...")
-    try {
-      const response = await fetch('https://ipapi.co/json/')
-      const data = await response.json()
-      if (data && data.country) {
-        const countryCode = data.country.toUpperCase()
-        const states = State.getStatesOfCountry(countryCode)
-        const cleanStateName = (data.region || '').replace(/ State$/i, '')
-        const matchedState = states.find(s =>
-          s.name.toLowerCase().includes(cleanStateName.toLowerCase()) ||
-          cleanStateName.toLowerCase().includes(s.name.toLowerCase()) ||
-          s.isoCode === data.region_code
-        )
-
-        const countryObj = Country.getCountryByCode(countryCode)
-
-        setFormData(prev => ({
-          ...prev,
-          country: countryObj?.name || prev.country,
-          countryCode: countryCode,
-          state: matchedState?.name || cleanStateName,
-          stateCode: matchedState?.isoCode || data.region_code || '',
-          city: data.city || '',
-          streetAddress: data.org || data.city || '',
-          landmark: '',
-          latitude: data.latitude,
-          longitude: data.longitude,
-        }))
-        toast.success("Location auto-detected via IP!")
-      } else {
-        throw new Error("Invalid IP location data")
-      }
-    } catch (error) {
-      console.error("IP geolocation failed:", error)
-      try {
-        const response = await fetch('https://ip-api.com/json/')
-        const data = await response.json()
-        if (data && data.status === 'success') {
-          const countryCode = data.countryCode.toUpperCase()
-          const states = State.getStatesOfCountry(countryCode)
-          const cleanStateName = (data.regionName || '').replace(/ State$/i, '')
-          const matchedState = states.find(s =>
-            s.name.toLowerCase().includes(cleanStateName.toLowerCase()) ||
-            cleanStateName.toLowerCase().includes(s.name.toLowerCase()) ||
-            s.isoCode === data.region
-          )
-
-          const countryObj = Country.getCountryByCode(countryCode)
-
-          setFormData(prev => ({
-            ...prev,
-            country: countryObj?.name || prev.country,
-            countryCode: countryCode,
-            state: matchedState?.name || cleanStateName,
-            stateCode: matchedState?.isoCode || data.region || '',
-            city: data.city || '',
-            streetAddress: data.as || data.city || '',
-            landmark: '',
-            latitude: data.lat,
-            longitude: data.lon,
-          }))
-          toast.success("Location auto-detected via IP!")
-        } else {
-          toast.error("Failed to detect location. Please enter manually.")
-        }
-      } catch (err) {
-        console.error("Second IP geolocation failed:", err)
-        toast.error("Location access denied or blocked. Please enter manually.")
-      }
-    } finally {
-      setIsLocating(false)
-    }
-  }
-
   const handleUseGPS = () => {
     if (!navigator.geolocation) {
       alert("Geolocation is not supported by your browser")
@@ -183,7 +109,7 @@ export const LocationStep = () => {
     // Check permission state first
     navigator.permissions?.query({ name: 'geolocation' as PermissionName }).then(result => {
       if (result.state === 'denied') {
-        fallbackToIPLocation()
+        setIsBlockedModalOpen(true)
         return
       }
       startLocating()
@@ -242,7 +168,7 @@ export const LocationStep = () => {
         setIsLocating(false)
         console.error("Geolocation error:", error.code, error.message)
         if (error.code === 1) { // Location access denied
-          fallbackToIPLocation()
+          setIsBlockedModalOpen(true)
         } else {
           let message = "Failed to get your location."
           if (error.code === 2) message = "Location unavailable. Please try again or enter manually."
@@ -623,6 +549,16 @@ export const LocationStep = () => {
           <div className="justify-start text-neutral-50 text-sm font-medium font-['Inter'] leading-5">Continue</div>
         </button>
       </div>
+
+      <LocationBlockedModal
+        isOpen={isBlockedModalOpen}
+        onClose={() => setIsBlockedModalOpen(false)}
+        onRetry={() => {
+          setIsBlockedModalOpen(false)
+          handleUseGPS()
+        }}
+        isRetrying={isLocating}
+      />
     </div>
   )
 }

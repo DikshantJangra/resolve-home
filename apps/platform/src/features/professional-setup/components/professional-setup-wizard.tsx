@@ -28,6 +28,7 @@ import { cn } from "@resolve/ui"
 import { apiClient, ENDPOINTS } from "@resolve/api"
 import { Country, State, City } from 'country-state-city'
 import { HiChevronDown } from 'react-icons/hi'
+import { LocationBlockedModal } from '@/components/shared/location-blocked-modal'
 
 export const ProfessionalSetupWizard = ({ onComplete, initialStep, isModal }: { onComplete: () => void, initialStep?: number, isModal?: boolean }) => {
   const store = useProfessionalSetupStore()
@@ -39,6 +40,7 @@ export const ProfessionalSetupWizard = ({ onComplete, initialStep, isModal }: { 
   const contentRef = React.useRef<HTMLDivElement>(null)
   const [isUploading, setIsUploading] = React.useState(false)
   const [isLocating, setIsLocating] = React.useState(false)
+  const [isBlockedModalOpen, setIsBlockedModalOpen] = React.useState(false)
   const [isEditingEmail, setIsEditingEmail] = React.useState(false)
   const [tempEmail, setTempEmail] = React.useState('')
   const [selectedServicesMap, setSelectedServicesMap] = React.useState<Record<string, string>>({})
@@ -101,106 +103,6 @@ export const ProfessionalSetupWizard = ({ onComplete, initialStep, isModal }: { 
     })
   }
 
-  const fallbackToIPLocation = async () => {
-    setIsLocating(true)
-    toast.info("Location permission blocked or denied. Falling back to IP-based location...")
-    try {
-      const response = await fetch('https://ipapi.co/json/')
-      const data = await response.json()
-      if (data && data.country) {
-        const countryCode = data.country.toUpperCase()
-        const states = State.getStatesOfCountry(countryCode)
-        const cleanStateName = (data.region || '').replace(/ State$/i, '')
-        const matchedState = states.find(s =>
-          s.name.toLowerCase().includes(cleanStateName.toLowerCase()) ||
-          cleanStateName.toLowerCase().includes(s.name.toLowerCase()) ||
-          s.isoCode === data.region_code
-        )
-
-        const country = Country.getCountryByCode(countryCode)
-
-        if (country) {
-          store.updateField('country', country.name)
-          store.updateField('countryCode', country.isoCode)
-
-          if (matchedState) {
-            store.updateField('state', matchedState.name)
-            store.updateField('stateCode', matchedState.isoCode)
-
-            const cities = City.getCitiesOfState(countryCode, matchedState.isoCode)
-            const cleanCityName = (data.city || '').replace(/ (City|LGA|Local Government Area)$/i, '')
-            const matchedCity = cities.find(c =>
-              c.name.toLowerCase().includes(cleanCityName.toLowerCase()) ||
-              cleanCityName.toLowerCase().includes(c.name.toLowerCase())
-            )
-
-            if (matchedCity) {
-              store.updateField('city', matchedCity.name)
-            } else {
-              store.updateField('city', cleanCityName)
-            }
-          }
-        }
-
-        store.updateField('address', data.org || data.city || '')
-        toast.success("Location auto-detected via IP!")
-      } else {
-        throw new Error("Invalid IP location data")
-      }
-    } catch (error) {
-      console.error("IP geolocation failed:", error)
-      try {
-        const response = await fetch('https://ip-api.com/json/')
-        const data = await response.json()
-        if (data && data.status === 'success') {
-          const countryCode = data.countryCode.toUpperCase()
-          const states = State.getStatesOfCountry(countryCode)
-          const cleanStateName = (data.regionName || '').replace(/ State$/i, '')
-          const matchedState = states.find(s =>
-            s.name.toLowerCase().includes(cleanStateName.toLowerCase()) ||
-            cleanStateName.toLowerCase().includes(s.name.toLowerCase()) ||
-            s.isoCode === data.region
-          )
-
-          const country = Country.getCountryByCode(countryCode)
-
-          if (country) {
-            store.updateField('country', country.name)
-            store.updateField('countryCode', country.isoCode)
-
-            if (matchedState) {
-              store.updateField('state', matchedState.name)
-              store.updateField('stateCode', matchedState.isoCode)
-
-              const cities = City.getCitiesOfState(countryCode, matchedState.isoCode)
-              const cleanCityName = (data.city || '').replace(/ (City|LGA|Local Government Area)$/i, '')
-              const matchedCity = cities.find(c =>
-                c.name.toLowerCase().includes(cleanCityName.toLowerCase()) ||
-                cleanCityName.toLowerCase().includes(c.name.toLowerCase())
-              )
-
-              if (matchedCity) {
-                store.updateField('city', matchedCity.name)
-              } else {
-                store.updateField('city', cleanCityName)
-              }
-            }
-          }
-
-          store.updateField('address', data.as || data.city || '')
-          toast.success("Location auto-detected via IP!")
-        } else {
-          toast.error("Failed to detect location. Please enter manually.")
-        }
-      } catch (err) {
-        console.error("Second IP geolocation failed:", err)
-        toast.error("Location access denied or blocked. Please enter manually.")
-      }
-    } finally {
-      setIsLocating(false)
-    }
-  }
-
   const handleUseGPS = () => {
     if (!navigator.geolocation) {
       toast.error("Geolocation is not supported by your browser")
@@ -209,7 +111,7 @@ export const ProfessionalSetupWizard = ({ onComplete, initialStep, isModal }: { 
 
     navigator.permissions?.query({ name: 'geolocation' as PermissionName }).then(result => {
       if (result.state === 'denied') {
-        fallbackToIPLocation()
+        setIsBlockedModalOpen(true)
         return
       }
       startLocating()
@@ -280,7 +182,7 @@ export const ProfessionalSetupWizard = ({ onComplete, initialStep, isModal }: { 
         setIsLocating(false)
         console.error("Geolocation error:", error)
         if (error.code === 1) { // Location access denied
-          fallbackToIPLocation()
+          setIsBlockedModalOpen(true)
         } else {
           toast.error("Location access denied or unavailable.")
         }
@@ -1022,6 +924,15 @@ export const ProfessionalSetupWizard = ({ onComplete, initialStep, isModal }: { 
             {renderStep()}
           </div>
         )}
+        <LocationBlockedModal
+          isOpen={isBlockedModalOpen}
+          onClose={() => setIsBlockedModalOpen(false)}
+          onRetry={() => {
+            setIsBlockedModalOpen(false)
+            handleUseGPS()
+          }}
+          isRetrying={isLocating}
+        />
       </div>
     )
   }
@@ -1082,6 +993,15 @@ export const ProfessionalSetupWizard = ({ onComplete, initialStep, isModal }: { 
           {store.currentStep === 3 ? (isPending ? "Submitting..." : "Finish set up") : "Continue"}
         </Button>
       </div>
+      <LocationBlockedModal
+        isOpen={isBlockedModalOpen}
+        onClose={() => setIsBlockedModalOpen(false)}
+        onRetry={() => {
+          setIsBlockedModalOpen(false)
+          handleUseGPS()
+        }}
+        isRetrying={isLocating}
+      />
     </div>
   )
 }
