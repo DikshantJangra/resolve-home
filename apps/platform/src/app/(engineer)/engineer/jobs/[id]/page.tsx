@@ -797,7 +797,6 @@ export default function JobDetailsPage() {
           document.body
         )}
       </div>
-      )
 }
 
       function JobLocationMap({job, engineerCoords}: {job: any; engineerCoords: [number, number] | null }) {
