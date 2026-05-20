@@ -17,6 +17,7 @@ export default function MessagesPage() {
   const { activeChatId, setActiveChatId } = useChatStore()
   const searchParams = useSearchParams()
   const bookingId = searchParams.get('bookingId')
+  const tabParam = searchParams.get('tab')
 
   React.useEffect(() => {
     setMounted(true)
@@ -54,7 +55,7 @@ export default function MessagesPage() {
           "w-full lg:w-[458px] h-full transition-all shrink-0",
           activeChatId ? "hidden lg:block" : "block"
         )}>
-          <ChatSidebar />
+          <ChatSidebar initialTab={tabParam || undefined} />
         </div>
 
         {/* Main Content: Visible on desktop, or on mobile when a chat is active */}

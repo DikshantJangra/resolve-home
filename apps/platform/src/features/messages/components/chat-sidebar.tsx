@@ -7,12 +7,12 @@ import { useUserChats, useUserProfile } from '@/hooks/api-hooks'
 import { useChatStore } from '@/store/use-chat-store'
 import { formatDistanceToNow } from 'date-fns'
 
-export const ChatSidebar = () => {
+export const ChatSidebar = ({ initialTab }: { initialTab?: string }) => {
   const [isMounted, setIsMounted] = React.useState(false)
   const { data: chats, isLoading } = useUserChats()
   const { data: userProfile, isLoading: isProfileLoading } = useUserProfile()
   const { activeChatId, setActiveChatId } = useChatStore()
-  const [activeTab, setActiveTab] = React.useState('Inbox')
+  const [activeTab, setActiveTab] = React.useState(initialTab || 'Inbox')
 
   React.useEffect(() => {
     setIsMounted(true)
@@ -31,12 +31,12 @@ export const ChatSidebar = () => {
 
   const filteredChats = chats?.filter((chat: any) => {
     const isRequest = chat.booking && chat.booking.status === 'awaiting_engineer'
-    
+
     if (activeTab === 'Request') {
       return isRequest
     } else {
       if (isRequest) return false // Hide requests in Inbox/Unread tabs
-      
+
       if (activeTab === 'Unread') {
         return chat.unreadCount > 0
       }
