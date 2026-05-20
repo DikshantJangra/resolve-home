@@ -587,40 +587,40 @@ export default function JobDetailsPage() {
                     </>
                   )
                 })()}
+              </div>
 
-                {/* Live Map */}
-                <JobLocationMap job={job} engineerCoords={engineerCoords} />
+              {/* Live Map */}
+              <JobLocationMap job={job} engineerCoords={engineerCoords} />
 
-                {/* Message + Make Quote buttons */}
-                <div className="flex flex-col gap-3 pt-2">
-                  <Link href={`/messages?bookingId=${job.id}`} className="flex-1">
-                    <Button className="w-full h-11 bg-blue-700 hover:bg-blue-800 gap-2">
-                      <HiOutlineChatAlt className="w-5 h-5" />
-                      Message Homeowner
-                    </Button>
-                  </Link>
+              {/* Message + Make Quote buttons */}
+              <div className="flex flex-col gap-3 pt-2">
+                <Link href={`/messages?bookingId=${job.id}`} className="flex-1">
+                  <Button className="w-full h-11 bg-blue-700 hover:bg-blue-800 gap-2">
+                    <HiOutlineChatAlt className="w-5 h-5" />
+                    Message Homeowner
+                  </Button>
+                </Link>
 
-                  {/* Show Make Quote button ONLY when arrived */}
-                  {jobStatus === 'arrived' && !showQuoteForm && (
-                    <Button
-                      onClick={() => {
-                        if (existingQuotation) {
-                          setLaborFee((existingQuotation.laborFee || 0).toString())
-                          setMaterials(existingQuotation.materials?.map((m: any) => ({
-                            name: m.name,
-                            price: (m.price || 0).toString(),
-                            quantity: (m.quantity || 1).toString()
-                          })) || [])
-                        }
-                        setShowQuoteForm(true)
-                      }}
-                      className="w-full h-11 bg-blue-700 hover:bg-blue-800 gap-2"
-                    >
-                      <HiOutlineDocumentText className="w-5 h-5" />
-                      {existingQuotation ? 'Update Job Quotation' : 'Create Job Quotation'}
-                    </Button>
-                  )}
-                </div>
+                {/* Show Make Quote button ONLY when arrived */}
+                {jobStatus === 'arrived' && !showQuoteForm && (
+                  <Button
+                    onClick={() => {
+                      if (existingQuotation) {
+                        setLaborFee((existingQuotation.laborFee || 0).toString())
+                        setMaterials(existingQuotation.materials?.map((m: any) => ({
+                          name: m.name,
+                          price: (m.price || 0).toString(),
+                          quantity: (m.quantity || 1).toString()
+                        })) || [])
+                      }
+                      setShowQuoteForm(true)
+                    }}
+                    className="w-full h-11 bg-blue-700 hover:bg-blue-800 gap-2"
+                  >
+                    <HiOutlineDocumentText className="w-5 h-5" />
+                    {existingQuotation ? 'Update Job Quotation' : 'Create Job Quotation'}
+                  </Button>
+                )}
               </div>
 
               {/* Premium Create Job Quotation Modal Overlay */}
@@ -736,10 +736,10 @@ export default function JobDetailsPage() {
                 </div>
               )}
             </div>
-        )}
           </div>
+        )}
 
-      {/* Complete Job Confirmation Modal Overlay */}
+        {/* Complete Job Confirmation Modal Overlay */}
         {showCompleteModal && (
           <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[2000] flex items-center justify-center p-4 animate-in fade-in duration-200">
             <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-zinc-150 flex flex-col gap-4 animate-in zoom-in-95 duration-200 text-center items-center">
