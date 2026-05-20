@@ -565,289 +565,303 @@ export default function JobDetailsPage() {
               </div>
 
               <div className="flex items-center gap-4">
-                <div className="w-14 h-14 bg-blue-50 rounded-full flex items-center justify-center shrink-0">
-                  <HiOutlineUser className="w-7 h-7 text-blue-700" />
-                </div>
-                <div>
-                  <h4 className="text-base font-semibold text-neutral-800">{job.customerDetails?.name || job.user?.name || 'Homeowner'}</h4>
-                  <p className="text-sm text-zinc-500">Member since 2024</p>
-                </div>
-              </div>
+                {(() => {
+                  const customer = job.user || job.customer || job.customerDetails
+                  const name = customer?.name || 'Homeowner'
+                  const image = customer?.image
+                  return (
+                    <>
+                      <div className="w-14 h-14 rounded-full overflow-hidden border-2 border-white shadow-sm shrink-0 bg-blue-50 flex items-center justify-center">
+                        {image ? (
+                          <img src={image.startsWith('http') ? image : `${process.env.NEXT_PUBLIC_API_URL}${image}`}
+                            alt={name} className="w-full h-full object-cover" />
+                        ) : (
+                          <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(name)}`}
+                            alt={name} className="w-full h-full object-cover" />
+                        )}
+                      </div>
+                      <div>
+                        <h4 className="text-base font-semibold text-neutral-800">{name}</h4>
+                        <p className="text-sm text-zinc-500">{customer?.email || 'Homeowner'}</p>
+                      </div>
+                    </>
+                  )
+                })()}
 
-              {/* Live Map */}
-              <JobLocationMap job={job} engineerCoords={engineerCoords} />
+                {/* Live Map */}
+                <JobLocationMap job={job} engineerCoords={engineerCoords} />
 
-              {/* Message + Make Quote buttons */}
-              <div className="flex flex-col gap-3 pt-2">
-                <Link href={`/messages?bookingId=${job.id}`} className="flex-1">
-                  <Button className="w-full h-11 bg-blue-700 hover:bg-blue-800 gap-2">
-                    <HiOutlineChatAlt className="w-5 h-5" />
-                    Message Homeowner
-                  </Button>
-                </Link>
+                {/* Message + Make Quote buttons */}
+                <div className="flex flex-col gap-3 pt-2">
+                  <Link href={`/messages?bookingId=${job.id}`} className="flex-1">
+                    <Button className="w-full h-11 bg-blue-700 hover:bg-blue-800 gap-2">
+                      <HiOutlineChatAlt className="w-5 h-5" />
+                      Message Homeowner
+                    </Button>
+                  </Link>
 
-                {/* Show Make Quote button ONLY when arrived */}
-                {jobStatus === 'arrived' && !showQuoteForm && (
-                  <Button
-                    onClick={() => {
-                      if (existingQuotation) {
-                        setLaborFee((existingQuotation.laborFee || 0).toString())
-                        setMaterials(existingQuotation.materials?.map((m: any) => ({
-                          name: m.name,
-                          price: (m.price || 0).toString(),
-                          quantity: (m.quantity || 1).toString()
-                        })) || [])
-                      }
-                      setShowQuoteForm(true)
-                    }}
-                    className="w-full h-11 bg-blue-700 hover:bg-blue-800 gap-2"
-                  >
-                    <HiOutlineDocumentText className="w-5 h-5" />
-                    {existingQuotation ? 'Update Job Quotation' : 'Create Job Quotation'}
-                  </Button>
-                )}
-              </div>
-            </div>
-
-            {/* Premium Create Job Quotation Modal Overlay */}
-            {showQuoteForm && (
-              <div className="fixed inset-0 z-[2000] flex items-center justify-center bg-zinc-950/60 backdrop-blur-sm px-4 py-6 overflow-y-auto">
-                <div className="bg-white rounded-3xl border border-zinc-100 shadow-2xl p-6 md:p-8 flex flex-col gap-6 w-full max-w-lg relative animate-in fade-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto">
-                  {/* Header */}
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <h3 className="text-xl font-bold text-neutral-900">
-                        {existingQuotation ? 'Update Job Quotation' : 'Create Job Quotation'}
-                      </h3>
-                      <p className="text-sm text-zinc-500 mt-1">Break down costs for labor and materials.</p>
-                    </div>
-                    <button
-                      onClick={() => setShowQuoteForm(false)}
-                      className="text-zinc-400 hover:text-zinc-600 text-sm font-semibold transition-colors"
+                  {/* Show Make Quote button ONLY when arrived */}
+                  {jobStatus === 'arrived' && !showQuoteForm && (
+                    <Button
+                      onClick={() => {
+                        if (existingQuotation) {
+                          setLaborFee((existingQuotation.laborFee || 0).toString())
+                          setMaterials(existingQuotation.materials?.map((m: any) => ({
+                            name: m.name,
+                            price: (m.price || 0).toString(),
+                            quantity: (m.quantity || 1).toString()
+                          })) || [])
+                        }
+                        setShowQuoteForm(true)
+                      }}
+                      className="w-full h-11 bg-blue-700 hover:bg-blue-800 gap-2"
                     >
-                      Close
-                    </button>
-                  </div>
-
-                  {existingQuotation && (
-                    <div className="bg-amber-50 border border-amber-100 rounded-2xl p-4 text-xs text-amber-700">
-                      A quote was already sent. Submitting again will revise it.
-                    </div>
+                      <HiOutlineDocumentText className="w-5 h-5" />
+                      {existingQuotation ? 'Update Job Quotation' : 'Create Job Quotation'}
+                    </Button>
                   )}
+                </div>
+              </div>
 
-                  {/* Labor Fee input */}
-                  <div className="flex flex-col gap-2">
-                    <label className="text-xs font-bold text-zinc-700 tracking-wide">Labor fee (₦) *</label>
-                    <input
-                      type="number"
-                      min="0"
-                      placeholder="0"
-                      value={laborFee}
-                      onChange={e => setLaborFee(e.target.value)}
-                      className="w-full border border-zinc-200 rounded-2xl px-4 h-12 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium transition-all"
-                    />
-                  </div>
-
-                  {/* Materials section */}
-                  <div className="flex flex-col gap-3">
-                    <div className="flex justify-between items-center">
-                      <span className="text-xs font-bold text-zinc-700 tracking-wide">Materials *</span>
+              {/* Premium Create Job Quotation Modal Overlay */}
+              {showQuoteForm && (
+                <div className="fixed inset-0 z-[2000] flex items-center justify-center bg-zinc-950/60 backdrop-blur-sm px-4 py-6 overflow-y-auto">
+                  <div className="bg-white rounded-3xl border border-zinc-100 shadow-2xl p-6 md:p-8 flex flex-col gap-6 w-full max-w-lg relative animate-in fade-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto">
+                    {/* Header */}
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <h3 className="text-xl font-bold text-neutral-900">
+                          {existingQuotation ? 'Update Job Quotation' : 'Create Job Quotation'}
+                        </h3>
+                        <p className="text-sm text-zinc-500 mt-1">Break down costs for labor and materials.</p>
+                      </div>
                       <button
-                        type="button"
-                        onClick={handleAddItem}
-                        className="text-xs font-semibold text-blue-700 hover:text-blue-800 transition-colors"
+                        onClick={() => setShowQuoteForm(false)}
+                        className="text-zinc-400 hover:text-zinc-600 text-sm font-semibold transition-colors"
                       >
-                        Add Item
+                        Close
                       </button>
                     </div>
 
-                    <div className="flex flex-col gap-3 max-h-[25vh] overflow-y-auto pr-1">
-                      {materials.map((item, index) => (
-                        <div key={item.id} className="flex gap-2 items-center">
-                          <input
-                            type="text"
-                            placeholder="item name (e.g Copper Pipe)"
-                            value={item.name}
-                            onChange={e => handleUpdateItem(item.id, 'name', e.target.value)}
-                            className="flex-1 border border-zinc-200 rounded-2xl px-3 h-11 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
-                          />
-                          <input
-                            type="number"
-                            min="0"
-                            placeholder="Price"
-                            value={item.price}
-                            onChange={e => handleUpdateItem(item.id, 'price', e.target.value)}
-                            className="w-20 border border-zinc-200 rounded-2xl px-2 h-11 text-sm text-center focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
-                          />
-                          <input
-                            type="number"
-                            min="1"
-                            placeholder="Qty"
-                            value={item.quantity}
-                            onChange={e => handleUpdateItem(item.id, 'quantity', e.target.value)}
-                            className="w-14 border border-zinc-200 rounded-2xl px-2 h-11 text-sm text-center focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
-                          />
-                          {materials.length > 1 && (
-                            <button
-                              type="button"
-                              onClick={() => handleRemoveItem(item.id)}
-                              className="p-2 text-rose-500 hover:text-rose-700 hover:bg-rose-50 rounded-xl transition-all"
-                            >
-                              <HiOutlineTrash className="w-5 h-5" />
-                            </button>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
+                    {existingQuotation && (
+                      <div className="bg-amber-50 border border-amber-100 rounded-2xl p-4 text-xs text-amber-700">
+                        A quote was already sent. Submitting again will revise it.
+                      </div>
+                    )}
 
-                  {/* Estimated Total */}
-                  <div className="flex items-end justify-between border-t border-zinc-100 pt-6">
-                    <div className="flex flex-col">
-                      <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Total Estimated Amount</span>
-                      <span className="text-3xl font-extrabold text-neutral-900 mt-1">
-                        ₦{totalEstimatedAmount.toLocaleString()}
-                      </span>
+                    {/* Labor Fee input */}
+                    <div className="flex flex-col gap-2">
+                      <label className="text-xs font-bold text-zinc-700 tracking-wide">Labor fee (₦) *</label>
+                      <input
+                        type="number"
+                        min="0"
+                        placeholder="0"
+                        value={laborFee}
+                        onChange={e => setLaborFee(e.target.value)}
+                        className="w-full border border-zinc-200 rounded-2xl px-4 h-12 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium transition-all"
+                      />
                     </div>
 
-                    <Button
-                      onClick={handleSubmitQuote}
-                      disabled={isCreatingQuote}
-                      className="h-12 bg-blue-700 hover:bg-blue-800 text-white font-bold px-6 rounded-2xl shadow-lg shadow-blue-700/15"
-                    >
-                      {isCreatingQuote ? 'Sending Quotation...' : 'Send Quotation'}
-                    </Button>
+                    {/* Materials section */}
+                    <div className="flex flex-col gap-3">
+                      <div className="flex justify-between items-center">
+                        <span className="text-xs font-bold text-zinc-700 tracking-wide">Materials *</span>
+                        <button
+                          type="button"
+                          onClick={handleAddItem}
+                          className="text-xs font-semibold text-blue-700 hover:text-blue-800 transition-colors"
+                        >
+                          Add Item
+                        </button>
+                      </div>
+
+                      <div className="flex flex-col gap-3 max-h-[25vh] overflow-y-auto pr-1">
+                        {materials.map((item, index) => (
+                          <div key={item.id} className="flex gap-2 items-center">
+                            <input
+                              type="text"
+                              placeholder="item name (e.g Copper Pipe)"
+                              value={item.name}
+                              onChange={e => handleUpdateItem(item.id, 'name', e.target.value)}
+                              className="flex-1 border border-zinc-200 rounded-2xl px-3 h-11 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+                            />
+                            <input
+                              type="number"
+                              min="0"
+                              placeholder="Price"
+                              value={item.price}
+                              onChange={e => handleUpdateItem(item.id, 'price', e.target.value)}
+                              className="w-20 border border-zinc-200 rounded-2xl px-2 h-11 text-sm text-center focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+                            />
+                            <input
+                              type="number"
+                              min="1"
+                              placeholder="Qty"
+                              value={item.quantity}
+                              onChange={e => handleUpdateItem(item.id, 'quantity', e.target.value)}
+                              className="w-14 border border-zinc-200 rounded-2xl px-2 h-11 text-sm text-center focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+                            />
+                            {materials.length > 1 && (
+                              <button
+                                type="button"
+                                onClick={() => handleRemoveItem(item.id)}
+                                className="p-2 text-rose-500 hover:text-rose-700 hover:bg-rose-50 rounded-xl transition-all"
+                              >
+                                <HiOutlineTrash className="w-5 h-5" />
+                              </button>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Estimated Total */}
+                    <div className="flex items-end justify-between border-t border-zinc-100 pt-6">
+                      <div className="flex flex-col">
+                        <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Total Estimated Amount</span>
+                        <span className="text-3xl font-extrabold text-neutral-900 mt-1">
+                          ₦{totalEstimatedAmount.toLocaleString()}
+                        </span>
+                      </div>
+
+                      <Button
+                        onClick={handleSubmitQuote}
+                        disabled={isCreatingQuote}
+                        className="h-12 bg-blue-700 hover:bg-blue-800 text-white font-bold px-6 rounded-2xl shadow-lg shadow-blue-700/15"
+                      >
+                        {isCreatingQuote ? 'Sending Quotation...' : 'Send Quotation'}
+                      </Button>
+                    </div>
                   </div>
                 </div>
-              </div>
-            )}
-          </div>
+              )}
+            </div>
         )}
-      </div>
+          </div>
 
       {/* Complete Job Confirmation Modal Overlay */}
-      {showCompleteModal && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[2000] flex items-center justify-center p-4 animate-in fade-in duration-200">
-          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-zinc-150 flex flex-col gap-4 animate-in zoom-in-95 duration-200 text-center items-center">
-            <div className="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center text-blue-700">
-              <HiOutlineCheckCircle className="w-6 h-6" />
-            </div>
+        {showCompleteModal && (
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[2000] flex items-center justify-center p-4 animate-in fade-in duration-200">
+            <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-zinc-150 flex flex-col gap-4 animate-in zoom-in-95 duration-200 text-center items-center">
+              <div className="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center text-blue-700">
+                <HiOutlineCheckCircle className="w-6 h-6" />
+              </div>
 
-            <div className="flex flex-col gap-1.5">
-              <h3 className="text-lg font-bold text-neutral-800">Complete Job?</h3>
-              <p className="text-sm text-zinc-500 px-4">
-                Are you sure you want to mark this job as complete? This will notify the homeowner to release the escrow funds.
-              </p>
-            </div>
+              <div className="flex flex-col gap-1.5">
+                <h3 className="text-lg font-bold text-neutral-800">Complete Job?</h3>
+                <p className="text-sm text-zinc-500 px-4">
+                  Are you sure you want to mark this job as complete? This will notify the homeowner to release the escrow funds.
+                </p>
+              </div>
 
-            <div className="flex gap-3 w-full mt-4">
-              <Button
-                variant="outline"
-                onClick={() => setShowCompleteModal(false)}
-                className="flex-1 h-11 border-zinc-200 text-zinc-700 font-semibold"
-              >
-                Cancel
-              </Button>
-              <Button
-                onClick={() => {
-                  completeJob(job.id, {
-                    onSuccess: () => {
-                      toast.success('Job marked as complete')
-                      setShowCompleteModal(false)
-                      setTimeout(() => {
-                        window.location.reload()
-                      }, 800)
-                    },
-                    onError: (err: any) => {
-                      toast.error(err.response?.data?.message || 'Failed to complete job.')
-                    }
-                  })
-                }}
-                disabled={isCompleting}
-                className="flex-1 h-11 bg-blue-700 hover:bg-blue-800 font-semibold"
-              >
-                {isCompleting ? 'Completing...' : 'Yes, Complete'}
-              </Button>
+              <div className="flex gap-3 w-full mt-4">
+                <Button
+                  variant="outline"
+                  onClick={() => setShowCompleteModal(false)}
+                  className="flex-1 h-11 border-zinc-200 text-zinc-700 font-semibold"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={() => {
+                    completeJob(job.id, {
+                      onSuccess: () => {
+                        toast.success('Job marked as complete')
+                        setShowCompleteModal(false)
+                        setTimeout(() => {
+                          window.location.reload()
+                        }, 800)
+                      },
+                      onError: (err: any) => {
+                        toast.error(err.response?.data?.message || 'Failed to complete job.')
+                      }
+                    })
+                  }}
+                  disabled={isCompleting}
+                  className="flex-1 h-11 bg-blue-700 hover:bg-blue-800 font-semibold"
+                >
+                  {isCompleting ? 'Completing...' : 'Yes, Complete'}
+                </Button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Verification Overlay - Portal'd to body for clean stacking */}
-      {showVerificationOverlay && mounted && createPortal(
-        <div className="fixed inset-0 z-[1000] flex items-start justify-center pt-10 pb-20 overflow-y-auto bg-white/10 backdrop-blur-md">
-          <div className="w-full max-w-2xl px-4 animate-in fade-in slide-in-from-bottom-8 duration-500">
-            <ProfessionalSetupWizard onComplete={() => setIsSetupOpen(false)} />
-          </div>
-        </div>,
-        document.body
-      )}
-    </div>
-  )
+        {/* Verification Overlay - Portal'd to body for clean stacking */}
+        {showVerificationOverlay && mounted && createPortal(
+          <div className="fixed inset-0 z-[1000] flex items-start justify-center pt-10 pb-20 overflow-y-auto bg-white/10 backdrop-blur-md">
+            <div className="w-full max-w-2xl px-4 animate-in fade-in slide-in-from-bottom-8 duration-500">
+              <ProfessionalSetupWizard onComplete={() => setIsSetupOpen(false)} />
+            </div>
+          </div>,
+          document.body
+        )}
+      </div>
+      )
 }
 
-function JobLocationMap({ job, engineerCoords }: { job: any; engineerCoords: [number, number] | null }) {
+      function JobLocationMap({job, engineerCoords}: {job: any; engineerCoords: [number, number] | null }) {
   const customerLat = job.customerDetails?.latitude ?? job.location?.latitude ?? job.address?.latitude
-  const customerLng = job.customerDetails?.longitude ?? job.location?.longitude ?? job.address?.longitude
-  const hasCustomerLocation = customerLat != null && customerLng != null
+      const customerLng = job.customerDetails?.longitude ?? job.location?.longitude ?? job.address?.longitude
+      const hasCustomerLocation = customerLat != null && customerLng != null
 
-  const defaultCenter: [number, number] = engineerCoords ?? (hasCustomerLocation ? [customerLng, customerLat] : [3.3792, 6.5244])
-  const [mapCenter, setMapCenter] = React.useState<[number, number]>(defaultCenter)
+      const defaultCenter: [number, number] = engineerCoords ?? (hasCustomerLocation ? [customerLng, customerLat] : [3.3792, 6.5244])
+      const [mapCenter, setMapCenter] = React.useState<[number, number]>(defaultCenter)
 
   React.useEffect(() => {
     if (engineerCoords) setMapCenter(engineerCoords)
   }, [engineerCoords])
 
-  const markers: MapMarker[] = []
-  if (hasCustomerLocation) {
-    markers.push({ lngLat: [customerLng, customerLat], color: '#dc2626', label: 'Homeowner Location' })
-  }
-  if (engineerCoords) {
-    markers.push({ lngLat: engineerCoords, color: '#1d4ed8', label: 'Your Location' })
-  }
+      const markers: MapMarker[] = []
+      if (hasCustomerLocation) {
+        markers.push({ lngLat: [customerLng, customerLat], color: '#dc2626', label: 'Homeowner Location' })
+      }
+      if (engineerCoords) {
+        markers.push({ lngLat: engineerCoords, color: '#1d4ed8', label: 'Your Location' })
+      }
 
-  if (!hasCustomerLocation && !engineerCoords) {
+      if (!hasCustomerLocation && !engineerCoords) {
     return (
       <div className="w-full h-56 rounded-xl bg-zinc-50 border border-zinc-200 flex items-center justify-center">
         <p className="text-sm text-zinc-400">Location data unavailable</p>
       </div>
-    )
+      )
   }
 
-  return (
-    <div className="flex flex-col gap-2">
-      <div className="flex items-center justify-between">
-        <p className="text-sm font-semibold text-neutral-800">Live Location</p>
-        <div className="flex items-center gap-3 text-xs text-zinc-500">
-          {hasCustomerLocation && (
-            <button
-              onClick={() => setMapCenter([customerLng, customerLat])}
-              className="flex items-center gap-1 hover:text-red-600 transition-colors"
-              title="Center on Homeowner"
-            >
-              <span className="w-2 h-2 rounded-full bg-red-600 inline-block" />
-              Homeowner
-            </button>
-          )}
-          {engineerCoords && (
-            <button
-              onClick={() => setMapCenter(engineerCoords)}
-              className="flex items-center gap-1 hover:text-blue-700 transition-colors"
-              title="Center Map"
-            >
-              <span className="w-2 h-2 rounded-full bg-blue-700 inline-block" />
-              You
-            </button>
-          )}
+      return (
+      <div className="flex flex-col gap-2">
+        <div className="flex items-center justify-between">
+          <p className="text-sm font-semibold text-neutral-800">Live Location</p>
+          <div className="flex items-center gap-3 text-xs text-zinc-500">
+            {hasCustomerLocation && (
+              <button
+                onClick={() => setMapCenter([customerLng, customerLat])}
+                className="flex items-center gap-1 hover:text-red-600 transition-colors"
+                title="Center on Homeowner"
+              >
+                <span className="w-2 h-2 rounded-full bg-red-600 inline-block" />
+                Homeowner
+              </button>
+            )}
+            {engineerCoords && (
+              <button
+                onClick={() => setMapCenter(engineerCoords)}
+                className="flex items-center gap-1 hover:text-blue-700 transition-colors"
+                title="Center Map"
+              >
+                <span className="w-2 h-2 rounded-full bg-blue-700 inline-block" />
+                You
+              </button>
+            )}
+          </div>
+        </div>
+        <div className="w-full h-64 rounded-xl overflow-hidden border border-zinc-200">
+          <Map
+            viewport={{ center: mapCenter, zoom: 13, bearing: 0, pitch: 0 }}
+            markers={markers}
+            className="w-full h-full"
+          />
         </div>
       </div>
-      <div className="w-full h-64 rounded-xl overflow-hidden border border-zinc-200">
-        <Map
-          viewport={{ center: mapCenter, zoom: 13, bearing: 0, pitch: 0 }}
-          markers={markers}
-          className="w-full h-full"
-        />
-      </div>
-    </div>
-  )
+      )
 }
