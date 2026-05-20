@@ -82,13 +82,25 @@ function EngineerCard({ engineer, onSelect, isPending, selectedId, currentEngine
         </div>
       </div>
 
-      {/* Distance */}
-      {engineer.distance !== null && engineer.distance !== undefined && (
-        <div className="flex items-center gap-1">
-          <IoLocationOutline className="w-3.5 h-3.5 text-blue-600" />
-          <span className="text-blue-600 text-xs font-semibold">{engineer.distance}km away</span>
+      {/* Distance + Address */}
+      {(engineer.distance !== null && engineer.distance !== undefined) || engineer.location?.city ? (
+        <div className="flex items-center gap-2 flex-wrap">
+          <IoLocationOutline className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+          {engineer.distance !== null && engineer.distance !== undefined && (
+            <span className="text-blue-600 text-xs font-semibold">{engineer.distance}km away</span>
+          )}
+          {engineer.location?.city && (
+            <>
+              {engineer.distance !== null && engineer.distance !== undefined && (
+                <span className="text-zinc-300 text-xs">·</span>
+              )}
+              <span className="text-zinc-500 text-xs">
+                {[engineer.location.city, engineer.location.state].filter(Boolean).join(', ')}
+              </span>
+            </>
+          )}
         </div>
-      )}
+      ) : null}
 
       {/* Services + Bio */}
       <div className="grid grid-cols-2 gap-3 pt-1 border-t border-zinc-100">

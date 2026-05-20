@@ -462,9 +462,17 @@ export default function BookingDetailsPage() {
                                 <span className="text-zinc-500 text-xs">{eng.completedJobs || 0} jobs</span>
                               </div>
                               {eng.distance != null && (
-                                <div className="flex items-center gap-1">
-                                  <HiOutlineLocationMarker className="w-3 h-3 text-blue-600" />
+                                <div className="flex items-center gap-1.5 flex-wrap">
+                                  <HiOutlineLocationMarker className="w-3 h-3 text-blue-600 shrink-0" />
                                   <span className="text-blue-600 text-xs font-semibold">{eng.distance}km away</span>
+                                  {eng.location?.city && (
+                                    <>
+                                      <span className="text-zinc-300 text-xs">·</span>
+                                      <span className="text-zinc-500 text-xs">
+                                        {[eng.location.city, eng.location.state].filter(Boolean).join(', ')}
+                                      </span>
+                                    </>
+                                  )}
                                 </div>
                               )}
                             </div>
