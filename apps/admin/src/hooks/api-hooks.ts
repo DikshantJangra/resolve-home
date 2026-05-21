@@ -222,11 +222,36 @@ export function useAdminUser(id: string) {
       const response = await apiClient.get(ENDPOINTS.ADMIN_USERS.BY_ID(id))
       const data = response.data.data || response.data
       const user = data?.user || data?.item || data?.data || data
-      const engineerProfile = data?.engineerProfile || null
-      // Merge engineerProfile into the user object for easy access
+      const engineerProfile = data?.engineerProfile || user?.engineerProfile || null
       return engineerProfile ? { ...user, engineerProfile } : user
     },
     enabled: !!id
+  })
+}
+
+export function useAdminProfessionalDetails(userId: string) {
+  return useQuery({
+    queryKey: ['admin-professional-details', userId],
+    queryFn: async () => {
+      const userResp = await apiClient.get(ENDPOINTS.ADMIN_USERS.BY_ID(userId))
+      const userData = userResp.data.data || userResp.data
+      const user = userData?.user || userData?.item || userData?.data || userData
+      const engineerProfile = userData?.engineerProfile || user?.engineerProfile || null
+      const engineerProfileId = engineerProfile?.id || engineerProfile?._id
+
+      if (engineerProfileId) {
+        try {
+          const engResp = await apiClient.get(ENDPOINTS.ADMIN_ENGINEERS.BY_ID(engineerProfileId))
+          const engData = engResp.data.data || engResp.data
+          const enriched = engData?.engineer || engData
+          return { ...user, ...enriched, _userId: userId }
+        } catch {
+          // fall through
+        }
+      }
+      return engineerProfile ? { ...user, engineerProfile } : user
+    },
+    enabled: !!userId
   })
 }
 
@@ -297,9 +322,45 @@ export function useAdminPendingEngineerById(id: string) {
   return useQuery({
     queryKey: ['admin-pending-engineer', id],
     queryFn: async () => {
-      const response = await apiClient.get(ENDPOINTS.ADMIN_ENGINEERS.BY_ID(id))
-      const data = response.data.data || response.data
-      return data?.engineer || data
+      // Try engineer profile endpoint directly
+      try {
+        const response = await apiClient.get(ENDPOINTS.ADMIN_ENGINEERS.BY_ID(id))
+        const data = response.data.data || response.data
+        const engineer = data?.engineer || data
+        // Validate we got enriched data (not a 404 masquerading as success)
+        if (engineer && (engineer.id || engineer._id) && engineer.id !== undefined) {
+          return engineer
+        }
+      } catch {
+        // fall through to user-based resolution
+      }
+
+      // id might be a user ID — fetch users list and resolve engineer profile ID
+      const usersResp = await apiClient.get(ENDPOINTS.ADMIN_USERS.BASE)
+      const usersData = usersResp.data.data || usersResp.data
+      const allUsers: any[] = Array.isArray(usersData) ? usersData : (usersData?.users || usersData?.items || usersData?.data || [])
+
+      const matchedUser = allUsers.find((u: any) =>
+        u.id === id || u._id === id ||
+        u.engineerProfile?.id === id || u.engineerProfile?._id === id
+      )
+
+      if (!matchedUser) return null
+
+      const epId = matchedUser.engineerProfile?.id || matchedUser.engineerProfile?._id
+      if (epId && epId !== id) {
+        try {
+          const engResp = await apiClient.get(ENDPOINTS.ADMIN_ENGINEERS.BY_ID(epId))
+          const engData = engResp.data.data || engResp.data
+          return engData?.engineer || engData
+        } catch {
+          // fall through
+        }
+      }
+
+      // Return user with engineerProfile merged
+      const ep = matchedUser.engineerProfile || {}
+      return { ...ep, ...matchedUser, id: epId || matchedUser.id || matchedUser._id }
     },
     enabled: !!id
   })
@@ -340,6 +401,19 @@ export function useAdminBookings() {
       const list = Array.isArray(raw) ? raw : (raw?.bookings || raw?.items || raw?.data || [])
       return list.map(normalizeBooking)
     }
+  })
+}
+
+export function useEngineerBookings(engineerId: string) {
+  return useQuery({
+    queryKey: ['engineer-bookings', engineerId],
+    queryFn: async () => {
+      const response = await apiClient.get(`${ENDPOINTS.ADMIN_BOOKINGS.BASE}?engineerId=${engineerId}&limit=100`)
+      const raw = response.data.data || response.data
+      const list = Array.isArray(raw) ? raw : (raw?.bookings || raw?.items || raw?.data || [])
+      return list.map(normalizeBooking)
+    },
+    enabled: !!engineerId
   })
 }
 

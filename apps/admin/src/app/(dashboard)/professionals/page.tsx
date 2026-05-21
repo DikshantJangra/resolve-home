@@ -276,7 +276,7 @@ export default function ProfessionalsPage() {
                   className="hover:bg-zinc-50/50 transition-colors cursor-pointer group"
                 >
                   <td className="px-6 py-5">
-                    <Link href={`/professionals/${pro.id || pro._id}`} className="flex items-center gap-3">
+                    <Link href={`/professionals/${pro.engineerProfile?.id || pro.engineerProfile?._id || pro.id || pro._id}`} className="flex items-center gap-3">
                       <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-bold text-sm border border-zinc-200 overflow-hidden">
                         {pro.profileImage || pro.avatar ? (
                           <img src={pro.profileImage || pro.avatar} alt={pro.name || pro.fullName} className="w-full h-full object-cover" />
@@ -294,12 +294,12 @@ export default function ProfessionalsPage() {
                     </Link>
                   </td>
                   <td className="px-6 py-5">
-                    <Link href={`/professionals/${pro.id || pro._id}`} className="block">
+                    <Link href={`/professionals/${pro.engineerProfile?.id || pro.engineerProfile?._id || pro.id || pro._id}`} className="block">
                       <span className="text-sm text-zinc-600 font-medium">{getCategoryName(pro)}</span>
                     </Link>
                   </td>
                   <td className="px-6 py-5">
-                    <Link href={`/professionals/${pro.id || pro._id}`} className="block">
+                    <Link href={`/professionals/${pro.engineerProfile?.id || pro.engineerProfile?._id || pro.id || pro._id}`} className="block">
                       <div className="flex items-center gap-2.5 px-3 py-1 bg-orange-50 border border-orange-200 rounded-full w-fit">
                         <HiOutlineStar className="w-4 h-4 text-amber-600" />
                         <span className="text-amber-600 text-sm font-medium">{pro.rating || 'N/A'}</span>
@@ -307,12 +307,12 @@ export default function ProfessionalsPage() {
                     </Link>
                   </td>
                   <td className="px-6 py-5">
-                    <Link href={`/professionals/${pro.id || pro._id}`} className="block">
+                    <Link href={`/professionals/${pro.engineerProfile?.id || pro.engineerProfile?._id || pro.id || pro._id}`} className="block">
                       <span className="text-sm text-zinc-600 font-medium">{pro.earnings ? `₦${pro.earnings.toLocaleString()}` : 'N/A'}</span>
                     </Link>
                   </td>
                   <td className="px-6 py-5">
-                    <Link href={`/professionals/${pro.id || pro._id}`} className="flex items-center gap-2">
+                    <Link href={`/professionals/${pro.engineerProfile?.id || pro.engineerProfile?._id || pro.id || pro._id}`} className="flex items-center gap-2">
                       {(() => {
                         const ep = pro.engineerProfile || pro
                         const status = pro.isBanned

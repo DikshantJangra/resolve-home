@@ -20,7 +20,7 @@ import {
   HiOutlineTrash
 } from 'react-icons/hi'
 import { cn, Button, Skeleton } from "@resolve/ui"
-import { useAdminUser, useAdminBookings, useDeleteEngineer } from '@/hooks/api-hooks'
+import { useAdminPendingEngineerById, useEngineerBookings, useDeleteEngineer, useCategories } from '@/hooks/api-hooks'
 import { BookingCard } from '@/components/bookings/booking-card'
 import { toast } from 'sonner'
 
@@ -30,9 +30,29 @@ export default function ProfessionalDetailsPage() {
   const [activeTab, setActiveTab] = useState<'overview' | 'personal'>('overview')
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
 
-  const { data: userData, isLoading: isUserLoading } = useAdminUser(id as string)
-  const { data: allBookings, isLoading: isBookingsLoading } = useAdminBookings()
+  const { data: userData, isLoading: isUserLoading } = useAdminPendingEngineerById(id as string)
   const { mutate: deleteEngineer, isPending: isDeleting } = useDeleteEngineer()
+  const { data: categories } = useCategories()
+  const categoryMap = Object.fromEntries((categories || []).map((c: any) => [c.id || c._id, c.name]))
+
+  const pro = userData
+
+  // Fetch bookings by engineer profile ID; also try userId as fallback
+  const { data: bookingsByProfileId, isLoading: isBookingsLoading1 } = useEngineerBookings(id as string)
+  const { data: bookingsByUserId, isLoading: isBookingsLoading2 } = useEngineerBookings(pro?.userId || '')
+
+  const proBookings = (() => {
+    const a = bookingsByProfileId || []
+    const b = bookingsByUserId || []
+    // Merge, deduplicate by booking id
+    const seen = new Set<string>()
+    return [...a, ...b].filter((bk: any) => {
+      const bkId = bk.id || bk._id
+      if (seen.has(bkId)) return false
+      seen.add(bkId)
+      return true
+    })
+  })()
 
   const handleDelete = () => {
     deleteEngineer(id as string, {
@@ -47,17 +67,7 @@ export default function ProfessionalDetailsPage() {
     })
   }
 
-  const isLoading = isUserLoading || isBookingsLoading
-
-  const pro = userData
-
-  // Get real booking history for this professional
-  const proBookings = allBookings?.filter((b: any) =>
-    (b.engineerId === id) ||
-    (b.engineer?._id === id) ||
-    (b.engineer?.id === id) ||
-    (b.assignedEngineerId === id)
-  ) || []
+  const isLoading = isUserLoading || isBookingsLoading1 || isBookingsLoading2
 
   if (isLoading) {
     return (
@@ -85,10 +95,10 @@ export default function ProfessionalDetailsPage() {
   }
 
   const stats = [
-    { title: "Total Earnings", value: `₦${(pro.engineerProfile?.totalEarnings || pro.earnings || 0).toLocaleString()}`, trend: "0%", icon: HiOutlineCurrencyDollar },
-    { title: "Jobs Done", value: pro.engineerProfile?.completedJobs ?? pro.engineerProfile?.totalBookings ?? proBookings.length ?? 0, trend: "0%", icon: HiOutlineBriefcase },
-    { title: "Success Rate", value: `${pro.engineerProfile?.successRate ?? 100}%`, trend: "0%", icon: HiOutlineBadgeCheck },
-    { title: "Avg. Rating", value: pro.engineerProfile?.rating || pro.rating || "N/A", trend: "0%", icon: HiOutlineStar },
+    { title: "Total Earnings", value: `₦${(pro.totalEarnings || pro.engineerProfile?.totalEarnings || pro.earnings || 0).toLocaleString()}`, trend: "0%", icon: HiOutlineCurrencyDollar },
+    { title: "Jobs Done", value: pro.completedJobs ?? pro.engineerProfile?.completedJobs ?? pro.totalBookings ?? proBookings.length ?? 0, trend: "0%", icon: HiOutlineBriefcase },
+    { title: "Success Rate", value: `${pro.successRate ?? pro.engineerProfile?.successRate ?? 100}%`, trend: "0%", icon: HiOutlineBadgeCheck },
+    { title: "Avg. Rating", value: pro.rating || pro.engineerProfile?.rating || "N/A", trend: "0%", icon: HiOutlineStar },
   ]
 
   // Removed dummy booking history logic
@@ -158,8 +168,8 @@ export default function ProfessionalDetailsPage() {
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
             <div className="flex items-center gap-4">
               <div className="w-14 h-14 rounded-full border border-zinc-200 overflow-hidden bg-zinc-100 flex items-center justify-center">
-                {pro.profileImage ? (
-                  <img src={pro.profileImage} alt={pro.name} className="w-full h-full object-cover" />
+                {(pro.profileImage || pro.image) ? (
+                  <img src={pro.profileImage || pro.image} alt={pro.name} className="w-full h-full object-cover" />
                 ) : (
                   <span className="text-zinc-500 font-bold text-lg">{pro.name?.charAt(0) || 'P'}</span>
                 )}
@@ -170,9 +180,9 @@ export default function ProfessionalDetailsPage() {
                   {pro.isVerified && <HiOutlineBadgeCheck className="text-blue-700 w-4 h-4" />}
                 </div>
                 <div className="flex items-center gap-2 text-zinc-500 text-sm">
-                  <span>{pro.category || pro.specialty || pro.primarySpecialty || 'N/A'}</span>
+                  <span>{categoryMap[pro.category] || categoryMap[pro.engineerProfile?.category] || pro.primarySpecialty || pro.specialty || pro.engineerProfile?.primarySpecialty || 'N/A'}</span>
                   <div className="w-1.5 h-1.5 bg-zinc-300 rounded-full" />
-                  <span>{pro.location || pro.address?.city || 'N/A'}</span>
+                  <span>{pro.location?.state || pro.location?.city || pro.address?.city || 'N/A'}</span>
                 </div>
               </div>
             </div>
@@ -257,11 +267,11 @@ export default function ProfessionalDetailsPage() {
               <h3 className="text-neutral-700 text-base font-semibold font-inter">Professional Info</h3>
               <div className="space-y-6">
                 <InfoRow label="Full Name" value={pro.name || pro.fullName || 'N/A'} />
-                <InfoRow label="Category" value={pro.engineerProfile?.category || pro.engineerProfile?.primarySpecialty || 'N/A'} />
+                <InfoRow label="Category" value={categoryMap[pro.category] || categoryMap[pro.engineerProfile?.category] || pro.primarySpecialty || pro.engineerProfile?.primarySpecialty || 'N/A'} />
                 <InfoRow label="Phone Number" value={pro.phone || pro.phoneNumber || 'N/A'} />
                 <InfoRow label="Email Address" value={pro.email || 'N/A'} />
-                <InfoRow label="Experience" value={pro.engineerProfile?.yearsOfExperience || 'N/A'} />
-                <InfoRow label="Joined Date" value={pro.createdAt ? new Date(pro.createdAt).toLocaleDateString() : 'N/A'} />
+                <InfoRow label="Experience" value={pro.yearsOfExperience ? `${pro.yearsOfExperience} years` : pro.engineerProfile?.yearsOfExperience || 'N/A'} />
+                <InfoRow label="Joined Date" value={(pro.joinedDate || pro.createdAt) ? new Date(pro.joinedDate || pro.createdAt).toLocaleDateString() : 'N/A'} />
               </div>
             </div>
 
@@ -269,11 +279,11 @@ export default function ProfessionalDetailsPage() {
             <div className="p-6 bg-white rounded-xl border border-zinc-300 flex flex-col gap-6 shadow-sm h-fit">
               <h3 className="text-neutral-700 text-base font-semibold font-inter">Verification & Identity</h3>
               <div className="space-y-6">
-                <InfoRow label={`${pro.engineerProfile?.idType || 'ID'} (${pro.engineerProfile?.idVerification?.status || 'Pending'})`} value={pro.engineerProfile?.idNumber || 'N/A'} />
-                <InfoRow label="Work Address" value={pro.engineerProfile?.location?.state || pro.engineerProfile?.location?.city || 'N/A'} />
-                <InfoRow label="Account Name" value={pro.engineerProfile?.bankDetails?.accountName || 'N/A'} />
-                <InfoRow label="Bank Name" value={pro.engineerProfile?.bankDetails?.bankName || 'N/A'} />
-                <InfoRow label="Account Number" value={pro.engineerProfile?.bankDetails?.accountNumber || 'N/A'} />
+                <InfoRow label={`${pro.idType || pro.engineerProfile?.idType || 'ID'} (${pro.idVerification?.status || pro.engineerProfile?.idVerification?.status || 'Pending'})`} value={pro.idNumber || pro.engineerProfile?.idNumber || 'N/A'} />
+                <InfoRow label="Work Address" value={pro.location?.state || pro.location?.city || pro.engineerProfile?.location?.state || pro.engineerProfile?.location?.city || 'N/A'} />
+                <InfoRow label="Account Name" value={pro.bankDetails?.accountName || pro.engineerProfile?.bankDetails?.accountName || 'N/A'} />
+                <InfoRow label="Bank Name" value={pro.bankDetails?.bankName || pro.engineerProfile?.bankDetails?.bankName || 'N/A'} />
+                <InfoRow label="Account Number" value={pro.bankDetails?.accountNumber || pro.engineerProfile?.bankDetails?.accountNumber || 'N/A'} />
               </div>
             </div>
           </div>
