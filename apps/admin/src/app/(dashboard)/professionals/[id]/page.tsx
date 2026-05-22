@@ -4,9 +4,6 @@ import React, { useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import {
   HiOutlineArrowLeft,
-  HiOutlinePhone,
-  HiOutlineChatAlt,
-  HiOutlineVideoCamera,
   HiOutlineTrendingUp,
   HiOutlineBriefcase,
   HiOutlineStar,
@@ -187,13 +184,7 @@ export default function ProfessionalDetailsPage() {
               </div>
             </div>
 
-            <div className="flex gap-3">
-              {[HiOutlinePhone, HiOutlineChatAlt, HiOutlineVideoCamera].map((Icon, idx) => (
-                <button key={idx} className="p-3 bg-stone-50 rounded-lg border border-zinc-200 text-zinc-600 hover:bg-zinc-100 transition-colors">
-                  <Icon size={20} />
-                </button>
-              ))}
-            </div>
+
           </div>
         </div>
 

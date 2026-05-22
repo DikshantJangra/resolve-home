@@ -12,7 +12,7 @@ import {
   HiOutlineChevronDown
 } from 'react-icons/hi'
 import { cn, Button, Skeleton, Input } from "@resolve/ui"
-import { useAdminUsers, useAdminStats, useCategories, useCreateProfessional } from '@/hooks/api-hooks'
+import { useAdminEngineers, useAdminStats, useCategories, useCreateProfessional } from '@/hooks/api-hooks'
 import { toast } from 'sonner'
 
 const StatCard = ({ title, value, trend, icon: Icon }: {
@@ -43,7 +43,7 @@ export default function ProfessionalsPage() {
   const [page, setPage] = useState(1)
   const PAGE_SIZE = 10
 
-  const { data: users, isLoading: usersLoading } = useAdminUsers()
+  const { data: users, isLoading: usersLoading } = useAdminEngineers()
   const { data: statsData, isLoading: statsLoading } = useAdminStats()
   const { data: categories } = useCategories()
   const { mutate: createProfessional, isPending: isCreating } = useCreateProfessional()
@@ -64,9 +64,6 @@ export default function ProfessionalsPage() {
   }
 
   const professionals = (users || [])
-    .filter((u: { role?: string }) =>
-      u.role?.toLowerCase() === 'worker' || u.role?.toLowerCase() === 'engineer'
-    )
     .filter((u: any) => {
       // Search logic
       const catName = getCategoryName(u).toLowerCase()
@@ -93,8 +90,8 @@ export default function ProfessionalsPage() {
 
   const stats = {
     total: (statsData as any)?.totalEngineers || professionals.length,
-    active: (statsData as any)?.activeProfessionals || (users || []).filter((u: any) => (u.role?.toLowerCase() === 'worker' || u.role?.toLowerCase() === 'engineer') && !u.isBanned).length,
-    inactive: (statsData as any)?.inactiveProfessionals || (users || []).filter((u: any) => (u.role?.toLowerCase() === 'worker' || u.role?.toLowerCase() === 'engineer') && u.isBanned).length,
+    active: (statsData as any)?.activeProfessionals || (users || []).filter((u: any) => !u.isBanned && u.isActive !== false).length,
+    inactive: (statsData as any)?.inactiveProfessionals || (users || []).filter((u: any) => u.isBanned || u.isActive === false).length,
     jobsDone: (statsData as any)?.jobsDone || professionals.reduce((acc: number, u: any) => acc + (u.totalJobs || 0), 0)
   }
 
@@ -302,20 +299,21 @@ export default function ProfessionalsPage() {
                     <Link href={`/professionals/${pro.engineerProfile?.id || pro.engineerProfile?._id || pro.id || pro._id}`} className="block">
                       <div className="flex items-center gap-2.5 px-3 py-1 bg-orange-50 border border-orange-200 rounded-full w-fit">
                         <HiOutlineStar className="w-4 h-4 text-amber-600" />
-                        <span className="text-amber-600 text-sm font-medium">{pro.rating || 'N/A'}</span>
+                        <span className="text-amber-600 text-sm font-medium">{pro.rating ?? pro.engineerProfile?.rating ?? 'N/A'}</span>
                       </div>
                     </Link>
                   </td>
                   <td className="px-6 py-5">
                     <Link href={`/professionals/${pro.engineerProfile?.id || pro.engineerProfile?._id || pro.id || pro._id}`} className="block">
-                      <span className="text-sm text-zinc-600 font-medium">{pro.earnings ? `₦${pro.earnings.toLocaleString()}` : 'N/A'}</span>
+                      <span className="text-sm text-zinc-600 font-medium">{(pro.earnings || pro.totalEarnings) ? `₦${(pro.earnings || pro.totalEarnings).toLocaleString()}` : 'N/A'}</span>
                     </Link>
                   </td>
                   <td className="px-6 py-5">
                     <Link href={`/professionals/${pro.engineerProfile?.id || pro.engineerProfile?._id || pro.id || pro._id}`} className="flex items-center gap-2">
                       {(() => {
                         const ep = pro.engineerProfile || pro
-                        const status = pro.isBanned
+                        const isSuspended = pro.isBanned || ep.isActive === false
+                        const status = isSuspended
                           ? { dot: 'bg-rose-400', text: 'text-rose-400', label: 'Suspended' }
                           : (ep.verificationStatus === 'approved' || ep.isVerified || ep.approvedAt)
                             ? { dot: 'bg-green-700', text: 'text-green-700', label: 'Active' }

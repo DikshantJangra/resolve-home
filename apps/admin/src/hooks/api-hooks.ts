@@ -137,6 +137,8 @@ export function useAdminStats() {
       const completedJobs = bookings.filter((b: any) =>
         b.status?.toLowerCase() === 'completed'
       ).length
+      const activeProfessionals = (engineers || []).filter((e: any) => !e.isBanned).length
+      const inactiveProfessionals = (engineers || []).filter((e: any) => e.isBanned).length
       const averageRating = engineers.length > 0
         ? (engineers.reduce((sum: number, e: any) => sum + (e.engineerProfile?.rating || e.rating || 0), 0) / engineers.length).toFixed(1)
         : '0'
@@ -145,8 +147,16 @@ export function useAdminStats() {
         totalRevenue,
         totalHomeowners,
         totalEngineers,
-        completedJobs,
+        activeProfessionals,
+        inactiveProfessionals,
+        jobsDone: completedJobs,
         averageRating,
+        trends: {
+          total: null,
+          jobs: null,
+          active: null,
+          inactive: null,
+        }
       }
     },
     enabled: !!users && !!engineers && !!bookings,
@@ -288,31 +298,25 @@ export function useBanUser() {
 // --- Admin Engineers ---
 
 export function useAdminEngineers() {
-  // No GET /api/admin/engineers endpoint exists — use users list and filter by role
   return useQuery({
     queryKey: ['admin-engineers'],
     queryFn: async () => {
-      const response = await apiClient.get(ENDPOINTS.ADMIN_USERS.BASE)
+      const response = await apiClient.get(ENDPOINTS.ADMIN_ENGINEERS.BASE)
       const data = response.data.data || response.data
 
-      const all = Array.isArray(data) ? data : (data?.users || data?.items || data?.data || [])
-      return all.filter((u: any) =>
-        u.role?.toLowerCase() === 'engineer' ||
-        u.role?.toLowerCase() === 'worker' ||
-        u.engineerProfile != null
-      )
+      const list = Array.isArray(data) ? data : (data?.engineers || data?.items || data?.data || [])
+      return list
     }
   })
 }
 
 export function useAdminEngineer(id: string) {
-  // No GET /api/admin/engineers/{id} endpoint — fall back to users endpoint
   return useQuery({
     queryKey: ['admin-engineer', id],
     queryFn: async () => {
-      const response = await apiClient.get(ENDPOINTS.ADMIN_USERS.BY_ID(id))
+      const response = await apiClient.get(ENDPOINTS.ADMIN_ENGINEERS.BY_ID(id))
       const data = response.data.data || response.data
-      return data?.user || data?.item || data?.data || data
+      return data?.engineer || data?.item || data?.data || data
     },
     enabled: !!id
   })

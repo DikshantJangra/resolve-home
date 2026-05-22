@@ -138,6 +138,7 @@ export const ENDPOINTS = {
 
   // ─── Admin — Engineers ────────────────────────────────────────────────────
   ADMIN_ENGINEERS: {
+    BASE: '/api/admin/engineers',
     PENDING: '/api/admin/engineers/pending',
     BY_ID: (id: string) => `/api/admin/engineers/${id}`,
     DELETE: (id: string) => `/api/admin/engineers/${id}`,
